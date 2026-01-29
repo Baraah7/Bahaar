@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../models/weather_response_model.dart';
+import '../models/weather/weather_response_model.dart';
 
 // final apiKey = dotenv.env['weatherAPI'];
 // String city = "Manama";
@@ -63,23 +63,15 @@ class WeatherApiService {
       'aqi': airQuality ? 'yes' : 'no',
     };
 
-    if (days != null) {
-      queryParams['days'] = days.toString();
-    }
-
-    if (alert != null) {
-      queryParams['alerts'] = alert ? 'yes' : 'no';
-    }
-    //days and alerts are optional parameters
+    queryParams['days'] = days.toString();
+  
+    queryParams['alerts'] = alert ? 'yes' : 'no';
+      //days and alerts are optional parameters
     // but both must be both either null or both not
     if (alert == null && days == null) {
        type = "current";
-    } else if  (alert != null && days != null) {
-      type = "forecast";
-    }
-    else {
-      throw Exception("invalid parameters");
-    }
+    } else    type = "forecast";
+  
     try {
       print('=== Building API Request ===');
       print('Type: $type');
