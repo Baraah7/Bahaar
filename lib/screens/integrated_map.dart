@@ -27,6 +27,7 @@ import 'package:Bahaar/services/marine_weather_service.dart';
 import 'package:Bahaar/models/weather/marine_weather_model.dart';
 import 'package:Bahaar/utilities/map_constants.dart';
 import 'package:Bahaar/widgets/map/admin_edit_toolbar.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -717,21 +718,20 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   Future<void> _handleResetMask() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Mask?'),
-        content: const Text(
-          'This will discard all your changes and restore the original mask.',
-        ),
+        title: Text(l10n.resetMask),
+        content: Text(l10n.resetMaskConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.reset, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -743,9 +743,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
         setState(() {
           _paintedCells.clear();
         });
-        _showMessage('Mask reset to original', Colors.green);
+        _showMessage(l10n.maskResetToOriginal, Colors.green);
       } else {
-        _showMessage('Failed to reset mask', Colors.red);
+        _showMessage(l10n.failedToResetMask, Colors.red);
       }
     }
   }
@@ -1127,7 +1127,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
   }
 
-  Widget _buildNavigationStatusIndicator() {
+  Widget _buildNavigationStatusIndicator(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -1150,7 +1150,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ),
           const SizedBox(width: 4),
           Text(
-            _maskInitialized ? 'Navigation Ready' : 'Loading...',
+            _maskInitialized ? l10n.navigationReady : l10n.loading,
             style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
         ],
@@ -1210,6 +1210,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -1249,7 +1251,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
           Positioned(
             top: 50,
             right: 10,
-            child: _buildNavigationStatusIndicator(),
+            child: _buildNavigationStatusIndicator(l10n),
           ),
 
           // Layer controls panel (top left, when visible)
@@ -1432,13 +1434,13 @@ class _IntegratedMapState extends State<IntegratedMap> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.info_outline, size: 16, color: Colors.blue),
-                        SizedBox(width: 6),
+                        const Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                        const SizedBox(width: 6),
                         Text(
-                          'Port Navigation',
-                          style: TextStyle(
+                          l10n.portNavigation,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -1448,10 +1450,10 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     const SizedBox(height: 8),
                     Text(
                       _selectedPort == null
-                          ? '1. Select a port (anchor icon)\n2. Tap sea destination on map'
+                          ? l10n.selectPortInstruction
                           : _seaDestination == null
-                              ? '2. Tap sea destination on map'
-                              : 'Calculating route...',
+                              ? l10n.tapSeaDestination
+                              : l10n.calculatingRoute,
                       style: const TextStyle(fontSize: 12),
                     ),
                     if (_selectedPort != null) ...[
@@ -1468,7 +1470,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                             const Icon(Icons.check_circle, size: 14, color: Colors.green),
                             const SizedBox(width: 4),
                             Text(
-                              'Port: ${_selectedPort!.name}',
+                              '${l10n.portSelected}: ${_selectedPort!.name}',
                               style: const TextStyle(fontSize: 11, color: Colors.green),
                             ),
                           ],
@@ -1497,18 +1499,18 @@ class _IntegratedMapState extends State<IntegratedMap> {
             Positioned.fill(
               child: Container(
                 color: Colors.black.withValues(alpha: 0.5),
-                child: const Center(
+                child: Center(
                   child: Card(
                     child: Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
                           Text(
-                            'Calculating route...',
-                            style: TextStyle(fontSize: 16),
+                            l10n.calculatingRoute,
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ],
                       ),
