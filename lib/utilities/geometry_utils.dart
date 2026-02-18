@@ -71,6 +71,81 @@ class GeometryUtils {
         point.longitude <= ne.longitude;
   }
 
+  // ============================================================
+  // Hit-testing utilities for feature editing
+  // ============================================================
+
+  /// Euclidean distance between two points in degrees.
+  static double distanceBetween(LatLng a, LatLng b) {
+    final dx = a.longitude - b.longitude;
+    final dy = a.latitude - b.latitude;
+    return sqrt(dx * dx + dy * dy);
+  }
+
+  /// Point-in-polygon test using ray-casting algorithm.
+  static bool isPointInPolygon(LatLng point, List<LatLng> polygon) {
+    if (polygon.length < 3) return false;
+
+    bool inside = false;
+    int j = polygon.length - 1;
+
+    for (int i = 0; i < polygon.length; i++) {
+      final pi = polygon[i];
+      final pj = polygon[j];
+
+      if ((pi.latitude > point.latitude) != (pj.latitude > point.latitude) &&
+          point.longitude <
+              (pj.longitude - pi.longitude) *
+                      (point.latitude - pi.latitude) /
+                      (pj.latitude - pi.latitude) +
+                  pi.longitude) {
+        inside = !inside;
+      }
+      j = i;
+    }
+    return inside;
+  }
+
+  /// Minimum perpendicular distance from a point to any segment of a polyline.
+  static double distanceToLineString(LatLng point, List<LatLng> line) {
+    if (line.isEmpty) return double.infinity;
+    if (line.length == 1) return distanceBetween(point, line.first);
+
+    double minDist = double.infinity;
+    for (int i = 0; i < line.length - 1; i++) {
+      final dist = _perpendicularDistance(point, line[i], line[i + 1]);
+      if (dist < minDist) minDist = dist;
+    }
+    return minDist;
+  }
+
+  /// Compute the centroid (average) of a list of points.
+  static LatLng computeCentroid(List<LatLng> points) {
+    if (points.isEmpty) return const LatLng(0, 0);
+    if (points.length == 1) return points.first;
+
+    double sumLat = 0, sumLng = 0;
+    for (final p in points) {
+      sumLat += p.latitude;
+      sumLng += p.longitude;
+    }
+    return LatLng(sumLat / points.length, sumLng / points.length);
+  }
+
+  /// Translate all coordinates by the delta between [from] and [to].
+  static List<LatLng> translateGeometry(
+      List<LatLng> coords, LatLng from, LatLng to) {
+    final dLat = to.latitude - from.latitude;
+    final dLng = to.longitude - from.longitude;
+    return coords
+        .map((c) => LatLng(c.latitude + dLat, c.longitude + dLng))
+        .toList();
+  }
+
+  // ============================================================
+  // Heatmap aggregation
+  // ============================================================
+
   /// Aggregate fishing events into grid cells for heatmap visualization.
   /// [resolution] is the cell size in degrees.
   static List<FishingIntensityCell> aggregateToGrid(
