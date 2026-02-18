@@ -9,6 +9,7 @@ class LayerControlPanel extends StatelessWidget {
   final bool maskInitialized;
   final VoidCallback onClose;
   final VoidCallback? onEnterAdminEdit;
+  final VoidCallback? onEnterFeatureEdit;
 
   const LayerControlPanel({
     super.key,
@@ -17,6 +18,7 @@ class LayerControlPanel extends StatelessWidget {
     required this.maskInitialized,
     required this.onClose,
     this.onEnterAdminEdit,
+    this.onEnterFeatureEdit,
   });
 
   @override
@@ -440,6 +442,23 @@ class LayerControlPanel extends StatelessWidget {
                 }
               : null,
           enabled: maskInitialized,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+        ListTile(
+          leading: const Icon(Icons.map, size: 18, color: Colors.purple),
+          title: const Text('Edit Features', style: TextStyle(fontSize: 13)),
+          subtitle: const Text(
+            'Add/move/delete map features',
+            style: TextStyle(fontSize: 10),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          onTap: onEnterFeatureEdit != null
+              ? () {
+                  onEnterFeatureEdit!();
+                  onClose();
+                }
+              : null,
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         ),

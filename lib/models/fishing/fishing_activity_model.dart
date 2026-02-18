@@ -92,6 +92,19 @@ class FishingEvent {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'vessel_id': vesselId,
+        'vessel_name': vesselName,
+        'event_type': eventType.name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'start_time': startTime.toIso8601String(),
+        'end_time': endTime.toIso8601String(),
+        if (durationHours != null) 'duration_hours': durationHours,
+        if (metadata != null) 'metadata': metadata,
+      };
+
   static FishingEventType _parseEventType(String type) {
     switch (type) {
       case 'fishing':
@@ -113,6 +126,7 @@ class FishingEvent {
 
 /// A vessel track (sequence of positions with associated events)
 class VesselTrack {
+  final String? id; // Firestore document ID
   final String vesselId;
   final String vesselName;
   final String? vesselFlag;
@@ -121,6 +135,7 @@ class VesselTrack {
   final List<FishingEvent> events;
 
   const VesselTrack({
+    this.id,
     required this.vesselId,
     required this.vesselName,
     this.vesselFlag,
@@ -130,6 +145,7 @@ class VesselTrack {
   });
 
   VesselTrack copyWith({
+    String? id,
     String? vesselId,
     String? vesselName,
     String? vesselFlag,
@@ -138,6 +154,7 @@ class VesselTrack {
     List<FishingEvent>? events,
   }) {
     return VesselTrack(
+      id: id ?? this.id,
       vesselId: vesselId ?? this.vesselId,
       vesselName: vesselName ?? this.vesselName,
       vesselFlag: vesselFlag ?? this.vesselFlag,
@@ -149,6 +166,7 @@ class VesselTrack {
 
   factory VesselTrack.fromJson(Map<String, dynamic> json) {
     return VesselTrack(
+      id: json['id'] as String?,
       vesselId: json['vessel_id'] as String,
       vesselName: json['vessel_name'] as String,
       vesselFlag: json['vessel_flag'] as String?,
@@ -165,6 +183,16 @@ class VesselTrack {
           [],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        if (id != null) 'id': id,
+        'vessel_id': vesselId,
+        'vessel_name': vesselName,
+        if (vesselFlag != null) 'vessel_flag': vesselFlag,
+        if (gearType != null) 'gear_type': gearType,
+        'positions': positions.map((p) => p.toJson()).toList(),
+        'events': events.map((e) => e.toJson()).toList(),
+      };
 }
 
 /// Aggregated fishing intensity for a grid cell (used for heatmap)

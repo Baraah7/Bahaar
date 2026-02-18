@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:Bahaar/models/map/editable_map_feature.dart';
 
 /// Service for parsing and managing GeoJSON data on the map
 class GeoJsonLayerBuilder {
   final Map<String, dynamic> geoJsonData;
 
   GeoJsonLayerBuilder(this.geoJsonData);
+
+  /// Create a new GeoJsonLayerBuilder that merges asset data with Firestore features.
+  /// Firestore features are converted to GeoJSON format and appended to the asset features.
+  factory GeoJsonLayerBuilder.withFirestoreFeatures(
+    Map<String, dynamic> assetGeoJson,
+    List<EditableMapFeature> firestoreFeatures,
+  ) {
+    final assetFeatures =
+        List<dynamic>.from(assetGeoJson['features'] as List? ?? []);
+
+    // Convert Firestore features to GeoJSON format and append
+    for (final feature in firestoreFeatures) {
+      assetFeatures.add(feature.toGeoJsonFeature());
+    }
+
+    return GeoJsonLayerBuilder({
+      'type': 'FeatureCollection',
+      'features': assetFeatures,
+    });
+  }
 
   /// Extract features by type from GeoJSON
   List<Map<String, dynamic>> getFeaturesByType(String type) {

@@ -31,10 +31,13 @@ class MapLayerManager extends ChangeNotifier {
   // UI control
   bool _showLayerControls = false;
 
-  // Admin edit mode
+  // Admin edit mode (mask painting)
   bool _isAdminEditMode = false;
   AdminBrushType _brushType = AdminBrushType.water;
   int _brushRadius = 1; // 1-5 cells
+
+  // Feature edit mode (add/move/delete features)
+  bool _isFeatureEditMode = false;
 
   // Getters
   bool get showBaseMap => _showBaseMap;
@@ -53,6 +56,7 @@ class MapLayerManager extends ChangeNotifier {
   bool get showFishingActivityHeatmap => _showFishingActivityHeatmap;
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
+  bool get isFeatureEditMode => _isFeatureEditMode;
   bool get isAdminEditMode => _isAdminEditMode;
   AdminBrushType get brushType => _brushType;
   int get brushRadius => _brushRadius;
@@ -173,6 +177,21 @@ class MapLayerManager extends ChangeNotifier {
   set isAdminEditMode(bool value) {
     if (_isAdminEditMode != value) {
       _isAdminEditMode = value;
+      // Mutual exclusion: exit feature edit mode when entering mask edit
+      if (value && _isFeatureEditMode) {
+        _isFeatureEditMode = false;
+      }
+      notifyListeners();
+    }
+  }
+
+  set isFeatureEditMode(bool value) {
+    if (_isFeatureEditMode != value) {
+      _isFeatureEditMode = value;
+      // Mutual exclusion: exit mask edit mode when entering feature edit
+      if (value && _isAdminEditMode) {
+        _isAdminEditMode = false;
+      }
       notifyListeners();
     }
   }
@@ -220,6 +239,7 @@ class MapLayerManager extends ChangeNotifier {
     _showFishingActivityHeatmap = true;
     _showMaskOverlay = false;
     _showLayerControls = false;
+    _isFeatureEditMode = false;
     notifyListeners();
   }
 }
