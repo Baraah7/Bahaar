@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
-import '../../models/marketplace/fish_listing_model.dart';
+import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 
 class FishMarketplaceService extends ChangeNotifier {
