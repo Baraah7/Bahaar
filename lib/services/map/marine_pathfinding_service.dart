@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/services/navigation_mask.dart';
+import 'package:Bahaar/services/map/navigation_mask.dart';
 import 'package:Bahaar/services/marine_weather_service.dart';
 import 'package:Bahaar/models/navigation/route_model.dart';
 import 'package:Bahaar/models/weather/marine_weather_model.dart';
