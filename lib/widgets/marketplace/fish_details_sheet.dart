@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../models/marketplace/fish_listing_model.dart';
+import '../../models/marketplace/fish_listing.dart';
 import 'buildSellerCard.dart';
 import 'buildPaymentOption.dart';
 

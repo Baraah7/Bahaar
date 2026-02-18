@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../models/marketplace/fish_listing_model.dart';
+import '../../models/marketplace/fish_listing.dart';
 
 Widget buildFishCard({
   required FishListing listing,
