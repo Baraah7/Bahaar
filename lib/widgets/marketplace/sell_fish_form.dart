@@ -88,12 +88,12 @@ class _SellFishFormState extends State<SellFishForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle('Fish Photos'),
-          _buildCard([
-            _buildImagePicker(),
-          ]),
+          _buildSectionHeader('Fish Photos', Icons.camera_alt_outlined),
+          const SizedBox(height: 10),
+          _buildCard([_buildImagePicker()]),
           const SizedBox(height: 24),
-          _buildSectionTitle('Fish Details'),
+          _buildSectionHeader('Fish Details', Icons.phishing_outlined),
+          const SizedBox(height: 10),
           _buildCard([
             _buildDropdown<FishType>(
               label: 'Fish Type',
@@ -106,7 +106,7 @@ class _SellFishFormState extends State<SellFishForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _customFishNameController,
-                decoration: _inputDecoration('Custom Fish Name'),
+                decoration: _inputDecoration('Custom Fish Name', Icons.edit_outlined),
                 validator: (value) {
                   if (_selectedFishType == FishType.other &&
                       (value == null || value.isEmpty)) {
@@ -130,32 +130,24 @@ class _SellFishFormState extends State<SellFishForm> {
                 Expanded(
                   child: TextFormField(
                     controller: _weightController,
-                    decoration: _inputDecoration('Weight (kg)'),
+                    decoration: _inputDecoration('Weight (kg)', Icons.scale_outlined),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Invalid number';
-                      }
+                      if (value == null || value.isEmpty) return 'Required';
+                      if (double.tryParse(value) == null) return 'Invalid number';
                       return null;
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: TextFormField(
                     controller: _priceController,
-                    decoration: _inputDecoration('Price per kg (BD)'),
+                    decoration: _inputDecoration('Price/kg (BD)', Icons.payments_outlined),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Invalid number';
-                      }
+                      if (value == null || value.isEmpty) return 'Required';
+                      if (double.tryParse(value) == null) return 'Invalid number';
                       return null;
                     },
                   ),
@@ -165,105 +157,195 @@ class _SellFishFormState extends State<SellFishForm> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _catchLocationController,
-              decoration: _inputDecoration('Catch Location (optional)'),
+              decoration: _inputDecoration('Catch Location (optional)', Icons.location_on_outlined),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: _inputDecoration('Description (optional)'),
+              decoration: _inputDecoration('Description (optional)', Icons.description_outlined),
               maxLines: 3,
             ),
           ]),
           const SizedBox(height: 24),
-          _buildSectionTitle('Payment Methods'),
+          _buildSectionHeader('Payment Methods', Icons.payments_outlined),
+          const SizedBox(height: 10),
           _buildCard([
-            const Text(
+            Text(
               'Select accepted payment methods:',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
             ),
             const SizedBox(height: 12),
             ...PaymentMethod.values.map((method) {
-              return CheckboxListTile(
-                title: Text(method.displayName),
-                subtitle: Text(
-                  method == PaymentMethod.cash
-                      ? 'Accept cash payment'
-                      : 'Accept Benefit Pay',
-                ),
-                value: _acceptedPayments.contains(method),
-                onChanged: (selected) {
+              final isSelected = _acceptedPayments.contains(method);
+              return GestureDetector(
+                onTap: () {
                   setState(() {
-                    if (selected == true) {
-                      _acceptedPayments.add(method);
-                    } else if (_acceptedPayments.length > 1) {
+                    if (isSelected && _acceptedPayments.length > 1) {
                       _acceptedPayments.remove(method);
+                    } else {
+                      _acceptedPayments.add(method);
                     }
                   });
                 },
-                controlAffinity: ListTileControlAffinity.leading,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF0D4F54).withValues(alpha: 0.06)
+                        : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF0D4F54).withValues(alpha: 0.3)
+                          : Colors.grey.shade200,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF0E7490).withValues(alpha: 0.1)
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          method == PaymentMethod.cash
+                              ? Icons.money_rounded
+                              : Icons.account_balance_wallet_rounded,
+                          size: 20,
+                          color: isSelected
+                              ? const Color(0xFF0E7490)
+                              : Colors.grey.shade500,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              method.displayName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? const Color(0xFF0D4F54)
+                                    : const Color(0xFF1E293B),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              method == PaymentMethod.cash
+                                  ? 'Accept cash payment'
+                                  : 'Accept Benefit Pay',
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF0D4F54) : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF0D4F54)
+                                : Colors.grey.shade400,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          Icons.check,
+                          size: 14,
+                          color: isSelected ? Colors.white : Colors.transparent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }),
             if (_acceptedPayments.contains(PaymentMethod.benefitPay)) ...[
-              const Divider(),
+              Divider(color: Colors.grey.shade200),
               const SizedBox(height: 8),
-              const Text(
-                'Benefit Pay QR Code / Payment Info',
-                style: TextStyle(fontWeight: FontWeight.w500),
+              Row(
+                children: [
+                  const Icon(Icons.qr_code_rounded, size: 18, color: Color(0xFF0E7490)),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Benefit Pay QR Code / Payment Info',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF1E293B)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _buildBenefitPayImagePicker(),
             ],
           ]),
           const SizedBox(height: 24),
-          _buildSectionTitle('Seller Information'),
+          _buildSectionHeader('Seller Information', Icons.person_outline),
+          const SizedBox(height: 10),
           _buildCard([
             TextFormField(
               controller: _sellerNameController,
-              decoration: _inputDecoration('Your Name'),
+              decoration: _inputDecoration('Your Name', Icons.person_outline),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your name';
-                }
+                if (value == null || value.isEmpty) return 'Please enter your name';
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _sellerPhoneController,
-              decoration: _inputDecoration('Phone Number'),
+              decoration: _inputDecoration('Phone Number', Icons.phone_outlined),
               keyboardType: TextInputType.phone,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your phone number';
-                }
+                if (value == null || value.isEmpty) return 'Please enter your phone number';
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _sellerLocationController,
-              decoration: _inputDecoration('Your Location (optional)'),
+              decoration: _inputDecoration('Your Location (optional)', Icons.location_on_outlined),
             ),
           ]),
           const SizedBox(height: 32),
+          // Submit button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 22, 62, 98),
+                backgroundColor: const Color(0xFF0D4F54),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                'Post Listing',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.add_business_rounded, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Post Listing',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -273,19 +355,45 @@ class _SellFishFormState extends State<SellFishForm> {
     );
   }
 
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: const Color(0xFF0E7490)),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+            letterSpacing: -0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildImagePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Add photos of your fish (optional)',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
         ),
         const SizedBox(height: 12),
         SizedBox(
           height: 100,
           child: ListView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             children: [
               ..._fishImages.asMap().entries.map((entry) {
                 return Stack(
@@ -293,35 +401,40 @@ class _SellFishFormState extends State<SellFishForm> {
                     Container(
                       width: 100,
                       height: 100,
-                      margin: const EdgeInsets.only(right: 8),
+                      margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         image: DecorationImage(
                           image: FileImage(File(entry.value)),
                           fit: BoxFit.cover,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                     Positioned(
                       top: 4,
-                      right: 12,
+                      right: 14,
                       child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _fishImages.removeAt(entry.key);
-                          });
-                        },
+                        onTap: () => setState(() => _fishImages.removeAt(entry.key)),
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade500,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 14,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.close, size: 12, color: Colors.white),
                         ),
                       ),
                     ),
@@ -334,21 +447,27 @@ class _SellFishFormState extends State<SellFishForm> {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: const Color(0xFF0D4F54).withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF0E7490).withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_photo_alternate,
-                          size: 32, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.add_photo_alternate_rounded,
+                        size: 28,
+                        color: const Color(0xFF0E7490).withValues(alpha: 0.6),
+                      ),
                       const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         'Add Photo',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                          color: Color(0xFF0E7490),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -370,12 +489,12 @@ class _SellFishFormState extends State<SellFishForm> {
             height: 150,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               image: DecorationImage(
                 image: FileImage(File(_benefitPayImage!)),
                 fit: BoxFit.contain,
               ),
-              color: Colors.grey.shade100,
+              color: Colors.grey.shade50,
             ),
           ),
           Positioned(
@@ -384,12 +503,18 @@ class _SellFishFormState extends State<SellFishForm> {
             child: GestureDetector(
               onTap: () => setState(() => _benefitPayImage = null),
               child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade500,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.close, size: 16, color: Colors.white),
+                child: const Icon(Icons.close, size: 14, color: Colors.white),
               ),
             ),
           ),
@@ -403,44 +528,28 @@ class _SellFishFormState extends State<SellFishForm> {
         height: 100,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue.shade200),
+          color: const Color(0xFF0E7490).withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF0E7490).withValues(alpha: 0.2)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.qr_code, size: 32, color: Colors.blue.shade600),
+            Icon(Icons.qr_code_rounded, size: 28, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Upload Benefit Pay QR Code',
               style: TextStyle(
-                color: Colors.blue.shade700,
+                color: Color(0xFF0E7490),
                 fontWeight: FontWeight.w500,
+                fontSize: 13,
               ),
             ),
             Text(
               'Buyers will see this when they select Benefit Pay',
-              style: TextStyle(
-                color: Colors.blue.shade400,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color.fromARGB(255, 22, 62, 98),
         ),
       ),
     );
@@ -454,8 +563,8 @@ class _SellFishFormState extends State<SellFishForm> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -476,7 +585,7 @@ class _SellFishFormState extends State<SellFishForm> {
   }) {
     return DropdownButtonFormField<T>(
       initialValue: initialValue,
-      decoration: _inputDecoration(label),
+      decoration: _inputDecoration(label, null),
       items: items.map((item) {
         return DropdownMenuItem<T>(
           value: item,
@@ -487,34 +596,33 @@ class _SellFishFormState extends State<SellFishForm> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, IconData? icon) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      prefixIcon: icon != null ? Icon(icon, size: 20, color: const Color(0xFF0E7490)) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade200),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 22, 62, 98),
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF0D4F54), width: 2),
       ),
       filled: true,
       fillColor: Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
   void _submitForm() {
     if (widget.currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please login to create a listing'),
+        SnackBar(
+          content: const Text('Please login to create a listing'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -522,7 +630,7 @@ class _SellFishFormState extends State<SellFishForm> {
 
     if (_formKey.currentState!.validate()) {
       final listing = FishListing(
-        id: '', // Will be set by Firestore
+        id: '',
         fishType: _selectedFishType,
         customFishName: _selectedFishType == FishType.other
             ? _customFishNameController.text

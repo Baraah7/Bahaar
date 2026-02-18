@@ -77,11 +77,11 @@ class _WeatherPageState extends State<Weather> {
     } else {
       // Clear/Sunny - ocean-inspired deep teal gradients
       return isDay
-          ? [const Color(0xFF0D4F54), const Color(0xFF0E7490), const Color(0xFF22D3EE)]
+          ? [const Color(0xFF0D4F54), const Color(0xFF0E7490), const Color(0xFF0D4F54)]
           : [const Color(0xFF0D1B2A), const Color(0xFF1B3A4B), const Color(0xFF065A60)];
     }
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
