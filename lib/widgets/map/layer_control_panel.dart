@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Bahaar/models/fishing/fish_probability_model.dart';
-import 'package:Bahaar/services/map_layer_manager.dart';
+import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
 
 /// Control panel widget for managing all map layers

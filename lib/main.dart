@@ -67,7 +67,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           l10n.appName,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
-        backgroundColor: const Color.fromARGB(255, 22, 62, 98),
+        backgroundColor: Color(0xFF0D4F54),
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
@@ -114,22 +114,22 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: 'Map',  
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+            backgroundColor:Color(0xFF0D4F54),
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.cloud),
             label: 'Weather',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+            backgroundColor: Color(0xFF0D4F54)
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.camera_alt),
             label: 'Fish ID',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+            backgroundColor: Color(0xFF0D4F54)
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.sailing),
             label: 'Mariner Harvest',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+            backgroundColor: Color(0xFF0D4F54)
           ),
         ],
       ),
