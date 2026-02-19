@@ -1,13 +1,13 @@
 {
   "bbox": {
-    "min_lon": 50.3,
-    "min_lat": 25.8,
-    "max_lon": 50.9,
-    "max_lat": 26.4
+    "min_lon": 50.26,
+    "min_lat": 25.525,
+    "max_lon": 50.933,
+    "max_lat": 26.697
   },
   "grid": {
-    "width": 600,
-    "height": 599,
+    "width": 673,
+    "height": 1172,
     "resolution_degrees": 0.001,
     "resolution_meters_approx": 111.0
   },
@@ -17,5 +17,5 @@
     "land": 0
   },
   "territorial_waters": "12 nautical miles (22,224 meters)",
-  "boundaries": "Clipped against Qatar and Saudi Arabia maritime boundaries"
+  "source": "bahrain_territorial_12nm_mobile.shp"
 }
