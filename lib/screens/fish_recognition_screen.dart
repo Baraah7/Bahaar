@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/fish_classification_provider.dart';
@@ -13,17 +14,32 @@ class FishRecognitionScreen extends ConsumerStatefulWidget {
       _FishRecognitionScreenState();
 }
 
-class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen> {
+class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
+    with SingleTickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    // Initialize classifier on screen load
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(fishClassificationProvider.notifier).initialize();
     });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -74,8 +90,10 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -94,297 +112,383 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen> {
     final hasError = classificationState.error != null && !isInitialized;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.fishRecognition),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF0077BE),
-        foregroundColor: Colors.white,
-      ),
-      body: hasError
-          ? _buildErrorView(context, classificationState.error!)
-          : !isInitialized
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(l10n.loadingRecognitionModel),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Instructions card
-                    Card(
-                      elevation: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.camera_alt,
-                              size: 48,
-                              color: Colors.blue[700],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l10n.takePhotoOfFish,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.systemWillIdentify,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+    if (classificationState.result != null) {
+      _animationController.forward();
+    } else {
+      _animationController.reset();
+    }
 
-                    const SizedBox(height: 24),
-
-                    // Camera and gallery buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: classificationState.isLoading
-                                ? null
-                                : _pickImageFromCamera,
-                            icon: const Icon(Icons.camera_alt, size: 28),
-                            label: Text(
-                              l10n.camera,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0077BE),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: classificationState.isLoading
-                                ? null
-                                : _pickImageFromGallery,
-                            icon: const Icon(Icons.photo_library, size: 28),
-                            label: Text(
-                              l10n.gallery,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Image preview
-                    if (_selectedImage != null)
-                      Card(
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          children: [
-                            Image.file(
-                              _selectedImage!,
-                              height: 300,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                            if (classificationState.isLoading)
-                              Container(
-                                height: 300,
-                                color: Colors.black54,
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        l10n.analyzing,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                    const SizedBox(height: 16),
-
-                    // Results
-                    if (classificationState.result != null)
-                      _buildResultCard(context, classificationState.result!),
-
-                    // Error message
-                    if (classificationState.error != null)
-                      Card(
-                        color: Colors.red[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error, color: Colors.red),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  classificationState.error!,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                    // Reset button
-                    if (_selectedImage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: OutlinedButton.icon(
-                          onPressed: _resetClassification,
-                          icon: const Icon(Icons.refresh),
-                          label: Text(l10n.newImage),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFF0077BE)),
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    // Supported species info
-                    Card(
-                      color: Colors.blue[50],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.info, color: Colors.blue[700]),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.supportedSpecies,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildSpeciesItem('Gilt-Head Bream'),
-                            _buildSpeciesItem('Horse Mackerel'),
-                            _buildSpeciesItem('Sea Bass'),
-                            _buildSpeciesItem('Shrimp'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(
+            l10n.fishRecognition,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+              color: Colors.white,
             ),
+          ),
+          centerTitle: true,
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF0D4F54),
+                Color(0xFF0E7490),
+                Color(0xFF0D4F54),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: hasError
+                ? _buildErrorView(context, classificationState.error!)
+                : !isInitialized
+                    ? _buildLoadingView(l10n)
+                    : _buildMainContent(context, classificationState, l10n),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildResultCard(BuildContext context, result) {
-    final isConfident = result.isConfident;
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildLoadingView(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.loadingRecognitionModel,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return Card(
-      elevation: 4,
-      color: isConfident ? Colors.green[50] : Colors.orange[50],
+  Widget _buildMainContent(
+    BuildContext context,
+    dynamic classificationState,
+    AppLocalizations l10n,
+  ) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           children: [
-            Icon(
-              isConfident ? Icons.check_circle : Icons.warning,
+            if (_selectedImage == null) ...[
+              _buildUploadArea(classificationState, l10n),
+              const SizedBox(height: 24),
+              _buildSupportedSpecies(l10n),
+            ] else ...[
+              _buildImagePreview(classificationState, l10n),
+              const SizedBox(height: 20),
+              if (classificationState.result != null)
+                _buildResultCard(context, classificationState.result!, l10n),
+              if (classificationState.error != null)
+                _buildErrorCard(classificationState.error!),
+              const SizedBox(height: 16),
+              _buildActionButtons(classificationState, l10n),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadArea(dynamic classificationState, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.phishing_rounded,
               size: 56,
-              color: isConfident ? Colors.green : Colors.orange,
+              color: Colors.white.withValues(alpha: 0.9),
             ),
-            const SizedBox(height: 16),
-            Text(
-              result.className,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.takePhotoOfFish,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${l10n.confidence}: ',
-                  style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.systemWillIdentify,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              Expanded(
+                child: _buildUploadButton(
+                  icon: Icons.camera_alt_rounded,
+                  label: l10n.camera,
+                  onPressed: classificationState.isLoading
+                      ? null
+                      : _pickImageFromCamera,
+                  isPrimary: true,
                 ),
-                Text(
-                  '${(result.confidence * 100).toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isConfident ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildUploadButton(
+                  icon: Icons.photo_library_rounded,
+                  label: l10n.gallery,
+                  onPressed: classificationState.isLoading
+                      ? null
+                      : _pickImageFromGallery,
+                  isPrimary: false,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUploadButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+    required bool isPrimary,
+  }) {
+    return Material(
+      color: isPrimary
+          ? Colors.white
+          : Colors.white.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 28,
+                color: isPrimary
+                    ? const Color(0xFF0E7490)
+                    : Colors.white,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isPrimary
+                      ? const Color(0xFF0E7490)
+                      : Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePreview(dynamic classificationState, AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Image.file(
+              _selectedImage!,
+              height: 280,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            if (classificationState.isLoading)
+              Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.analyzing,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultCard(BuildContext context, dynamic result, AppLocalizations l10n) {
+    final isConfident = result.isConfident;
+    final confidence = result.confidence as double;
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                _buildConfidenceIndicator(confidence, isConfident),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        result.className,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            isConfident
+                                ? Icons.verified_rounded
+                                : Icons.info_outline_rounded,
+                            size: 18,
+                            color: isConfident
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isConfident
+                                ? 'High Confidence'
+                                : 'Low Confidence',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isConfident
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFF59E0B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
             if (!isConfident) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.lightbulb_outline, color: Colors.orange),
-                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.lightbulb_outline_rounded,
+                      color: Color(0xFFD97706),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         l10n.tryTakingClearerPhoto,
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF92400E),
+                        ),
                       ),
                     ),
                   ],
@@ -397,21 +501,222 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen> {
     );
   }
 
-  Widget _buildSpeciesItem(String name) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+  Widget _buildConfidenceIndicator(double confidence, bool isConfident) {
+    final percentage = (confidence * 100).toInt();
+    final color = isConfident
+        ? const Color(0xFF10B981)
+        : const Color(0xFFF59E0B);
+
+    return SizedBox(
+      width: 72,
+      height: 72,
+      child: Stack(
         children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: Colors.blue[700],
-              shape: BoxShape.circle,
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: CircularProgressIndicator(
+              value: confidence,
+              strokeWidth: 6,
+              backgroundColor: color.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              strokeCap: StrokeCap.round,
             ),
           ),
-          const SizedBox(width: 8),
-          Text(name),
+          Center(
+            child: Text(
+              '$percentage%',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(String error) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEE2E2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFDC2626),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              error,
+              style: const TextStyle(
+                color: Color(0xFF991B1B),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(dynamic classificationState, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: _resetClassification,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.newImage,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: classificationState.isLoading
+                  ? null
+                  : () {
+                      if (_selectedImage != null) {
+                        _classifyImage(_selectedImage!);
+                      }
+                    },
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_rounded,
+                      color: classificationState.isLoading
+                          ? Colors.grey
+                          : const Color(0xFF0E7490),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Reanalyze',
+                      style: TextStyle(
+                        color: classificationState.isLoading
+                            ? Colors.grey
+                            : const Color(0xFF0E7490),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupportedSpecies(AppLocalizations l10n) {
+    final species = [
+      'Gilt-Head Bream',
+      'Horse Mackerel',
+      'Sea Bass',
+      'Shrimp',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+  
+              const SizedBox(width: 10),
+              Text(
+                l10n.supportedSpecies,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: species.map((item) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 8),
+                    Text(
+                      item,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -422,32 +727,74 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen> {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 56,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
               l10n.failedToLoadModel,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                ref.read(fishClassificationProvider.notifier).initialize();
-              },
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n.tryAgain),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0077BE),
-                foregroundColor: Colors.white,
+            const SizedBox(height: 32),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                onTap: () {
+                  ref.read(fishClassificationProvider.notifier).initialize();
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.refresh_rounded,
+                        color: Color(0xFF0E7490),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        l10n.tryAgain,
+                        style: const TextStyle(
+                          color: Color(0xFF0E7490),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

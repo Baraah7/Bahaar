@@ -2,7 +2,7 @@ import 'package:Bahaar/models/marketplace/buyer_information.dart';
 import 'package:Bahaar/models/marketplace/fish_listing.dart';
 import 'package:Bahaar/models/marketplace/seller_information.dart';
 import 'package:flutter/foundation.dart';
-import '../models/marketplace/listing_model.dart';
+import '../models/marketplace/listing_model.dart' hide ListingStatus, FishType, FishCondition, PaymentMethod;
 import '../models/marketplace/order_model.dart';
 
 class FishMarketplaceService extends ChangeNotifier {
@@ -17,7 +17,7 @@ class FishMarketplaceService extends ChangeNotifier {
       _listings.where((l) => l.status == ListingStatus.available).toList();
   List<Order> get orders => List.unmodifiable(_orders);
   List<Order> get sellerOrders => _orders
-      .where((o) => o.listing.seller.id == _currentSellerId)
+      .where((o) => o.sellerId == _currentSellerId)
       .toList();
   List<Order> get pendingSellerOrders => sellerOrders
       .where((o) => o.status == OrderStatus.pending)
@@ -72,7 +72,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.fresh,
         acceptedPayments: [PaymentMethod.cash, PaymentMethod.benefitPay],
         description: 'Fresh Hamour caught this morning from Bahrain waters.',
-        seller: sampleSeller1,
+        sellerId: sampleSeller1.id,
+        sellerName: sampleSeller1.name,
+        sellerPhone: sampleSeller1.phone,
+        sellerLocation: sampleSeller1.location,
         listedAt: DateTime.now().subtract(const Duration(hours: 2)),
         catchLocation: 'North Sea of Bahrain',
         catchDate: DateTime.now().subtract(const Duration(hours: 4)),
@@ -85,7 +88,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.fresh,
         acceptedPayments: [PaymentMethod.cash],
         description: 'Medium-sized Shaari, perfect for grilling.',
-        seller: sampleSeller2,
+        sellerId: sampleSeller2.id,
+        sellerName: sampleSeller2.name,
+        sellerPhone: sampleSeller2.phone,
+        sellerLocation: sampleSeller2.location,
         listedAt: DateTime.now().subtract(const Duration(hours: 5)),
         catchLocation: 'East Coast',
         catchDate: DateTime.now().subtract(const Duration(hours: 6)),
@@ -98,7 +104,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.cleaned,
         acceptedPayments: [PaymentMethod.cash, PaymentMethod.benefitPay],
         description: 'Premium jumbo shrimp, cleaned and ready to cook.',
-        seller: sampleSeller3,
+        sellerId: sampleSeller3.id,
+        sellerName: sampleSeller3.name,
+        sellerPhone: sampleSeller3.phone,
+        sellerLocation: sampleSeller3.location,
         listedAt: DateTime.now().subtract(const Duration(hours: 1)),
         catchLocation: 'Fasht Al-Adham',
         catchDate: DateTime.now().subtract(const Duration(hours: 3)),
@@ -111,7 +120,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.fresh,
         acceptedPayments: [PaymentMethod.benefitPay],
         description: 'Large Kingfish, excellent for steaks.',
-        seller: sampleSeller1,
+        sellerId: sampleSeller1.id,
+        sellerName: sampleSeller1.name,
+        sellerPhone: sampleSeller1.phone,
+        sellerLocation: sampleSeller1.location,
         listedAt: DateTime.now().subtract(const Duration(hours: 3)),
         catchLocation: 'Hawar Islands',
         catchDate: DateTime.now().subtract(const Duration(hours: 5)),
@@ -124,7 +136,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.fresh,
         acceptedPayments: [PaymentMethod.cash, PaymentMethod.benefitPay],
         description: 'Small but delicious Safi, local favorite.',
-        seller: sampleSeller2,
+        sellerId: sampleSeller2.id,
+        sellerName: sampleSeller2.name,
+        sellerPhone: sampleSeller2.phone,
+        sellerLocation: sampleSeller2.location,
         listedAt: DateTime.now().subtract(const Duration(hours: 4)),
         catchLocation: 'Budaiya Coast',
         catchDate: DateTime.now().subtract(const Duration(hours: 5)),
@@ -137,7 +152,10 @@ class FishMarketplaceService extends ChangeNotifier {
         condition: FishCondition.fresh,
         acceptedPayments: [PaymentMethod.cash],
         description: 'Live blue crabs, very fresh!',
-        seller: sampleSeller3,
+        sellerId: sampleSeller3.id,
+        sellerName: sampleSeller3.name,
+        sellerPhone: sampleSeller3.phone,
+        sellerLocation: sampleSeller3.location,
         listedAt: DateTime.now().subtract(const Duration(minutes: 30)),
         catchLocation: 'Tubli Bay',
         catchDate: DateTime.now().subtract(const Duration(hours: 1)),
@@ -217,7 +235,7 @@ class FishMarketplaceService extends ChangeNotifier {
       return l.displayName.toLowerCase().contains(lowerQuery) ||
           l.fishType.arabicName.contains(query) ||
           (l.description?.toLowerCase().contains(lowerQuery) ?? false) ||
-          l.seller.name.toLowerCase().contains(lowerQuery) ||
+          l.sellerName.toLowerCase().contains(lowerQuery) ||
           (l.catchLocation?.toLowerCase().contains(lowerQuery) ?? false);
     }).toList();
   }
@@ -239,8 +257,12 @@ class FishMarketplaceService extends ChangeNotifier {
   }) async {
     final order = Order(
       id: 'order_${DateTime.now().millisecondsSinceEpoch}',
-      listing: listing,
-      buyer: buyer,
+      listingId: listing.id,
+      sellerId: listing.sellerId,
+      buyerId: buyer.id,
+      buyerName: buyer.name,
+      buyerPhone: buyer.phone,
+      buyerLocation: buyer.location,
       paymentMethod: paymentMethod,
       paymentProofImageUrl: paymentProofImageUrl,
       orderedAt: DateTime.now(),
@@ -273,8 +295,7 @@ class FishMarketplaceService extends ChangeNotifier {
         rejectionReason: reason,
         respondedAt: DateTime.now(),
       );
-      // Make the listing available again
-      await updateListingStatus(order.listing.id, ListingStatus.available);
+      await updateListingStatus(order.listingId, ListingStatus.available);
       notifyListeners();
     }
   }
@@ -283,11 +304,18 @@ class FishMarketplaceService extends ChangeNotifier {
     final index = _orders.indexWhere((o) => o.id == orderId);
     if (index != -1) {
       final order = _orders[index];
-      _orders[index] = order.copyWith(
-        status: OrderStatus.completed,
-        respondedAt: DateTime.now(),
-      );
-      await updateListingStatus(order.listing.id, ListingStatus.sold);
+      _orders[index] = order.copyWith(status: OrderStatus.completed);
+      await updateListingStatus(order.listingId, ListingStatus.sold);
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    final index = _orders.indexWhere((o) => o.id == orderId);
+    if (index != -1) {
+      final order = _orders[index];
+      _orders[index] = order.copyWith(status: OrderStatus.cancelled);
+      await updateListingStatus(order.listingId, ListingStatus.available);
       notifyListeners();
     }
   }
@@ -301,10 +329,10 @@ class FishMarketplaceService extends ChangeNotifier {
   }
 
   List<Order> getOrdersForListing(String listingId) {
-    return _orders.where((o) => o.listing.id == listingId).toList();
+    return _orders.where((o) => o.listingId == listingId).toList();
   }
 
   List<FishListing> getSellerListings(String sellerId) {
-    return _listings.where((l) => l.seller.id == sellerId).toList();
+    return _listings.where((l) => l.sellerId == sellerId).toList();
   }
 }
