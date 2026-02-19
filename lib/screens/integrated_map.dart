@@ -23,6 +23,8 @@ import 'package:Bahaar/widgets/navigation/route_polyline_layer.dart';
 import 'package:Bahaar/widgets/navigation/active_navigation_overlay.dart';
 import 'package:Bahaar/widgets/navigation/weather_alert_overlay.dart';
 import 'package:Bahaar/services/fishing_activity_service.dart';
+import 'package:Bahaar/services/fish_probability_service.dart';
+import 'package:Bahaar/widgets/map/fish_probability_layer.dart';
 import 'package:Bahaar/services/marine_weather_service.dart';
 import 'package:Bahaar/models/weather/marine_weather_model.dart';
 import 'package:Bahaar/utilities/map_constants.dart';
@@ -64,6 +66,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
   late final HybridRouteCoordinator _routeCoordinator;
   late final MarineWeatherService _weatherService;
   late final FishingActivityService _fishingActivityService;
+  late final FishProbabilityService _fishProbabilityService;
   final FeatureEditService _featureEditService = FeatureEditService();
   final FeatureEditState _featureEditState = FeatureEditState();
   NavigationSessionManager? _navigationManager;
@@ -137,6 +140,10 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _layerManager = MapLayerManager();
     _fishingActivityService = FishingActivityService();
     _fishingActivityService.initialize().then((_) {
+      if (mounted) setState(() {});
+    });
+    _fishProbabilityService = FishProbabilityService();
+    _fishProbabilityService.initialize().then((_) {
       if (mounted) setState(() {});
     });
     _initLocation();
@@ -237,6 +244,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _featureEditState.removeListener(_onFeatureEditUpdate);
     _featureEditState.dispose();
     _fishingActivityService.dispose();
+    _fishProbabilityService.dispose();
     _layerManager.dispose();
     super.dispose();
   }
@@ -1143,6 +1151,22 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 showTracks: _layerManager.showFishingActivityTracks,
                 showEvents: _layerManager.showFishingActivityEvents,
                 showHeatmap: _layerManager.showFishingActivityHeatmap,
+              );
+            },
+          ),
+
+        // Fish probability heatmap layer
+        if (_fishProbabilityService.isInitialized)
+          ListenableBuilder(
+            listenable: _layerManager,
+            builder: (context, _) {
+              if (!_layerManager.showFishProbabilityHeatmap) {
+                return const SizedBox.shrink();
+              }
+              return FishProbabilityLayer(
+                service: _fishProbabilityService,
+                selectedSpecies: _layerManager.selectedSpecies,
+                currentZoom: _currentZoom,
               );
             },
           ),
