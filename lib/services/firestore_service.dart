@@ -19,4 +19,8 @@ class FirestoreService {
     final doc = await _db.collection('users').doc(uid).get();
     return doc.exists;
   }
+
+  Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    await _db.collection('users').doc(uid).update(data);
+  }
 }

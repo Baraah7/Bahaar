@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
+import '../../models/weather/tide_model.dart';
 
 // Reusable styles and colors
 class _WeatherStyles {
@@ -28,8 +29,9 @@ class _WeatherStyles {
 
 class WeatherList extends StatelessWidget {
   final weather_response_model weatherData;
+  final List<TideEntry> tides;
 
-  const WeatherList({super.key, required this.weatherData});
+  const WeatherList({super.key, required this.weatherData, this.tides = const []});
 
   // Reusable weather icon widget
   Widget _weatherIcon(String iconUrl, {double size = 32}) {
@@ -148,6 +150,8 @@ class WeatherList extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildSunMoonCard(),
+                const SizedBox(height: 16),
+                _buildTidesCard(),
               ],
             ),
           ),
@@ -662,6 +666,93 @@ class WeatherList extends StatelessWidget {
       'last quarter' => Icons.brightness_3,
       _ => Icons.nightlight_round,
     };
+  }
+
+  Widget _buildTidesCard() {
+    const tideBlue = Color(0xFF4FC3F7);
+    const tideLow = Color(0xFF81D4FA);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _WeatherStyles.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader("Today's Tides", tideBlue),
+          const SizedBox(height: 4),
+          if (tides.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.waves, color: _WeatherStyles.white(0.4), size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Tide data unavailable',
+                    style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 15),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...tides.map((entry) {
+              final isHigh = entry.isHigh;
+              final color = isHigh ? tideBlue : tideLow;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isHigh ? Icons.arrow_upward : Icons.arrow_downward,
+                        color: color,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isHigh ? 'High Tide' : 'Low Tide',
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          entry.formattedTime,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${entry.heightMt.toStringAsFixed(2)} m',
+                      style: TextStyle(
+                        color: _WeatherStyles.white(0.85),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
   }
 
   String _getDayName(int weekday) {
