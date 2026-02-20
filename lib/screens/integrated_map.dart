@@ -104,30 +104,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
   LatLng? _destinationPoint;
   bool _isCalculatingRoute = false;
 
-  // Predefined ports for starting marine navigation
-  final List<PortPoint> _availablePorts = [
-    PortPoint(
-      id: 'port_1',
-      name: 'Mina Salman Port',
-      location: LatLng(26.2100, 50.6200),
-      description: 'Main commercial port',
-      facilities: ['fuel', 'parking', 'restroom'],
-    ),
-    PortPoint(
-      id: 'port_2',
-      name: 'Manama Marina',
-      location: LatLng(26.2285, 50.6050),
-      description: 'Recreational marina',
-      facilities: ['fuel', 'parking', 'restaurant'],
-    ),
-    PortPoint(
-      id: 'port_3',
-      name: 'Muharraq Harbor',
-      location: LatLng(26.2572, 50.6300),
-      description: 'Northern harbor access',
-      facilities: ['parking', 'restroom'],
-    ),
-  ];
+  // Ports loaded from seaports.json
+  List<PortPoint> _availablePorts = [];
 
   // Selected port and destination
   PortPoint? _selectedPort;
@@ -149,6 +127,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _initLocation();
     _initNavigationMask();
     _loadGeoJson();
+    _loadSeaports();
     _initMarinas();
     _initRoutingServices();
     _loadFirestoreFeatures();
@@ -314,6 +293,43 @@ class _IntegratedMapState extends State<IntegratedMap> {
       log('Error getting location: $e');
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _loadSeaports() async {
+    try {
+      final String jsonString = await rootBundle.loadString(
+        'assets/data/seaports.json',
+      );
+      final List<dynamic> data = json.decode(jsonString) as List<dynamic>;
+      if (mounted) {
+        setState(() {
+          _availablePorts = data.asMap().entries.map((entry) {
+            final port = entry.value as Map<String, dynamic>;
+            final name = port['name'] as String;
+            return PortPoint(
+              id: 'port_${entry.key}',
+              name: _toTitleCase(name),
+              location: LatLng(
+                port['y_latitude'] as double,
+                port['x_longitude'] as double,
+              ),
+              description: port['l_sm'] as String? ?? '',
+            );
+          }).toList();
+        });
+        log('Seaports loaded: ${_availablePorts.length} ports');
+      }
+    } catch (e) {
+      log('Error loading seaports: $e');
+    }
+  }
+
+  String _toTitleCase(String text) {
+    return text
+        .toLowerCase()
+        .split(' ')
+        .map((word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
   }
 
   Future<void> _loadGeoJson() async {
