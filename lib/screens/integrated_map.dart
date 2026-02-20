@@ -15,6 +15,7 @@ import 'package:Bahaar/services/map/navigation_session_manager.dart';
 import 'package:Bahaar/models/navigation/marina_model.dart';
 import 'package:Bahaar/models/navigation/route_model.dart';
 import 'package:Bahaar/widgets/map/enhanced_depth_layer.dart';
+import 'package:Bahaar/widgets/map/territorial_mask_layer.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
 import 'package:Bahaar/widgets/map/fishing_activity_layer.dart';
 import 'package:Bahaar/widgets/map/layer_control_panel.dart';
@@ -87,6 +88,11 @@ class _IntegratedMapState extends State<IntegratedMap> {
   bool _maskInitialized = false;
   bool _showDepthLegend = false;
   double _currentZoom = MapConstants.defaultZoom;
+
+  // Outside-mask warning — shown when the user's location or a tapped point
+  // falls outside the territorial water boundary.
+  String? _outsideMaskWarning;
+  bool _outsideMaskWarningDismissed = false;
 
   // Admin edit state - track painted cells with their brush type for visualization
   final Map<({int row, int col}), AdminBrushType> _paintedCells = {};
@@ -369,7 +375,18 @@ class _IntegratedMapState extends State<IntegratedMap> {
       if (_maskInitialized) {
         final isNavigable = _navigationMask.isPointNavigable(targetLocation);
         if (!isNavigable) {
-          log('Warning: Current location appears to be on land');
+          final isOutside = targetLocation.longitude < _navigationMask.minLon ||
+              targetLocation.longitude > _navigationMask.maxLon ||
+              targetLocation.latitude < _navigationMask.minLat ||
+              targetLocation.latitude > _navigationMask.maxLat;
+          final msg = isOutside
+              ? 'Your location is outside the territorial water boundary'
+              : 'Your location appears to be on land';
+          log('Warning: $msg');
+          setState(() {
+            _outsideMaskWarning = msg;
+            _outsideMaskWarningDismissed = false;
+          });
         } else {
           log('Location validated: on navigable water');
         }
@@ -403,13 +420,37 @@ class _IntegratedMapState extends State<IntegratedMap> {
     if (_currentRoute != null) return;
 
     final isNavigable = _navigationMask.isPointNavigable(point);
-    log('Tapped location (${point.latitude}, ${point.longitude}): ${isNavigable ? "Water" : "Land"}');
 
-    // If port selection is open, only accept water points as destinations
+    // Determine if the point is outside the territorial mask's geographic bounds
+    // (completely outside the area) vs. inside bounds but on land.
+    final isOutsideBounds = point.longitude < _navigationMask.minLon ||
+        point.longitude > _navigationMask.maxLon ||
+        point.latitude < _navigationMask.minLat ||
+        point.latitude > _navigationMask.maxLat;
+
+    log('Tapped (${point.latitude.toStringAsFixed(4)}, ${point.longitude.toStringAsFixed(4)}): '
+        '${isNavigable ? "navigable water" : isOutsideBounds ? "outside territorial bounds" : "land"}');
+
+    if (!isNavigable) {
+      // Show contextual warning — block the pin either way
+      final msg = isOutsideBounds
+          ? 'Outside territorial waters — cannot pin a destination here'
+          : 'Cannot pin a destination on land';
+      setState(() {
+        _outsideMaskWarning = msg;
+        _outsideMaskWarningDismissed = false;
+      });
+    } else {
+      // Clear warning when a valid water point is tapped
+      if (_outsideMaskWarning != null) {
+        setState(() => _outsideMaskWarning = null);
+      }
+    }
+
+    // If port selection is open, only accept navigable water points as destinations
     if (_showPortSelection) {
       if (!isNavigable) {
-        _showMessage('Please select a water destination', Colors.red);
-        return;
+        return; // Pin blocked — warning already shown above
       }
 
       setState(() {
@@ -1129,7 +1170,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
               isVisible: _layerManager.showDepthLayer,
               opacity: _layerManager.depthLayerOpacity,
               visualizationType: _layerManager.depthVisualizationType,
-              navigationMask: _maskInitialized ? _navigationMask : null,
             );
           },
         ),
@@ -1187,10 +1227,14 @@ class _IntegratedMapState extends State<IntegratedMap> {
             },
           ),
 
-        // Navigation mask overlay
-        if (_maskInitialized && _layerManager.showMaskOverlay)
-          PolygonLayer(
-            polygons: _buildMaskOverlay(),
+        // Territorial water mask boundary layer.
+        // This is the authoritative navigable-water boundary — independent of
+        // depth visualization. It shows the outer edge of Bahrain's territorial
+        // waters as a teal border so the user knows where the boundary is.
+        if (_maskInitialized)
+          TerritorialMaskLayer(
+            navigationMask: _navigationMask,
+            isVisible: _layerManager.showMaskOverlay,
           ),
 
         // Painted cells visualization (admin edit mode)
@@ -1378,33 +1422,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
   }
 
-
-  List<Polygon> _buildMaskOverlay() {
-    final polygons = <Polygon>[];
-    final resolution = _navigationMask.resolution;
-    final halfRes = resolution / 2;
-
-    // Get boundary water cells and draw them as small squares
-    final boundaryCells = _navigationMask.getBoundaryWaterCells();
-
-    for (final center in boundaryCells) {
-      polygons.add(
-        Polygon(
-          points: [
-            LatLng(center.latitude - halfRes, center.longitude - halfRes),
-            LatLng(center.latitude + halfRes, center.longitude - halfRes),
-            LatLng(center.latitude + halfRes, center.longitude + halfRes),
-            LatLng(center.latitude - halfRes, center.longitude + halfRes),
-          ],
-          color: Colors.purple.withValues(alpha: 0.15),
-          borderStrokeWidth: 1.0,
-          borderColor: Colors.purple.withValues(alpha: 0.6),
-        ),
-      );
-    }
-
-    return polygons;
-  }
 
   List<Polygon> _buildPaintedCellsOverlay() {
     final polygons = <Polygon>[];
@@ -1865,6 +1882,18 @@ class _IntegratedMapState extends State<IntegratedMap> {
               ),
             ),
 
+
+          // Outside-territorial-boundary warning
+          if (_outsideMaskWarning != null && !_outsideMaskWarningDismissed)
+            Positioned(
+              top: 50,
+              left: 60,
+              right: 60,
+              child: OutsideMaskWarning(
+                message: _outsideMaskWarning!,
+                onDismiss: () => setState(() => _outsideMaskWarningDismissed = true),
+              ),
+            ),
 
           // Weather alert overlay
           if (_activeWeatherWarnings.isNotEmpty && !_weatherAlertDismissed)
