@@ -153,6 +153,34 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? userName,
+    String? phone,
+    String? location,
+  }) async {
+    final firebaseUser = currentFirebaseUser;
+    if (firebaseUser == null || _currentAppUser == null) return;
+
+    final updates = <String, dynamic>{};
+    if (firstName != null) updates['first_name'] = firstName;
+    if (lastName != null) updates['last_name'] = lastName;
+    if (userName != null) updates['user_name'] = userName;
+    if (phone != null) updates['phone'] = phone;
+    if (location != null) updates['location'] = location;
+
+    await _firestoreService.updateUser(firebaseUser.uid, updates);
+    _currentAppUser = _currentAppUser!.copyWith(
+      firstName: firstName ?? _currentAppUser!.firstName,
+      lastName: lastName ?? _currentAppUser!.lastName,
+      userName: userName ?? _currentAppUser!.userName,
+      phone: phone ?? _currentAppUser!.phone,
+      location: location ?? _currentAppUser!.location,
+    );
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     await _AuthenticationService.signOut();
     _currentAppUser = null;

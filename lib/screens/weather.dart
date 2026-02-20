@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utilities/weather_api_service.dart';
+import '../services/world_tides_service.dart';
 import '../models/weather/weather_response_model.dart';
+import '../models/weather/tide_model.dart';
 import '../widgets/weather/weather_list.dart';
 import '../l10n/app_localizations.dart';
 
@@ -14,44 +16,44 @@ class Weather extends StatefulWidget {
 
 class _WeatherPageState extends State<Weather> {
   final weatherService = WeatherApiService();
+  final tidesService = WorldTidesService();
   weather_response_model? weatherData;
+  List<TideEntry> tides = [];
   String? errorMessage;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadWeatherData();
+    _loadAll();
   }
 
-  Future<void> _loadWeatherData() async {
+  Future<void> _loadAll() async {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-      print('Starting to fetch weather data...');
-      final weather_response_model data = await weatherService.getWeather(
-        "Manama",
-        true,
-        7,
-        false,
-      );
-      print('Weather data received successfully');
+      final results = await Future.wait([
+        weatherService.getWeather("Manama", true, 7, false),
+        tidesService.getTides(),
+      ]);
 
       setState(() {
-        weatherData = data;
+        weatherData = results[0] as weather_response_model;
+        tides = results[1] as List<TideEntry>;
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching weather: $e');
       setState(() {
         errorMessage = e.toString();
         isLoading = false;
       });
     }
   }
+
+  Future<void> _loadWeatherData() => _loadAll();
 
   // Get gradient colors based on time of day and weather condition
   List<Color> _getGradientColors() {
@@ -93,10 +95,6 @@ class _WeatherPageState extends State<Weather> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
@@ -157,7 +155,7 @@ class _WeatherPageState extends State<Weather> {
                         ),
                       )
                     : weatherData != null
-                        ? WeatherList(weatherData: weatherData!)
+                        ? WeatherList(weatherData: weatherData!, tides: tides)
                         : Center(
                             child: Text(
                               l10n.noDataAvailable,
