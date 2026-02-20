@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/weather/weather_response_model.dart';
+import '../models/weather/tide_model.dart';
 
 // final apiKey = dotenv.env['weatherAPI'];
 // String city = "Manama";
@@ -131,6 +132,34 @@ class WeatherApiService {
 
       if (e is Exception) rethrow;
       throw Exception("Network or parsing error: $e");
+    }
+  }
+
+  Future<List<TideEntry>> getTides(String city) async {
+    final apiKey = dotenv.env['weatherAPI'];
+    if (apiKey == null || apiKey.isEmpty) return [];
+
+    try {
+      final uri = Uri.parse(
+        'https://api.weatherapi.com/v1/marine.json',
+      ).replace(queryParameters: {'key': apiKey, 'q': city, 'tides': 'yes'});
+
+      final response = await client.get(uri);
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final forecastday = data['forecast']['forecastday'] as List;
+      if (forecastday.isEmpty) return [];
+
+      final tidesRaw = forecastday[0]['tides'] as List?;
+      if (tidesRaw == null || tidesRaw.isEmpty) return [];
+
+      final tideList = tidesRaw[0]['tide'] as List;
+      return tideList
+          .map((t) => TideEntry.fromJson(t as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
     }
   }
 }

@@ -6,7 +6,7 @@ import 'package:Bahaar/screens/weather.dart';
 import 'package:Bahaar/screens/integrated_map.dart';
 import 'package:Bahaar/screens/mariner_harvest.dart';
 import 'package:Bahaar/screens/settings_screen.dart';
-import 'package:Bahaar/widgets/main_page_cards.dart';
+import 'package:Bahaar/screens/profile_screen.dart';
 import 'package:Bahaar/widgets/language_switcher.dart';
 import 'package:Bahaar/screens/fish_recognition_screen.dart';
 import 'package:Bahaar/providers/language_provider.dart';
@@ -73,6 +73,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         elevation: 0,
         actions: [
           const LanguageSwitcher(),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            ),
+            tooltip: 'Profile',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
