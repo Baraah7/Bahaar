@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:Bahaar/models/fishing/fish_probability_model.dart';
 
 /// Manages the state and configuration of all map layers
 /// Provides a centralized way to control layer visibility, opacity, and settings
@@ -24,6 +25,15 @@ class MapLayerManager extends ChangeNotifier {
   bool _showFishingActivityTracks = true;
   bool _showFishingActivityEvents = true;
   bool _showFishingActivityHeatmap = true;
+
+  // Fish probability heatmap
+  bool _showFishProbabilityHeatmap = false;
+  Set<FishSpecies> _selectedSpecies = {
+    FishSpecies.giltHeadBream,
+    FishSpecies.horseMackerel,
+    FishSpecies.seaBass,
+    FishSpecies.shrimp,
+  };
 
   // Navigation mask
   bool _showMaskOverlay = false;
@@ -54,6 +64,8 @@ class MapLayerManager extends ChangeNotifier {
   bool get showFishingActivityTracks => _showFishingActivityTracks;
   bool get showFishingActivityEvents => _showFishingActivityEvents;
   bool get showFishingActivityHeatmap => _showFishingActivityHeatmap;
+  bool get showFishProbabilityHeatmap => _showFishProbabilityHeatmap;
+  Set<FishSpecies> get selectedSpecies => Set.unmodifiable(_selectedSpecies);
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
   bool get isFeatureEditMode => _isFeatureEditMode;
@@ -160,6 +172,22 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
+  set showFishProbabilityHeatmap(bool value) {
+    if (_showFishProbabilityHeatmap != value) {
+      _showFishProbabilityHeatmap = value;
+      notifyListeners();
+    }
+  }
+
+  void toggleSpecies(FishSpecies species) {
+    if (_selectedSpecies.contains(species)) {
+      _selectedSpecies = Set.from(_selectedSpecies)..remove(species);
+    } else {
+      _selectedSpecies = Set.from(_selectedSpecies)..add(species);
+    }
+    notifyListeners();
+  }
+
   set showMaskOverlay(bool value) {
     if (_showMaskOverlay != value) {
       _showMaskOverlay = value;
@@ -237,6 +265,13 @@ class MapLayerManager extends ChangeNotifier {
     _showFishingActivityTracks = true;
     _showFishingActivityEvents = true;
     _showFishingActivityHeatmap = true;
+    _showFishProbabilityHeatmap = false;
+    _selectedSpecies = {
+      FishSpecies.giltHeadBream,
+      FishSpecies.horseMackerel,
+      FishSpecies.seaBass,
+      FishSpecies.shrimp,
+    };
     _showMaskOverlay = false;
     _showLayerControls = false;
     _isFeatureEditMode = false;
