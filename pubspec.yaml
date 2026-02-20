@@ -52,6 +52,8 @@ flutter:
     - assets/data/marinas.geojson
     - assets/data/fishing_activity_sample.geojson
     - assets/data/fish_probability_fallback.json
+    - assets/data/seaports.json
+    - assets/data/protected-areas.json
     - assets/navigation/
     - assets/models/
     - lib/widgets/map/mask/bahrain_territorial_waters.tif
