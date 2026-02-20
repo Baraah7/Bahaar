@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:Bahaar/models/fishing/fish_probability_model.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
 
@@ -53,6 +54,8 @@ class LayerControlPanel extends StatelessWidget {
             _buildGeoJsonSection(),
             const Divider(),
             _buildFishingActivitySection(),
+            const Divider(),
+            _buildFishProbabilitySection(),
             const Divider(),
             _buildNavigationMaskSection(),
           ],
@@ -407,6 +410,112 @@ class LayerControlPanel extends StatelessWidget {
         const Divider(),
         _buildAdminSection(),
       ],
+    );
+  }
+
+  Widget _buildFishProbabilitySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Fish Probability',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          title: const Text('Show Fish Heatmap', style: TextStyle(fontSize: 13)),
+          subtitle: Text(
+            layerManager.showFishProbabilityHeatmap
+                ? 'CMEMS SST + Chlorophyll'
+                : 'Disabled',
+            style: const TextStyle(fontSize: 10),
+          ),
+          value: layerManager.showFishProbabilityHeatmap,
+          onChanged: (val) => layerManager.showFishProbabilityHeatmap = val,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+        if (layerManager.showFishProbabilityHeatmap) ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Species',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                ...FishSpecies.values.map((species) {
+                  final isSelected =
+                      layerManager.selectedSpecies.contains(species);
+                  return SwitchListTile(
+                    title: Row(
+                      children: [
+                        Icon(Icons.set_meal,
+                            size: 14, color: species.color),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${species.englishName}  ${species.arabicName}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    value: isSelected,
+                    onChanged: (_) => layerManager.toggleSpecies(species),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  );
+                }),
+                const SizedBox(height: 6),
+                _buildProbabilityLegend(),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProbabilityLegend() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.teal.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Probability',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          _legendRow(Colors.grey.shade300, 'Low  (<40%)'),
+          _legendRow(Colors.teal.withValues(alpha: 0.35), 'Moderate  (40–60%)'),
+          _legendRow(Colors.teal.withValues(alpha: 0.52), 'High  (60–80%)'),
+          _legendRow(Colors.teal.withValues(alpha: 0.65), 'Very High  (>80%)'),
+          const SizedBox(height: 4),
+          const Text(
+            'Colour varies by species',
+            style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendRow(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Container(width: 16, height: 10, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 9)),
+        ],
+      ),
     );
   }
 
