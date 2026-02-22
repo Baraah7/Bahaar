@@ -449,6 +449,29 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
     // If port selection is open, only accept navigable water points as destinations
     if (_showPortSelection) {
+      // Check protected/restricted areas FIRST — works for all 11 areas,
+      // including terrestrial ones where isNavigable would be false.
+      final areaName = _getProtectedAreaAt(point);
+      if (areaName != null) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: const Icon(Icons.shield_outlined, color: Colors.orange, size: 40),
+            title: const Text('Protected Area'),
+            content: Text(
+              'This location is inside "$areaName".\n\nDestinations inside protected areas are not permitted. Please choose a different location.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Choose Another Location'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       if (!isNavigable) {
         return; // Pin blocked — warning already shown above
       }
@@ -456,7 +479,14 @@ class _IntegratedMapState extends State<IntegratedMap> {
       setState(() {
         _seaDestination = point;
       });
-      _showMessage('Sea destination set. Select a port to start from.', Colors.blue);
+
+      // If a port is already selected, calculate the route immediately —
+      // the user only needs to pick a port once and a destination once.
+      if (_selectedPort != null) {
+        _calculatePortToSeaRoute();
+      } else {
+        _showMessage('Destination set. Now tap a port on the map to start from.', Colors.blue);
+      }
       return;
     }
   }
@@ -995,6 +1025,30 @@ class _IntegratedMapState extends State<IntegratedMap> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  /// Returns the name of the protected or restricted area that contains [point],
+  /// or null if the point is not inside any such area.
+  String? _getProtectedAreaAt(LatLng point) {
+    if (_geoJsonBuilder == null) return null;
+
+    for (final type in ['protected_zone', 'restricted_area']) {
+      for (final feature in _geoJsonBuilder!.getFeaturesByType(type)) {
+        try {
+          final coords = feature['geometry']['coordinates'][0] as List;
+          final polygon = coords
+              .map((c) => LatLng(
+                    (c[1] as num).toDouble(),
+                    (c[0] as num).toDouble(),
+                  ))
+              .toList();
+          if (GeometryUtils.isPointInPolygon(point, polygon)) {
+            return feature['properties']['name'] as String? ?? 'Protected Area';
+          }
+        } catch (_) {}
+      }
+    }
+    return null;
   }
 
   String _formatDistance(double meters) {
