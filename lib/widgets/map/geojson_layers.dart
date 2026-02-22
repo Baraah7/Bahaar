@@ -48,7 +48,7 @@ class GeoJsonLayerBuilder {
       final name = feature['properties']['name'] as String?;
 
       return Marker(
-        point: LatLng(coords[1], coords[0]), // GeoJSON is [lng, lat]
+        point: LatLng((coords[1] as num).toDouble(), (coords[0] as num).toDouble()), // GeoJSON is [lng, lat]
         width: 30,
         height: 30,
         child: Tooltip(
@@ -77,7 +77,7 @@ class GeoJsonLayerBuilder {
 
       return Polyline(
         points: coords.map((coord) {
-          return LatLng(coord[1], coord[0]); // GeoJSON is [lng, lat]
+          return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble()); // GeoJSON is [lng, lat]
         }).toList(),
         strokeWidth: type == 'shipping_lane' ? 3.0 : 2.0,
         color: type == 'shipping_lane'
@@ -101,7 +101,7 @@ class GeoJsonLayerBuilder {
 
       polygons.add(Polygon(
         points: coords.map((coord) {
-          return LatLng(coord[1], coord[0]);
+          return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
         }).toList(),
         color: type == 'protected_zone'
             ? Colors.red.withValues(alpha: 0.15)
@@ -128,7 +128,7 @@ class GeoJsonLayerBuilder {
 
       polygons.add(Polygon(
         points: coords.map((coord) {
-          return LatLng(coord[1], coord[0]);
+          return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
         }).toList(),
         color: Colors.green.withValues(alpha: 0.15),
         borderStrokeWidth: 2.0,
@@ -151,7 +151,7 @@ class GeoJsonLayerBuilder {
 
       polygons.add(Polygon(
         points: coords.map((coord) {
-          return LatLng(coord[1], coord[0]);
+          return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
         }).toList(),
         color: Colors.red.withValues(alpha: 0.25),
         borderStrokeWidth: 3.0,
