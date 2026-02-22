@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/fish_classification_provider.dart';
+import '../providers/language_provider.dart';
+import '../models/fishing/fish_probability_model.dart';
 import '../l10n/app_localizations.dart';
 
 class FishRecognitionScreen extends ConsumerStatefulWidget {
@@ -427,7 +429,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result.className,
+                        ref.watch(languageProvider).languageCode == 'ar'
+                            ? result.arabicName
+                            : result.className,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -650,12 +654,10 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   Widget _buildSupportedSpecies(AppLocalizations l10n) {
-    final species = [
-      'Gilt-Head Bream',
-      'Horse Mackerel',
-      'Sea Bass',
-      'Shrimp',
-    ];
+    final isArabic = ref.watch(languageProvider).languageCode == 'ar';
+    final species = FishSpecies.values
+        .map((s) => isArabic ? s.arabicName : s.englishName)
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
