@@ -869,11 +869,17 @@ class _IntegratedMapState extends State<IntegratedMap> {
         return;
       }
 
-      // Calculate marine route from port to sea destination
+      // Calculate marine route from port to sea destination,
+      // blocking all protected zones and restricted areas.
       final marineSegment = await _marineService.findMarineRoute(
         origin: _selectedPort!.location,
         destination: _seaDestination!,
-        restrictedAreas: [], // TODO: Add restricted areas support
+        restrictedAreas: [
+          if (_geoJsonBuilder != null) ...[
+            ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
+            ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
+          ],
+        ],
       );
 
       if (marineSegment == null) {
