@@ -53,6 +53,8 @@ class LayerControlPanel extends StatelessWidget {
             const Divider(),
             _buildGeoJsonSection(),
             const Divider(),
+            _buildExclusionZonesSection(),
+            const Divider(),
             _buildFishingActivitySection(),
             const Divider(),
             _buildFishProbabilitySection(),
@@ -300,6 +302,33 @@ class LayerControlPanel extends StatelessWidget {
       onChanged: onChanged,
       dense: true,
       contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildExclusionZonesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Oil/Gas Exclusion Zones',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          title: const Text('Show Exclusion Zones', style: TextStyle(fontSize: 13)),
+          subtitle: Text(
+            layerManager.showExclusionZones
+                ? '500 m UNCLOS safety buffers'
+                : 'Hidden (safety rules still apply)',
+            style: const TextStyle(fontSize: 10),
+          ),
+          secondary: const Icon(Icons.oil_barrel, size: 18, color: Colors.red),
+          value: layerManager.showExclusionZones,
+          onChanged: (val) => layerManager.showExclusionZones = val,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+      ],
     );
   }
 

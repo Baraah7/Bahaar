@@ -161,7 +161,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _initRoutingServices();
     _loadFirestoreFeatures();
     _featureEditState.addListener(_onFeatureEditUpdate);
-    _exclusionZoneService.initialize();
     _aisService = AisService(
       aishubUsername: dotenv.env['AISHUB_USERNAME'] ?? '',
     );
@@ -197,6 +196,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
         geoJsonBuilder: _geoJsonBuilder!,
         weatherService: _weatherService,
       );
+      // Exclusion zones are always hard-blocked during routing
+      _routeCoordinator.extraRestrictedAreas =
+          _exclusionZoneService.buildExclusionPolygons();
 
       // Initialize navigation session manager
       _navigationManager = NavigationSessionManager(
@@ -297,6 +299,14 @@ class _IntegratedMapState extends State<IntegratedMap> {
       if (mounted) {
         setState(() => _maskInitialized = true);
         log('Navigation mask initialized successfully');
+        // Drop any exclusion zones that ended up on land.
+        // Use a 5-cell neighbourhood search so a zone whose exact centre
+        // rounds to a land cell (grid rounding) is still kept if water
+        // exists nearby.
+        await _exclusionZoneService.initialize();
+        _exclusionZoneService.filterByWater(
+          (p) => _navigationMask.findNearestWaterPoint(p, maxSearchRadius: 5) != null,
+        );
       }
     } catch (e) {
       log('Error initializing navigation mask: $e');
@@ -504,6 +514,30 @@ class _IntegratedMapState extends State<IntegratedMap> {
       if (_outsideMaskWarning != null) {
         setState(() => _outsideMaskWarning = null);
       }
+    }
+
+    // Block pins inside oil/gas exclusion zones (always, regardless of mode)
+    final violation = _exclusionZoneService.checkViolation(point);
+    if (violation != null) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.oil_barrel, color: Colors.red, size: 40),
+          title: const Text('Exclusion Zone'),
+          content: Text(
+            'This location is inside the ${violation.zone.name} safety exclusion zone '
+            '(${violation.distanceMeters.round()} m from platform).\n\n'
+            'Destinations inside the 500 m UNCLOS safety buffer are not permitted.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Choose Another Location'),
+            ),
+          ],
+        ),
+      );
+      return;
     }
 
     // If port selection is open, only accept navigable water points as destinations
@@ -929,7 +963,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
       }
 
       // Calculate marine route from port to sea destination,
-      // blocking all protected zones and restricted areas.
+      // blocking all protected zones, restricted areas, and exclusion zones.
       final marineSegment = await _marineService.findMarineRoute(
         origin: _selectedPort!.location,
         destination: _seaDestination!,
@@ -938,6 +972,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
             ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
             ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
           ],
+          ..._exclusionZoneService.buildExclusionPolygons(),
         ],
       );
 
@@ -1392,7 +1427,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
         // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
         ExclusionZoneLayer(
           service: _exclusionZoneService,
-          isVisible: true,
+          isVisible: _layerManager.showExclusionZones,
         ),
 
         // Territorial water mask boundary layer.
