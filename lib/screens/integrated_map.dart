@@ -37,6 +37,14 @@ import 'package:Bahaar/models/map/editable_map_feature.dart';
 import 'package:Bahaar/models/map/feature_edit_state.dart';
 import 'package:Bahaar/utilities/geometry_utils.dart';
 import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:Bahaar/services/map/exclusion_zone_service.dart';
+import 'package:Bahaar/widgets/map/exclusion_zone_layer.dart';
+import 'package:Bahaar/services/sos_service.dart';
+import 'package:Bahaar/widgets/map/sos_button.dart';
+import 'package:Bahaar/services/ais_service.dart';
+import 'package:Bahaar/models/ais_model.dart';
+import 'package:Bahaar/widgets/map/ais_vessel_layer.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -79,6 +87,21 @@ class _IntegratedMapState extends State<IntegratedMap> {
   // Weather state
   List<WeatherSafetyAssessment> _activeWeatherWarnings = [];
   bool _weatherAlertDismissed = false;
+
+  // Exclusion zone state
+  final ExclusionZoneService _exclusionZoneService = ExclusionZoneService();
+  ExclusionZoneViolation? _activeExclusionViolation;
+  ExclusionZone? _approachingExclusionZone;
+  double _approachingExclusionZoneDistance = 0;
+  bool _exclusionAlertDismissed = false;
+
+  // SOS state
+  final SosService _sosService = SosService();
+
+  // AIS state
+  late final AisService _aisService;
+  CpaResult? _topCpaAlert;
+  bool _aisAlertDismissed = false;
 
   // State
   bool _mapReady = false;
@@ -138,6 +161,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _initRoutingServices();
     _loadFirestoreFeatures();
     _featureEditState.addListener(_onFeatureEditUpdate);
+    _exclusionZoneService.initialize();
+    _aisService = AisService(
+      aishubUsername: dotenv.env['AISHUB_USERNAME'] ?? '',
+    );
+    _aisService.addListener(_onAisUpdate);
+    _aisService.initialize();
   }
 
   Future<void> _initRoutingServices() async {
@@ -191,6 +220,28 @@ class _IntegratedMapState extends State<IntegratedMap> {
     }
   }
 
+  void _onAisUpdate() {
+    if (!mounted) return;
+    // Pick the highest-risk CPA alert to show in the banner
+    final alerts = _aisService.cpaAlerts;
+    setState(() {
+      _topCpaAlert = alerts.isNotEmpty ? alerts.first : null;
+      if (_topCpaAlert != null) _aisAlertDismissed = false;
+    });
+
+    // Also feed own position into the CPA calculator whenever AIS updates
+    final lat = _locationData?.latitude;
+    final lon = _locationData?.longitude;
+    if (lat != null && lon != null) {
+      _aisService.updateOwnPosition(
+        lat: lat,
+        lon: lon,
+        sogKnots: 0,  // stationary until we have own-vessel SOG/COG
+        cogDeg: 0,
+      );
+    }
+  }
+
   void _onFeatureEditUpdate() {
     if (mounted) {
       setState(() {});
@@ -231,6 +282,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _fishingActivityService.dispose();
     _fishProbabilityService.dispose();
     _layerManager.dispose();
+    _aisService.removeListener(_onAisUpdate);
+    _aisService.dispose();
     super.dispose();
   }
 
@@ -294,6 +347,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
       if (mounted) {
         setState(() {});
         _moveToLocationIfReady();
+        if (_locationData?.latitude != null && _locationData?.longitude != null) {
+          _checkExclusionZones(LatLng(
+            _locationData!.latitude!,
+            _locationData!.longitude!,
+          ));
+        }
       }
     } catch (e) {
       log('Error getting location: $e');
@@ -1016,6 +1075,43 @@ class _IntegratedMapState extends State<IntegratedMap> {
     }
   }
 
+  void _checkExclusionZones(LatLng position) {
+    if (!_exclusionZoneService.isInitialized) return;
+
+    final violation = _exclusionZoneService.checkViolation(position);
+    ExclusionZone? approaching;
+    double approachDist = 0;
+
+    if (violation == null) {
+      approaching = _exclusionZoneService.checkApproach(
+        position,
+        warningMeters: 2000,
+      );
+      if (approaching != null) {
+        approachDist = _exclusionZoneService.distanceTo(position, approaching);
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _activeExclusionViolation = violation;
+        _approachingExclusionZone = approaching;
+        _approachingExclusionZoneDistance = approachDist;
+        if (violation != null) _exclusionAlertDismissed = false;
+      });
+    }
+  }
+
+  Future<SosAlert> _sendSos() async {
+    final lat = _locationData?.latitude;
+    final lon = _locationData?.longitude;
+    final position = (lat != null && lon != null)
+        ? LatLng(lat, lon)
+        : const LatLng(26.2235, 50.5876); // Bahrain fallback
+
+    return _sosService.sendSos(position: position);
+  }
+
   void _showMessage(String message, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1280,6 +1376,18 @@ class _IntegratedMapState extends State<IntegratedMap> {
               );
             },
           ),
+
+        // AIS vessels with projected paths
+        AisVesselLayer(
+          service: _aisService,
+          isVisible: true,
+        ),
+
+        // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
+        ExclusionZoneLayer(
+          service: _exclusionZoneService,
+          isVisible: true,
+        ),
 
         // Territorial water mask boundary layer.
         // This is the authoritative navigable-water boundary — independent of
@@ -1949,6 +2057,33 @@ class _IntegratedMapState extends State<IntegratedMap> {
               ),
             ),
 
+          // Exclusion zone violation alert (inside 500m buffer)
+          if (_activeExclusionViolation != null && !_exclusionAlertDismissed)
+            ExclusionZoneAlert(
+              zone: _activeExclusionViolation!.zone,
+              distanceMeters: _activeExclusionViolation!.distanceMeters,
+              isViolation: true,
+              onDismiss: () => setState(() => _exclusionAlertDismissed = true),
+            ),
+
+          // Exclusion zone approach warning (within 2km, not yet inside)
+          if (_activeExclusionViolation == null &&
+              _approachingExclusionZone != null &&
+              !_exclusionAlertDismissed)
+            ExclusionZoneAlert(
+              zone: _approachingExclusionZone!,
+              distanceMeters: _approachingExclusionZoneDistance,
+              isViolation: false,
+              onDismiss: () => setState(() => _exclusionAlertDismissed = true),
+            ),
+
+          // AIS collision alert
+          if (_topCpaAlert != null && !_aisAlertDismissed)
+            AisCollisionAlert(
+              cpa: _topCpaAlert!,
+              onDismiss: () => setState(() => _aisAlertDismissed = true),
+            ),
+
           // Weather alert overlay
           if (_activeWeatherWarnings.isNotEmpty && !_weatherAlertDismissed)
             WeatherAlertOverlay(
@@ -1985,6 +2120,13 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 ),
               ),
             ),
+
+          // SOS emergency button (bottom left)
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: SosButton(onSosConfirmed: _sendSos),
+          ),
 
           // Zoom controls (bottom right)
           Positioned(
