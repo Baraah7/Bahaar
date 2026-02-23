@@ -166,16 +166,17 @@ class MarineSafetyThresholds {
       warnings.add('Moderate waves: ${data.waveHeight.toStringAsFixed(1)}m');
     }
 
-    // Evaluate wind speed
+    // Evaluate wind speed (convert km/h → knots for display)
+    final windKnots = data.windSpeed / 1.852;
     if (data.windSpeed >= windSpeedBlocked) {
       worstLevel = SafetyLevel.blocked;
-      warnings.add('Wind speed ${data.windSpeed.toStringAsFixed(0)} km/h exceeds safe limit');
+      warnings.add('Wind ${windKnots.toStringAsFixed(0)} kn exceeds safe limit');
     } else if (data.windSpeed >= windSpeedDangerous) {
       worstLevel = _worst(worstLevel, SafetyLevel.dangerous);
-      warnings.add('Strong wind: ${data.windSpeed.toStringAsFixed(0)} km/h');
+      warnings.add('Strong wind: ${windKnots.toStringAsFixed(0)} kn');
     } else if (data.windSpeed >= windSpeedCaution) {
       worstLevel = _worst(worstLevel, SafetyLevel.caution);
-      warnings.add('Moderate wind: ${data.windSpeed.toStringAsFixed(0)} km/h');
+      warnings.add('Moderate wind: ${windKnots.toStringAsFixed(0)} kn');
     }
 
     // Evaluate visibility (lower is worse)

@@ -97,10 +97,16 @@ class NavigationConstants {
   static const double waveHeightDangerous = 2.0;
   static const double waveHeightBlocked = 3.0;
 
-  /// Wind speed thresholds (km/h)
-  static const double windSpeedCautionKph = 30.0;
-  static const double windSpeedDangerousKph = 45.0;
-  static const double windSpeedBlockedKph = 60.0;
+  /// Wind speed thresholds — based on maritime small-vessel safety guidance
+  /// Caution: 25 kn, Dangerous: 35 kn, Blocked: 50 kn
+  static const double windSpeedCautionKph = 46.3;   // 25 knots
+  static const double windSpeedDangerousKph = 64.8; // 35 knots
+  static const double windSpeedBlockedKph = 92.6;   // 50 knots
+
+  /// Wind speed thresholds in knots (for display)
+  static const double windSpeedCautionKnots = 25.0;
+  static const double windSpeedDangerousKnots = 35.0;
+  static const double windSpeedBlockedKnots = 50.0;
 
   /// Visibility thresholds (meters)
   static const double visibilityCautionMeters = 5000.0;
