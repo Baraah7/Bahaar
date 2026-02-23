@@ -411,9 +411,14 @@ class HybridRouteCoordinator {
     return _navigationMask.validateRoute(geometry);
   }
 
-  /// Get restricted area polygons from GeoJSON
+  /// Get restricted area polygons from GeoJSON.
+  /// Includes both explicitly restricted areas AND all protected zones so
+  /// the A* pathfinder treats every protected area as a hard block.
   List<Polygon> _getRestrictedAreas() {
-    return _geoJsonBuilder.buildRestrictedAreas(isVisible: true);
+    return [
+      ..._geoJsonBuilder.buildRestrictedAreas(isVisible: true),
+      ..._geoJsonBuilder.buildProtectedZones(isVisible: true),
+    ];
   }
 
   /// Calculate route metrics
