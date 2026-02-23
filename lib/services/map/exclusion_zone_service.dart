@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 /// Represents a single offshore oil/gas installation with its 500m safety buffer.
@@ -117,6 +118,49 @@ class ExclusionZoneService {
       }
     }
     return null;
+  }
+
+  /// Remove zones that have no navigable water within [searchRadiusCells]
+  /// grid cells of their centre.
+  ///
+  /// Uses [hasNearbyWater] — pass `_navigationMask.findNearestWaterPoint`
+  /// (or similar) so that a zone is kept as long as water exists nearby,
+  /// even if the exact centre coordinate falls on a land cell due to grid
+  /// rounding.
+  ///
+  /// ```dart
+  /// _exclusionZoneService.filterByWater(
+  ///   (p) => _navigationMask.findNearestWaterPoint(p, maxSearchRadius: 5) != null,
+  /// );
+  /// ```
+  void filterByWater(bool Function(LatLng) hasNearbyWater) {
+    _zones.removeWhere((zone) => !hasNearbyWater(zone.center));
+    log('ExclusionZoneService: ${_zones.length} zones after land filter');
+  }
+
+  /// Build approximate circular polygons for each zone so the marine
+  /// pathfinder can treat them as hard-blocked areas.
+  ///
+  /// [pointCount] controls polygon resolution (default 16 is plenty for
+  /// the ~111 m grid cells used by the A* planner).
+  List<Polygon> buildExclusionPolygons({int pointCount = 16}) {
+    return _zones.map((zone) {
+      const metersPerDegLat = 111319.9;
+      final metersPerDegLon =
+          metersPerDegLat * math.cos(zone.center.latitude * math.pi / 180);
+
+      final points = List.generate(pointCount, (i) {
+        final angle = 2 * math.pi * i / pointCount;
+        final dLat = (zone.bufferMeters * math.cos(angle)) / metersPerDegLat;
+        final dLon = (zone.bufferMeters * math.sin(angle)) / metersPerDegLon;
+        return LatLng(
+          zone.center.latitude + dLat,
+          zone.center.longitude + dLon,
+        );
+      });
+
+      return Polygon(points: points);
+    }).toList();
   }
 
   /// Public distance in metres between [position] and a zone's centre.

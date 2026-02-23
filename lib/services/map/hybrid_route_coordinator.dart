@@ -21,6 +21,10 @@ class HybridRouteCoordinator {
   final GeoJsonLayerBuilder _geoJsonBuilder;
   final MarineWeatherService? _weatherService;
 
+  /// Additional polygons that are always hard-blocked during marine routing
+  /// (e.g. oil/gas platform exclusion zones).
+  List<Polygon> extraRestrictedAreas = [];
+
   HybridRouteCoordinator({
     required OsrmRoutingService osrmService,
     required MarinePathfindingService marineService,
@@ -418,6 +422,7 @@ class HybridRouteCoordinator {
     return [
       ..._geoJsonBuilder.buildRestrictedAreas(isVisible: true),
       ..._geoJsonBuilder.buildProtectedZones(isVisible: true),
+      ...extraRestrictedAreas,
     ];
   }
 

@@ -35,6 +35,9 @@ class MapLayerManager extends ChangeNotifier {
     FishSpecies.shrimp,
   };
 
+  // Exclusion zones (oil/gas platforms)
+  bool _showExclusionZones = true;
+
   // Navigation mask
   bool _showMaskOverlay = false;
 
@@ -66,6 +69,7 @@ class MapLayerManager extends ChangeNotifier {
   bool get showFishingActivityHeatmap => _showFishingActivityHeatmap;
   bool get showFishProbabilityHeatmap => _showFishProbabilityHeatmap;
   Set<FishSpecies> get selectedSpecies => Set.unmodifiable(_selectedSpecies);
+  bool get showExclusionZones => _showExclusionZones;
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
   bool get isFeatureEditMode => _isFeatureEditMode;
@@ -188,6 +192,13 @@ class MapLayerManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  set showExclusionZones(bool value) {
+    if (_showExclusionZones != value) {
+      _showExclusionZones = value;
+      notifyListeners();
+    }
+  }
+
   set showMaskOverlay(bool value) {
     if (_showMaskOverlay != value) {
       _showMaskOverlay = value;
@@ -272,6 +283,7 @@ class MapLayerManager extends ChangeNotifier {
       FishSpecies.seaBass,
       FishSpecies.shrimp,
     };
+    _showExclusionZones = true;
     _showMaskOverlay = false;
     _showLayerControls = false;
     _isFeatureEditMode = false;
