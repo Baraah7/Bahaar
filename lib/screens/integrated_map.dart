@@ -45,6 +45,8 @@ import 'package:Bahaar/services/ais_service.dart';
 import 'package:Bahaar/models/ais_model.dart';
 import 'package:Bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:Bahaar/widgets/map/bahaar_overlay_layer.dart';
+import 'package:Bahaar/screens/prediction_screen.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -1616,12 +1618,29 @@ class _IntegratedMapState extends State<IntegratedMap> {
             ],
           ),
 
+        // Bahaar fishing zones, MPA circles, and confirmed spot markers
+        BahaarOverlayLayer(
+          onGetPrediction: _navigateToPrediction,
+        ),
+
         // User location marker
         if (_locationData != null)
           MarkerLayer(
             markers: [_buildUserLocationMarker()],
           ),
       ],
+    );
+  }
+
+  void _navigateToPrediction(LatLng latLng, String speciesId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PredictionScreen(
+          initialLatLng: latLng,
+          initialSpeciesId: speciesId,
+        ),
+      ),
     );
   }
 

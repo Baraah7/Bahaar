@@ -10,6 +10,9 @@ import 'package:Bahaar/screens/profile_screen.dart';
 import 'package:Bahaar/widgets/language_switcher.dart';
 import 'package:Bahaar/screens/fish_recognition_screen.dart';
 import 'package:Bahaar/providers/language_provider.dart';
+import 'package:Bahaar/screens/prediction_screen.dart';
+import 'package:Bahaar/screens/report_screen.dart';
+import 'package:Bahaar/screens/species_guide_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'app_start.dart';
 
@@ -106,11 +109,18 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           Weather(),
           FishRecognitionScreen(),
           MarinerHarvestPage(),
+          PredictionScreen(),
+          ReportScreen(),
+          SpeciesGuideScreen(),
         ]
       ),
       
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF0D4F54),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white60,
         onTap: (index) {
           _controller.animateToPage(
             index,
@@ -138,6 +148,21 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             icon: Icon(Icons.sailing),
             label: 'Mariner Harvest',
             backgroundColor: Color(0xFF0D4F54)
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'تنبؤات',
+            backgroundColor: Color(0xFF0D4F54),
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle),
+            label: 'تقرير',
+            backgroundColor: Color(0xFF0D4F54),
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.set_meal),
+            label: 'دليل الأسماك',
+            backgroundColor: Color(0xFF0D4F54),
           ),
         ],
       ),
