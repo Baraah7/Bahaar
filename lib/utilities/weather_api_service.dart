@@ -71,7 +71,9 @@ class WeatherApiService {
     // but both must be both either null or both not
     if (alert == null && days == null) {
        type = "current";
-    } else    type = "forecast";
+    } else {
+      type = "forecast";
+    }
   
     try {
       print('=== Building API Request ===');
