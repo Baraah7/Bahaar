@@ -24,8 +24,8 @@ class FishingActivityService {
   String? _gfwApiToken;
 
   // Cached data
-  List<VesselTrack> _tracks = [];
-  List<FishingEvent> _events = [];
+  final List<VesselTrack> _tracks = [];
+  final List<FishingEvent> _events = [];
   List<FishingIntensityCell> _intensityCells = [];
   final Map<double, List<VesselTrack>> _simplifiedTrackCache = {};
 
