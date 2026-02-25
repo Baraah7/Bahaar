@@ -45,6 +45,9 @@ import 'package:Bahaar/services/ais_service.dart';
 import 'package:Bahaar/models/ais_model.dart';
 import 'package:Bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:Bahaar/widgets/map/depth_soundings_layer.dart';
+import 'package:Bahaar/services/offline/connectivity_service.dart';
+import 'package:Bahaar/services/fishing/trip_service.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -166,6 +169,11 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
     _aisService.addListener(_onAisUpdate);
     _aisService.initialize();
+
+    // Sync pending offline data when connectivity is restored
+    ConnectivityService.instance.onConnectivityChanged.listen((online) {
+      if (online) TripService.instance.syncPendingToFirestore();
+    });
   }
 
   Future<void> _initRoutingServices() async {
@@ -1353,6 +1361,10 @@ class _IntegratedMapState extends State<IntegratedMap> {
             subdomains: MapConstants.osmSubdomains,
           ),
 
+        // GEBCO depth soundings layer (toggled from layer panel)
+        if (_layerManager.showDepthSoundings)
+          const DepthSoundingsLayer(),
+
         // Enhanced depth layer with multiple visualization types
         ListenableBuilder(
           listenable: _layerManager,
@@ -2157,6 +2169,32 @@ class _IntegratedMapState extends State<IntegratedMap> {
                         ],
                       ),
                     ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Offline indicator banner (top centre)
+          if (!ConnectivityService.instance.isOnline)
+            Positioned(
+              top: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.wifi_off, color: Colors.white, size: 14),
+                      SizedBox(width: 6),
+                      Text('Offline — map tiles cached',
+                          style: TextStyle(color: Colors.white, fontSize: 12)),
+                    ],
                   ),
                 ),
               ),
