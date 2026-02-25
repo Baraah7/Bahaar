@@ -4,6 +4,8 @@ import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
 import '../../models/weather/tide_model.dart';
+import '../../utilities/celestial_calculator.dart';
+import 'celestial_almanac_card.dart';
 
 // Reusable styles and colors
 class _WeatherStyles {
@@ -152,6 +154,8 @@ class WeatherList extends StatelessWidget {
                 _buildSunMoonCard(),
                 const SizedBox(height: 16),
                 _buildTidesCard(),
+                const SizedBox(height: 16),
+                _buildCelestialAlmanac(),
               ],
             ),
           ),
@@ -666,6 +670,15 @@ class WeatherList extends StatelessWidget {
       'last quarter' => Icons.brightness_3,
       _ => Icons.nightlight_round,
     };
+  }
+
+  Widget _buildCelestialAlmanac() {
+    final now = DateTime.now();
+    final lat = weatherData.location.lat;
+    final lon = weatherData.location.lon;
+    final solar = CelestialCalculator.calculateSolarDay(lat, lon, now);
+    final lunar = CelestialCalculator.calculateLunarDay(lat, lon, now);
+    return CelestialAlmanacCard(solar: solar, lunar: lunar);
   }
 
   Widget _buildTidesCard() {

@@ -60,6 +60,8 @@ class LayerControlPanel extends StatelessWidget {
             _buildFishProbabilitySection(),
             const Divider(),
             _buildNavigationMaskSection(),
+            const Divider(),
+            _buildDepthSoundingsSection(),
           ],
         ),
       ),
@@ -545,6 +547,33 @@ class LayerControlPanel extends StatelessWidget {
           Text(label, style: const TextStyle(fontSize: 9)),
         ],
       ),
+    );
+  }
+
+  Widget _buildDepthSoundingsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Depth Soundings (GEBCO)',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          title: const Text('Show Depth Soundings', style: TextStyle(fontSize: 13)),
+          subtitle: Text(
+            layerManager.showDepthSoundings
+                ? 'GEBCO bathymetric tiles'
+                : 'Disabled',
+            style: const TextStyle(fontSize: 10),
+          ),
+          secondary: const Icon(Icons.water, size: 18, color: Colors.blueAccent),
+          value: layerManager.showDepthSoundings,
+          onChanged: (val) => layerManager.showDepthSoundings = val,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+      ],
     );
   }
 

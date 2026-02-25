@@ -7,9 +7,14 @@ import 'package:Bahaar/screens/integrated_map.dart';
 import 'package:Bahaar/screens/mariner_harvest.dart';
 import 'package:Bahaar/screens/settings_screen.dart';
 import 'package:Bahaar/screens/profile_screen.dart';
+import 'package:Bahaar/screens/fishing_log_screen.dart';
 import 'package:Bahaar/widgets/language_switcher.dart';
 import 'package:Bahaar/screens/fish_recognition_screen.dart';
 import 'package:Bahaar/providers/language_provider.dart';
+import 'package:Bahaar/services/offline/connectivity_service.dart';
+import 'package:Bahaar/services/offline/database_service.dart';
+import 'package:Bahaar/services/notifications/notification_service.dart';
+import 'package:Bahaar/services/notifications/weather_monitor.dart';
 import 'l10n/app_localizations.dart';
 import 'app_start.dart';
 
@@ -17,6 +22,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: "secrets.env");
+
+  // Offline services
+  await DatabaseService.instance.database;
+  await ConnectivityService.instance.initialize();
+
+  // Notifications + weather monitor
+  await NotificationService.instance.initialize();
+  WeatherMonitor.instance.start();
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -106,6 +120,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           Weather(),
           FishRecognitionScreen(),
           MarinerHarvestPage(),
+          FishingLogScreen(),
         ]
       ),
       
@@ -137,6 +152,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.sailing),
             label: 'Mariner Harvest',
+            backgroundColor: Color(0xFF0D4F54)
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.anchor),
+            label: 'Fishing Log',
             backgroundColor: Color(0xFF0D4F54)
           ),
         ],

@@ -38,6 +38,9 @@ class MapLayerManager extends ChangeNotifier {
   // Exclusion zones (oil/gas platforms)
   bool _showExclusionZones = true;
 
+  // GEBCO depth soundings tile layer
+  bool _showDepthSoundings = false;
+
   // Navigation mask
   bool _showMaskOverlay = false;
 
@@ -70,6 +73,7 @@ class MapLayerManager extends ChangeNotifier {
   bool get showFishProbabilityHeatmap => _showFishProbabilityHeatmap;
   Set<FishSpecies> get selectedSpecies => Set.unmodifiable(_selectedSpecies);
   bool get showExclusionZones => _showExclusionZones;
+  bool get showDepthSoundings => _showDepthSoundings;
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
   bool get isFeatureEditMode => _isFeatureEditMode;
@@ -199,6 +203,13 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
+  set showDepthSoundings(bool value) {
+    if (_showDepthSoundings != value) {
+      _showDepthSoundings = value;
+      notifyListeners();
+    }
+  }
+
   set showMaskOverlay(bool value) {
     if (_showMaskOverlay != value) {
       _showMaskOverlay = value;
@@ -284,6 +295,7 @@ class MapLayerManager extends ChangeNotifier {
       FishSpecies.shrimp,
     };
     _showExclusionZones = true;
+    _showDepthSoundings = false;
     _showMaskOverlay = false;
     _showLayerControls = false;
     _isFeatureEditMode = false;
