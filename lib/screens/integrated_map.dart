@@ -510,6 +510,24 @@ class _IntegratedMapState extends State<IntegratedMap> {
     log('Tapped (${point.latitude.toStringAsFixed(4)}, ${point.longitude.toStringAsFixed(4)}): '
         '${isNavigable ? "navigable water" : isOutsideBounds ? "outside territorial bounds" : "land"}');
 
+    // In port selection mode, land taps are used for port selection.
+    // GestureDetector inside Marker.child is unreliable in flutter_map v8 —
+    // instead we detect a port tap here via screen-space proximity.
+    if (_showPortSelection && !isNavigable) {
+      final tapScreen = tapPosition.relative;
+      if (tapScreen != null) {
+        const tapRadius = 45.0; // pixels — covers the 60×80 marker area
+        for (final port in _availablePorts) {
+          final portScreen = _mapController.camera.getOffsetFromOrigin(port.location);
+          if ((tapScreen - portScreen).distance <= tapRadius) {
+            _handlePortSelected(port);
+            return;
+          }
+        }
+      }
+      return; // land tap with no port nearby — silently ignore
+    }
+
     if (!isNavigable) {
       // Show contextual warning — block the pin either way
       final msg = isOutsideBounds
