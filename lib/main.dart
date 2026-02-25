@@ -126,6 +126,10 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF0D4F54),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white60,
         onTap: (index) {
           _controller.animateToPage(
             index,
