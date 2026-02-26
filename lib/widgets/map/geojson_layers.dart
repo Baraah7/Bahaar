@@ -192,43 +192,18 @@ class GeoJsonLayerBuilder {
 /// Widget for displaying GeoJSON features on the map
 class GeoJsonMapLayers extends StatelessWidget {
   final GeoJsonLayerBuilder builder;
-  final bool showFishingSpots;
-  final bool showShippingLanes;
   final bool showProtectedZones;
-  final bool showFishingZones;
-  final bool showRestrictedAreas;
 
   const GeoJsonMapLayers({
     super.key,
     required this.builder,
-    this.showFishingSpots = true,
-    this.showShippingLanes = true,
     this.showProtectedZones = true,
-    this.showFishingZones = true,
-    this.showRestrictedAreas = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Polygons (bottom layer)
-        PolygonLayer(
-          polygons: builder.buildAllZones(
-            showProtected: showProtectedZones,
-            showFishing: showFishingZones,
-            showRestricted: showRestrictedAreas,
-          ),
-        ),
-        // Polylines (middle layer)
-        PolylineLayer(
-          polylines: builder.buildShippingLanes(isVisible: showShippingLanes),
-        ),
-        // Markers (top layer)
-        MarkerLayer(
-          markers: builder.buildFishingSpotMarkers(isVisible: showFishingSpots),
-        ),
-      ],
+    return PolygonLayer(
+      polygons: builder.buildProtectedZones(isVisible: showProtectedZones),
     );
   }
 }
