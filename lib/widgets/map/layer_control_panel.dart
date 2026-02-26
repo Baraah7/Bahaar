@@ -208,104 +208,25 @@ class LayerControlPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'GeoJSON Overlays',
+          'Protected Zones',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         const SizedBox(height: 8),
-
-        // Master toggle
         SwitchListTile(
-          title: const Text('All GeoJSON Layers', style: TextStyle(fontSize: 13)),
-          value: layerManager.showGeoJsonLayers,
-          onChanged: (val) {
-            layerManager.showGeoJsonLayers = val;
-            if (val) {
-              layerManager.toggleAllGeoJsonLayers(true);
-            }
-          },
+          title: const Text('Protected Zones', style: TextStyle(fontSize: 13)),
+          secondary: const Icon(Icons.shield, size: 18, color: Colors.red),
+          subtitle: geoJsonBuilder != null
+              ? Text(
+                  '${geoJsonBuilder!.getFeatureCount('protected_zone') + geoJsonBuilder!.getFeatureCount('reef')} features',
+                  style: const TextStyle(fontSize: 10),
+                )
+              : null,
+          value: layerManager.showProtectedZones,
+          onChanged: (val) => layerManager.showProtectedZones = val,
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         ),
-
-        if (layerManager.showGeoJsonLayers && geoJsonBuilder != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                _buildGeoJsonLayerToggle(
-                  'Fishing Spots',
-                  Icons.location_on,
-                  Colors.blue,
-                  layerManager.showFishingSpots,
-                  (val) => layerManager.showFishingSpots = val,
-                  geoJsonBuilder!.getFeatureCount('fishing_spot'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Shipping Lanes',
-                  Icons.route,
-                  Colors.red,
-                  layerManager.showShippingLanes,
-                  (val) => layerManager.showShippingLanes = val,
-                  geoJsonBuilder!.getFeatureCount('shipping_lane') +
-                      geoJsonBuilder!.getFeatureCount('patrol_route'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Protected Zones',
-                  Icons.shield,
-                  Colors.red,
-                  layerManager.showProtectedZones,
-                  (val) => layerManager.showProtectedZones = val,
-                  geoJsonBuilder!.getFeatureCount('protected_zone') +
-                      geoJsonBuilder!.getFeatureCount('reef'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Fishing Zones',
-                  Icons.agriculture,
-                  Colors.green,
-                  layerManager.showFishingZones,
-                  (val) => layerManager.showFishingZones = val,
-                  geoJsonBuilder!.getFeatureCount('fishing_zone'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Restricted Areas',
-                  Icons.block,
-                  Colors.red,
-                  layerManager.showRestrictedAreas,
-                  (val) => layerManager.showRestrictedAreas = val,
-                  geoJsonBuilder!.getFeatureCount('restricted_area'),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
-    );
-  }
-
-  Widget _buildGeoJsonLayerToggle(
-    String title,
-    IconData icon,
-    Color color,
-    bool value,
-    ValueChanged<bool> onChanged,
-    int count,
-  ) {
-    return SwitchListTile(
-      title: Row(
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(title, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
-      subtitle: Text(
-        '$count feature${count != 1 ? 's' : ''}',
-        style: const TextStyle(fontSize: 10),
-      ),
-      value: value,
-      onChanged: onChanged,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
     );
   }
 

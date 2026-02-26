@@ -1435,11 +1435,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
               }
               return GeoJsonMapLayers(
                 builder: _geoJsonBuilder!,
-                showFishingSpots: _layerManager.showFishingSpots,
-                showShippingLanes: _layerManager.showShippingLanes,
                 showProtectedZones: _layerManager.showProtectedZones,
-                showFishingZones: _layerManager.showFishingZones,
-                showRestrictedAreas: _layerManager.showRestrictedAreas,
               );
             },
           ),

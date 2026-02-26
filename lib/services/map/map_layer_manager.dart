@@ -12,13 +12,9 @@ class MapLayerManager extends ChangeNotifier {
   double _depthLayerOpacity = 0.7;
   DepthVisualizationType _depthVisualizationType = DepthVisualizationType.bathymetric;
 
-  // GeoJSON layers
+  // GeoJSON layers — only protected zones remain
   bool _showGeoJsonLayers = true;
-  bool _showFishingSpots = true;
-  bool _showShippingLanes = true;
   bool _showProtectedZones = true;
-  bool _showFishingZones = true;
-  bool _showRestrictedAreas = true;
 
   // Fishing activity layer
   bool _showFishingActivity = false;
@@ -61,11 +57,7 @@ class MapLayerManager extends ChangeNotifier {
   double get depthLayerOpacity => _depthLayerOpacity;
   DepthVisualizationType get depthVisualizationType => _depthVisualizationType;
   bool get showGeoJsonLayers => _showGeoJsonLayers;
-  bool get showFishingSpots => _showFishingSpots;
-  bool get showShippingLanes => _showShippingLanes;
   bool get showProtectedZones => _showProtectedZones;
-  bool get showFishingZones => _showFishingZones;
-  bool get showRestrictedAreas => _showRestrictedAreas;
   bool get showFishingActivity => _showFishingActivity;
   bool get showFishingActivityTracks => _showFishingActivityTracks;
   bool get showFishingActivityEvents => _showFishingActivityEvents;
@@ -117,37 +109,9 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
-  set showFishingSpots(bool value) {
-    if (_showFishingSpots != value) {
-      _showFishingSpots = value;
-      notifyListeners();
-    }
-  }
-
-  set showShippingLanes(bool value) {
-    if (_showShippingLanes != value) {
-      _showShippingLanes = value;
-      notifyListeners();
-    }
-  }
-
   set showProtectedZones(bool value) {
     if (_showProtectedZones != value) {
       _showProtectedZones = value;
-      notifyListeners();
-    }
-  }
-
-  set showFishingZones(bool value) {
-    if (_showFishingZones != value) {
-      _showFishingZones = value;
-      notifyListeners();
-    }
-  }
-
-  set showRestrictedAreas(bool value) {
-    if (_showRestrictedAreas != value) {
-      _showRestrictedAreas = value;
       notifyListeners();
     }
   }
@@ -227,7 +191,6 @@ class MapLayerManager extends ChangeNotifier {
   set isAdminEditMode(bool value) {
     if (_isAdminEditMode != value) {
       _isAdminEditMode = value;
-      // Mutual exclusion: exit feature edit mode when entering mask edit
       if (value && _isFeatureEditMode) {
         _isFeatureEditMode = false;
       }
@@ -238,7 +201,6 @@ class MapLayerManager extends ChangeNotifier {
   set isFeatureEditMode(bool value) {
     if (_isFeatureEditMode != value) {
       _isFeatureEditMode = value;
-      // Mutual exclusion: exit mask edit mode when entering feature edit
       if (value && _isAdminEditMode) {
         _isAdminEditMode = false;
       }
@@ -261,13 +223,9 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
-  /// Toggle all GeoJSON sub-layers on/off
+  /// Toggle the protected zones GeoJSON sub-layer on/off
   void toggleAllGeoJsonLayers(bool value) {
-    _showFishingSpots = value;
-    _showShippingLanes = value;
     _showProtectedZones = value;
-    _showFishingZones = value;
-    _showRestrictedAreas = value;
     notifyListeners();
   }
 
@@ -278,11 +236,7 @@ class MapLayerManager extends ChangeNotifier {
     _depthLayerOpacity = 0.7;
     _depthVisualizationType = DepthVisualizationType.bathymetric;
     _showGeoJsonLayers = true;
-    _showFishingSpots = true;
-    _showShippingLanes = true;
     _showProtectedZones = true;
-    _showFishingZones = true;
-    _showRestrictedAreas = true;
     _showFishingActivity = false;
     _showFishingActivityTracks = true;
     _showFishingActivityEvents = true;
