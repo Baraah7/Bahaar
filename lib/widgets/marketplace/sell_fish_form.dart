@@ -2,12 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
+import '../../models/fishing/trip_model.dart';
 
 class SellFishForm extends StatefulWidget {
   final String? currentUserId;
   final String? currentUserName;
   final String? currentUserPhone;
   final String? currentUserLocation;
+  /// Recent catch entries from the fishing log shown as quick-fill suggestions.
+  final List<CatchEntry> recentCatches;
   final Function(FishListing) onSubmit;
 
   const SellFishForm({
@@ -16,6 +19,7 @@ class SellFishForm extends StatefulWidget {
     this.currentUserName,
     this.currentUserPhone,
     this.currentUserLocation,
+    this.recentCatches = const [],
     required this.onSubmit,
   });
 
@@ -81,6 +85,164 @@ class _SellFishFormState extends State<SellFishForm> {
     }
   }
 
+  /// Pre-fill form fields from a catch log entry.
+  void _applyFromCatch(CatchEntry catch_) {
+    // Match species name to a FishType enum value (case-insensitive).
+    FishType? matched;
+    for (final t in FishType.values) {
+      if (t.displayName.toLowerCase() ==
+              catch_.species.toLowerCase() ||
+          t.arabicName == catch_.species) {
+        matched = t;
+        break;
+      }
+    }
+
+    setState(() {
+      if (matched != null) {
+        _selectedFishType = matched;
+        _customFishNameController.clear();
+      } else {
+        _selectedFishType = FishType.other;
+        _customFishNameController.text = catch_.species;
+      }
+      if (catch_.weightKg != null) {
+        _weightController.text =
+            catch_.weightKg!.toStringAsFixed(2);
+      }
+      if (catch_.notes != null && catch_.notes!.isNotEmpty) {
+        _descriptionController.text = catch_.notes!;
+      }
+      // Pre-fill catch location from the logged GPS position
+      _catchLocationController.text =
+          '${catch_.latitude.toStringAsFixed(5)}, '
+          '${catch_.longitude.toStringAsFixed(5)}';
+    });
+  }
+
+  Widget _buildRecentCatchesSuggestions() {
+    if (widget.recentCatches.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+            'From Your Fishing Log', Icons.history_rounded),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tap a recent catch to pre-fill the form',
+                style: TextStyle(
+                    color: Colors.grey.shade500, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 82,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: widget.recentCatches.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: 10),
+                  itemBuilder: (_, i) {
+                    final c = widget.recentCatches[i];
+                    final dateStr = _fmtDate(c.timestamp);
+                    return GestureDetector(
+                      onTap: () => _applyFromCatch(c),
+                      child: Container(
+                        width: 110,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D4F54)
+                              .withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF0E7490)
+                                .withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              c.species,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: Color(0xFF0D4F54),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (c.weightKg != null)
+                              Text(
+                                '${c.weightKg!.toStringAsFixed(1)} kg',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600),
+                              ),
+                            Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    size: 10,
+                                    color: Colors.grey.shade400),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    dateStr,
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color:
+                                            Colors.grey.shade400),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  String _fmtDate(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inDays == 0) return 'Today';
+    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${dt.day}/${dt.month}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -88,6 +250,8 @@ class _SellFishFormState extends State<SellFishForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Recent catches suggestion strip (from fishing log)
+          _buildRecentCatchesSuggestions(),
           _buildSectionHeader('Fish Photos', Icons.camera_alt_outlined),
           const SizedBox(height: 10),
           _buildCard([_buildImagePicker()]),

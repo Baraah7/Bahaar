@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/marketplace/fish_listing.dart';
+import '../models/fishing/trip_model.dart';
 import '../services/marketplace/fish_marketplace_service.dart';
+import '../services/fishing/trip_service.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/marketplace/marketplace_tab.dart';
 import '../widgets/marketplace/sell_fish_form.dart';
@@ -21,6 +23,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late FishMarketplaceService _marketplaceService;
+  List<CatchEntry> _recentCatches = [];
 
   @override
   void initState() {
@@ -28,10 +31,25 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     _tabController = TabController(length: 3, vsync: this);
     _marketplaceService = FishMarketplaceService();
     _marketplaceService.addListener(_onMarketplaceUpdate);
+    _loadRecentCatches();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeUserData();
     });
+  }
+
+  Future<void> _loadRecentCatches() async {
+    try {
+      final trips = await TripService.instance.getAllTrips();
+      // Flatten all catches, sort newest first, keep last 20
+      final all = trips
+          .expand((t) => t.catches)
+          .toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      if (mounted) {
+        setState(() => _recentCatches = all.take(20).toList());
+      }
+    } catch (_) {}
   }
 
   void _onMarketplaceUpdate() {
@@ -90,6 +108,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                             : user?.userName,
                         currentUserPhone: user?.phone,
                         currentUserLocation: user?.location,
+                        recentCatches: _recentCatches,
                         onSubmit: (listing) =>
                             _onListingSubmitted(listing, l10n),
                       ),

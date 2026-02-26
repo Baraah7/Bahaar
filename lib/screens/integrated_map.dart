@@ -17,13 +17,11 @@ import 'package:Bahaar/models/navigation/route_model.dart';
 import 'package:Bahaar/widgets/map/enhanced_depth_layer.dart';
 import 'package:Bahaar/widgets/map/territorial_mask_layer.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
-import 'package:Bahaar/widgets/map/fishing_activity_layer.dart';
 import 'package:Bahaar/widgets/map/layer_control_panel.dart';
 import 'package:Bahaar/widgets/navigation/marina_marker_layer.dart';
 import 'package:Bahaar/widgets/navigation/route_polyline_layer.dart';
 import 'package:Bahaar/widgets/navigation/active_navigation_overlay.dart';
 import 'package:Bahaar/widgets/navigation/weather_alert_overlay.dart';
-import 'package:Bahaar/services/fishing_activity_service.dart';
 import 'package:Bahaar/services/fish_probability_service.dart';
 import 'package:Bahaar/widgets/map/fish_probability_layer.dart';
 import 'package:Bahaar/services/marine_weather_service.dart';
@@ -39,8 +37,8 @@ import 'package:Bahaar/utilities/geometry_utils.dart';
 import 'package:Bahaar/l10n/app_localizations.dart';
 import 'package:Bahaar/services/map/exclusion_zone_service.dart';
 import 'package:Bahaar/widgets/map/exclusion_zone_layer.dart';
-import 'package:Bahaar/services/sos_service.dart';
-import 'package:Bahaar/widgets/map/sos_button.dart';
+import 'package:Bahaar/services/map/outline_edit_service.dart';
+import 'package:Bahaar/widgets/map/territorial_outline_editor.dart';
 import 'package:Bahaar/services/ais_service.dart';
 import 'package:Bahaar/models/ais_model.dart';
 import 'package:Bahaar/widgets/map/ais_vessel_layer.dart';
@@ -79,7 +77,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
   late final MarinePathfindingService _marineService;
   late final HybridRouteCoordinator _routeCoordinator;
   late final MarineWeatherService _weatherService;
-  late final FishingActivityService _fishingActivityService;
   late final FishProbabilityService _fishProbabilityService;
   final FeatureEditService _featureEditService = FeatureEditService();
   final FeatureEditState _featureEditState = FeatureEditState();
@@ -100,8 +97,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
   double _approachingExclusionZoneDistance = 0;
   bool _exclusionAlertDismissed = false;
 
-  // SOS state
-  final SosService _sosService = SosService();
+  // Outline edit state
+  final OutlineEditService _outlineEditService = OutlineEditService();
+  bool _isOutlineEditMode = false;
+  OutlineBrushMode _outlineBrushMode = OutlineBrushMode.erase;
+  double _outlineBrushRadius = 0.003; // ~333 m
+  LatLng? _outlinePaintPreview;
 
   // AIS state
   late final AisService _aisService;
@@ -150,10 +151,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
   void initState() {
     super.initState();
     _layerManager = MapLayerManager();
-    _fishingActivityService = FishingActivityService();
-    _fishingActivityService.initialize().then((_) {
-      if (mounted) setState(() {});
-    });
     _fishProbabilityService = FishProbabilityService();
     _fishProbabilityService.initialize().then((_) {
       if (mounted) setState(() {});
@@ -291,7 +288,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
     _navigationManager?.dispose();
     _featureEditState.removeListener(_onFeatureEditUpdate);
     _featureEditState.dispose();
-    _fishingActivityService.dispose();
     _fishProbabilityService.dispose();
     _layerManager.dispose();
     _aisService.removeListener(_onAisUpdate);
@@ -1171,16 +1167,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
     }
   }
 
-  Future<SosAlert> _sendSos() async {
-    final lat = _locationData?.latitude;
-    final lon = _locationData?.longitude;
-    final position = (lat != null && lon != null)
-        ? LatLng(lat, lon)
-        : const LatLng(26.2235, 50.5876); // Bahrain fallback
-
-    return _sosService.sendSos(position: position);
-  }
-
   void _showMessage(String message, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1340,12 +1326,54 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   // ============================================================
+  // Outline Edit Methods
+  // ============================================================
+
+  void _enterOutlineEditMode() {
+    setState(() {
+      _isOutlineEditMode = true;
+      _layerManager.showMaskOverlay = true;
+    });
+  }
+
+  void _exitOutlineEditMode() {
+    setState(() {
+      _isOutlineEditMode = false;
+      _outlinePaintPreview = null;
+    });
+  }
+
+  Future<void> _handleOutlinePaint(LatLng point) async {
+    setState(() => _outlinePaintPreview = point);
+    try {
+      await _outlineEditService.addEdit(OutlineEdit(
+        point: point,
+        radiusDegrees: _outlineBrushRadius,
+        isErase: _outlineBrushMode == OutlineBrushMode.erase,
+        createdAt: DateTime.now(),
+      ));
+    } catch (e) {
+      _showMessage('Failed to save outline edit', Colors.red);
+    }
+  }
+
+  Future<void> _resetOutlineEdits() async {
+    try {
+      await _outlineEditService.resetAllEdits();
+      _showMessage('Outline reset to original', Colors.green);
+    } catch (e) {
+      _showMessage('Failed to reset outline', Colors.red);
+    }
+  }
+
+  // ============================================================
   // UI Builder Methods
   // ============================================================
 
   Widget _buildMap() {
     final isAdminMode = _layerManager.isAdminEditMode;
     final isFeatureEditMode = _layerManager.isFeatureEditMode;
+    final isOutlineMode = _isOutlineEditMode;
 
     return FlutterMap(
       mapController: _mapController,
@@ -1362,9 +1390,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
             setState(() => _currentZoom = position.zoom);
           }
         },
-        // Disable map gestures in admin edit mode to allow painting
+        // Disable map gestures in admin/outline edit mode to allow painting
         interactionOptions: InteractionOptions(
-          flags: isAdminMode
+          flags: isAdminMode || isOutlineMode
               ? InteractiveFlag.none
               : isFeatureEditMode
                   ? InteractiveFlag.all & ~InteractiveFlag.doubleTapZoom
@@ -1416,24 +1444,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
             },
           ),
 
-        // Fishing activity layer
-        if (_fishingActivityService.isInitialized)
-          ListenableBuilder(
-            listenable: _layerManager,
-            builder: (context, _) {
-              if (!_layerManager.showFishingActivity) {
-                return const SizedBox.shrink();
-              }
-              return FishingActivityLayer(
-                service: _fishingActivityService,
-                currentZoom: _currentZoom,
-                showTracks: _layerManager.showFishingActivityTracks,
-                showEvents: _layerManager.showFishingActivityEvents,
-                showHeatmap: _layerManager.showFishingActivityHeatmap,
-              );
-            },
-          ),
-
         // Fish probability heatmap layer
         if (_fishProbabilityService.isInitialized)
           ListenableBuilder(
@@ -1462,14 +1472,28 @@ class _IntegratedMapState extends State<IntegratedMap> {
           isVisible: _layerManager.showExclusionZones,
         ),
 
-        // Territorial water mask boundary layer.
-        // This is the authoritative navigable-water boundary — independent of
-        // depth visualization. It shows the outer edge of Bahrain's territorial
-        // waters as a teal border so the user knows where the boundary is.
+        // Territorial water boundary — live-editable outline layer.
+        // When outline-edit mode is active the edited version is shown
+        // (streams Firestore edits in real time so all users see changes).
+        // Otherwise falls back to the static boundary layer.
         if (_maskInitialized)
-          TerritorialMaskLayer(
-            navigationMask: _navigationMask,
-            isVisible: _layerManager.showMaskOverlay,
+          _isOutlineEditMode
+              ? EditedTerritorialOutlineLayer(
+                  navigationMask: _navigationMask,
+                  editService: _outlineEditService,
+                  isVisible: true,
+                )
+              : TerritorialMaskLayer(
+                  navigationMask: _navigationMask,
+                  isVisible: _layerManager.showMaskOverlay,
+                ),
+
+        // Paint preview circle while admin drags in outline-edit mode
+        if (_isOutlineEditMode)
+          OutlinePaintPreviewLayer(
+            center: _outlinePaintPreview,
+            radiusDegrees: _outlineBrushRadius,
+            mode: _outlineBrushMode,
           ),
 
         // Painted cells visualization (admin edit mode)
@@ -1833,32 +1857,49 @@ class _IntegratedMapState extends State<IntegratedMap> {
         children: [
           // Main map with gesture detector for admin painting
           GestureDetector(
-            behavior: _layerManager.isAdminEditMode || _layerManager.isFeatureEditMode
+            behavior: _layerManager.isAdminEditMode ||
+                    _layerManager.isFeatureEditMode ||
+                    _isOutlineEditMode
                 ? HitTestBehavior.opaque
                 : HitTestBehavior.translucent,
             onTapDown: _layerManager.isAdminEditMode
                 ? (details) {
                     final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) {
-                      _handleAdminPaint(latLng);
-                    }
+                    if (latLng != null) _handleAdminPaint(latLng);
                   }
-                : null,
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
             onPanStart: _layerManager.isAdminEditMode
                 ? (details) {
                     final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) {
-                      _handleAdminPaint(latLng);
-                    }
+                    if (latLng != null) _handleAdminPaint(latLng);
                   }
-                : null,
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
             onPanUpdate: _layerManager.isAdminEditMode
                 ? (details) {
                     final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) {
-                      _handleAdminPaint(latLng);
-                    }
+                    if (latLng != null) _handleAdminPaint(latLng);
                   }
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
+            onPanEnd: _isOutlineEditMode
+                ? (_) => setState(() => _outlinePaintPreview = null)
                 : null,
             child: _buildMap(),
           ),
@@ -1885,6 +1926,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     onClose: () => _layerManager.showLayerControls = false,
                     onEnterAdminEdit: _enterAdminEditMode,
                     onEnterFeatureEdit: _enterFeatureEditMode,
+                    onEnterOutlineEdit: _enterOutlineEditMode,
                   ),
                 );
               }
@@ -1925,6 +1967,23 @@ class _IntegratedMapState extends State<IntegratedMap> {
             },
           ),
 
+          // Outline editor toolbar (when in outline edit mode)
+          if (_isOutlineEditMode && _maskInitialized)
+            Positioned(
+              top: 50,
+              left: 10,
+              child: TerritorialOutlineEditorToolbar(
+                brushMode: _outlineBrushMode,
+                brushRadius: _outlineBrushRadius,
+                onBrushModeChanged: (mode) =>
+                    setState(() => _outlineBrushMode = mode),
+                onBrushRadiusChanged: (r) =>
+                    setState(() => _outlineBrushRadius = r),
+                onClose: _exitOutlineEditMode,
+                onReset: _resetOutlineEdits,
+              ),
+            ),
+
           // Feature edit toolbar (when in feature edit mode)
           ListenableBuilder(
             listenable: _featureEditState,
@@ -1964,7 +2023,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ListenableBuilder(
             listenable: _layerManager,
             builder: (context, _) {
-              if (!_layerManager.showLayerControls && !_layerManager.isAdminEditMode && !_layerManager.isFeatureEditMode) {
+              if (!_layerManager.showLayerControls && !_layerManager.isAdminEditMode && !_layerManager.isFeatureEditMode && !_isOutlineEditMode) {
                 return Positioned(
                   top: 30,
                   left: 10,
@@ -2236,13 +2295,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 ),
               ),
             ),
-
-          // SOS emergency button (bottom left)
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: SosButton(onSosConfirmed: _sendSos),
-          ),
 
           // Zoom controls (bottom right)
           Positioned(
