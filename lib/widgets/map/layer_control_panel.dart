@@ -11,6 +11,7 @@ class LayerControlPanel extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback? onEnterAdminEdit;
   final VoidCallback? onEnterFeatureEdit;
+  final VoidCallback? onEnterOutlineEdit;
 
   const LayerControlPanel({
     super.key,
@@ -20,6 +21,7 @@ class LayerControlPanel extends StatelessWidget {
     required this.onClose,
     this.onEnterAdminEdit,
     this.onEnterFeatureEdit,
+    this.onEnterOutlineEdit,
   });
 
   @override
@@ -605,6 +607,26 @@ class LayerControlPanel extends StatelessWidget {
           onTap: maskInitialized && onEnterAdminEdit != null
               ? () {
                   onEnterAdminEdit!();
+                  onClose();
+                }
+              : null,
+          enabled: maskInitialized,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+        ListTile(
+          leading: const Icon(Icons.border_style, size: 18, color: Colors.teal),
+          title: const Text('Edit Outline', style: TextStyle(fontSize: 13)),
+          subtitle: Text(
+            maskInitialized
+                ? 'Erase/restore boundary outline'
+                : 'Loading...',
+            style: const TextStyle(fontSize: 10),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          onTap: maskInitialized && onEnterOutlineEdit != null
+              ? () {
+                  onEnterOutlineEdit!();
                   onClose();
                 }
               : null,
