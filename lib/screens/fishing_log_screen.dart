@@ -2,11 +2,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:intl/intl.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
+import 'package:Bahaar/screens/trip_detail_screen.dart';
 
 class FishingLogScreen extends StatefulWidget {
   const FishingLogScreen({super.key});
@@ -23,7 +23,12 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTrips();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _service.initialize();
+    await _loadTrips();
   }
 
   Future<void> _loadTrips() async {
@@ -52,6 +57,32 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     final loc = await _currentLocation();
     await _service.startTrip(location: loc);
     await _loadTrips();
+  }
+
+  /// Returns the most recent trip that ended today, if any.
+  Trip? get _todayEndedTrip {
+    final today = DateTime.now();
+    for (final t in _trips) {
+      if (!t.isActive && t.endTime != null) {
+        final end = t.endTime!.toLocal();
+        if (end.year == today.year &&
+            end.month == today.month &&
+            end.day == today.day) {
+          return t;
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> _resumeTrip(Trip trip) async {
+    await _service.resumeTrip(trip);
+    await _loadTrips();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trip resumed.')),
+      );
+    }
   }
 
   Future<void> _endTrip() async {
@@ -117,6 +148,49 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
   Future<void> _deleteTrip(String tripId) async {
     await _service.deleteTrip(tripId);
     await _loadTrips();
+  }
+
+  Future<void> _deleteActiveTrip() async {
+    final activeTrip = _service.activeTrip;
+    if (activeTrip == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0D2E31),
+        title: const Text('Delete Active Trip?',
+            style: TextStyle(color: Colors.white)),
+        content: Text(
+          'This will permanently delete the current trip and all '
+          '${activeTrip.catches.length} catch${activeTrip.catches.length == 1 ? '' : 'es'} logged so far. '
+          'This cannot be undone.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    await _service.deleteTrip(activeTrip.id);
+    await _loadTrips();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trip deleted.')),
+      );
+    }
   }
 
   @override
@@ -195,13 +269,29 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 ),
               ],
             )
-          : FloatingActionButton.extended(
-              heroTag: 'start_trip',
-              backgroundColor: const Color(0xFF0D4F54),
-              onPressed: _startTrip,
-              icon: const Icon(Icons.anchor, color: Colors.white),
-              label: const Text('Start Trip',
-                  style: TextStyle(color: Colors.white)),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_todayEndedTrip != null) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'resume_trip',
+                    backgroundColor: const Color(0xFF1A5C62),
+                    onPressed: () => _resumeTrip(_todayEndedTrip!),
+                    icon: const Icon(Icons.play_arrow, color: Colors.white),
+                    label: const Text('Resume Trip',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                FloatingActionButton.extended(
+                  heroTag: 'start_trip',
+                  backgroundColor: const Color(0xFF0D4F54),
+                  onPressed: _startTrip,
+                  icon: const Icon(Icons.anchor, color: Colors.white),
+                  label: const Text('Start Trip',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
             ),
     );
   }
@@ -225,6 +315,14 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
               'Trip in progress — $dStr  ·  ${trip.catches.length} catch${trip.catches.length == 1 ? '' : 'es'}',
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline,
+                color: Colors.white54, size: 20),
+            onPressed: _deleteActiveTrip,
+            tooltip: 'Delete trip',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -256,142 +354,8 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     );
   }
 
-  void _showTripDetail(Trip trip) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF0D2E31),
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      isScrollControlled: true,
-      builder: (_) => _TripDetailSheet(trip: trip),
-    );
-  }
-}
-
-class _TripDetailSheet extends StatelessWidget {
-  final Trip trip;
-  const _TripDetailSheet({required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    final dateStr = DateFormat('EEE d MMM yyyy · HH:mm')
-        .format(trip.startTime.toLocal());
-
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.6,
-      maxChildSize: 0.92,
-      builder: (_, ctrl) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF0D2E31),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  const Icon(Icons.anchor, color: Colors.white70),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(dateStr,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold)),
-                        Text(
-                          '${trip.catches.length} catch${trip.catches.length == 1 ? '' : 'es'} · ${trip.totalWeightKg.toStringAsFixed(1)} kg total',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white12, height: 24),
-            // Catches list
-            Expanded(
-              child: trip.catches.isEmpty
-                  ? const Center(
-                      child: Text('No catches logged.',
-                          style: TextStyle(color: Colors.white38)))
-                  : ListView.separated(
-                      controller: ctrl,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: trip.catches.length,
-                      separatorBuilder: (_, __) =>
-                          const Divider(color: Colors.white10),
-                      itemBuilder: (_, i) {
-                        final c = trip.catches[i];
-                        final timeStr = DateFormat('HH:mm')
-                            .format(c.timestamp.toLocal());
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.set_meal,
-                                  color: Color(0xFF4FC3F7), size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(c.species,
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600)),
-                                    if (c.notes != null)
-                                      Text(c.notes!,
-                                          style: const TextStyle(
-                                              color: Colors.white38,
-                                              fontSize: 12)),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  if (c.weightKg != null)
-                                    Text('${c.weightKg!.toStringAsFixed(1)} kg',
-                                        style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 13)),
-                                  Text(timeStr,
-                                      style: const TextStyle(
-                                          color: Colors.white38,
-                                          fontSize: 11)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _showTripDetail(Trip trip) async {
+    final changed = await TripDetailScreen.open(context, trip);
+    if (changed) await _loadTrips();
   }
 }

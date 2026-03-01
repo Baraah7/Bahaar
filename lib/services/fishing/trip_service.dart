@@ -15,9 +15,35 @@ class TripService {
   final _db = DatabaseService.instance;
   final _connectivity = ConnectivityService.instance;
   Trip? _activeTrip;
+  bool _initialized = false;
 
   Trip? get activeTrip => _activeTrip;
   bool get hasActiveTrip => _activeTrip != null;
+
+  /// Must be called once before using the service (e.g. on app start).
+  /// Restores the active trip from SQLite and cleans up any orphaned open trips.
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+
+    final openRows = await _db.getOpenTrips();
+    if (openRows.isEmpty) return;
+
+    // Close all but the most recent open trip (oldest-first order, so last = newest)
+    final toClose = openRows.sublist(0, openRows.length - 1);
+    final now = DateTime.now().toIso8601String();
+    for (final row in toClose) {
+      await _db.updateTrip(row['id'] as String, {'end_time': now});
+      log('TripService: auto-closed orphaned trip ${row['id']}');
+    }
+
+    // Restore the most recent open trip as the active trip
+    final activeRow = openRows.last;
+    final catchRows = await _db.getCatchesForTrip(activeRow['id'] as String);
+    final catches = catchRows.map(CatchEntry.fromRow).toList();
+    _activeTrip = Trip.fromRow(activeRow, catches);
+    log('TripService: restored active trip ${_activeTrip!.id}');
+  }
 
   // ─── Trip CRUD ───────────────────────────────────────────────
 
@@ -33,6 +59,15 @@ class TripService {
     _activeTrip = trip;
     log('TripService: started trip ${trip.id}');
     return trip;
+  }
+
+  /// Re-open a finished trip (clears its end_time and makes it active again).
+  Future<Trip> resumeTrip(Trip trip) async {
+    await _db.clearTripEndTime(trip.id);
+    final resumed = trip.copyWith(endTime: null);
+    _activeTrip = resumed;
+    log('TripService: resumed trip ${trip.id}');
+    return resumed;
   }
 
   Future<Trip> endTrip() async {
@@ -80,11 +115,12 @@ class TripService {
     double? weightKg,
     String? notes,
     String? imagePath,
+    DateTime? timestamp,
   }) async {
     final entry = CatchEntry(
       id: const Uuid().v4(),
       tripId: tripId,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
       species: species,
       weightKg: weightKg,
       latitude: location.latitude,
@@ -104,6 +140,17 @@ class TripService {
 
     log('TripService: logged catch ${entry.id} for trip $tripId');
     return entry;
+  }
+
+  Future<void> updateCatch(CatchEntry entry) async {
+    await _db.updateCatch(entry.id, {
+      'species': entry.species,
+      'weight_kg': entry.weightKg,
+      'latitude': entry.latitude,
+      'longitude': entry.longitude,
+      'notes': entry.notes,
+      'synced': 0,
+    });
   }
 
   Future<void> deleteCatch(String catchId) async {
