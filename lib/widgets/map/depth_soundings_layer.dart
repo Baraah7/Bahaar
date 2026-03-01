@@ -101,9 +101,12 @@ class _MbTilesDb {
       final dir = await getApplicationSupportDirectory();
       final dest = p.join(dir.path, 'depth_gebco.mbtiles');
 
-      if (!File(dest).existsSync()) {
-        final data = await rootBundle.load('assets/depth_gebco.mbtiles');
-        await File(dest).writeAsBytes(data.buffer.asUint8List());
+      final assetData = await rootBundle.load('assets/depth_gebco.mbtiles');
+      final destFile = File(dest);
+      // Re-copy if missing or size differs (catches updated asset bundles)
+      if (!destFile.existsSync() ||
+          destFile.lengthSync() != assetData.lengthInBytes) {
+        await destFile.writeAsBytes(assetData.buffer.asUint8List());
       }
 
       _db = await openDatabase(dest, readOnly: true);
@@ -151,7 +154,7 @@ class _DepthSoundingsLayerState extends State<DepthSoundingsLayer> {
         tileProvider: _MbTileProvider(_db!),
         minZoom: 4,
         maxZoom: 18,
-        maxNativeZoom: 9,
+        maxNativeZoom: 12,
         errorTileCallback: (tile, error, stackTrace) {},
       ),
     );
