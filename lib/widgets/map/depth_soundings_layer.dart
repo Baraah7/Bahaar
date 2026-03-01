@@ -150,7 +150,8 @@ class _DepthSoundingsLayerState extends State<DepthSoundingsLayer> {
         urlTemplate: 'mbtiles://{z}/{x}/{y}',
         tileProvider: _MbTileProvider(_db!),
         minZoom: 4,
-        maxZoom: 9,
+        maxZoom: 18,
+        maxNativeZoom: 9,
         errorTileCallback: (tile, error, stackTrace) {},
       ),
     );
