@@ -35,7 +35,7 @@ class MapLayerManager extends ChangeNotifier {
   bool _showExclusionZones = true;
 
   // GEBCO depth soundings tile layer
-  bool _showDepthSoundings = false;
+  bool _showDepthSoundings = true;
 
   // Navigation mask
   bool _showMaskOverlay = false;
@@ -249,7 +249,7 @@ class MapLayerManager extends ChangeNotifier {
       FishSpecies.shrimp,
     };
     _showExclusionZones = true;
-    _showDepthSoundings = false;
+    _showDepthSoundings = true;
     _showMaskOverlay = false;
     _showLayerControls = false;
     _isFeatureEditMode = false;
