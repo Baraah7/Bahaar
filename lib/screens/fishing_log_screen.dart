@@ -2,11 +2,18 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
+<<<<<<< HEAD
 import 'package:intl/intl.dart';
+=======
+>>>>>>> origin/exp
 import 'package:Bahaar/models/fishing/trip_model.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
+<<<<<<< HEAD
+=======
+import 'package:Bahaar/screens/trip_detail_screen.dart';
+>>>>>>> origin/exp
 
 class FishingLogScreen extends StatefulWidget {
   const FishingLogScreen({super.key});
@@ -23,7 +30,16 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
     _loadTrips();
+=======
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _service.initialize();
+    await _loadTrips();
+>>>>>>> origin/exp
   }
 
   Future<void> _loadTrips() async {
@@ -54,6 +70,35 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     await _loadTrips();
   }
 
+<<<<<<< HEAD
+=======
+  /// Returns the most recent trip that ended today, if any.
+  Trip? get _todayEndedTrip {
+    final today = DateTime.now();
+    for (final t in _trips) {
+      if (!t.isActive && t.endTime != null) {
+        final end = t.endTime!.toLocal();
+        if (end.year == today.year &&
+            end.month == today.month &&
+            end.day == today.day) {
+          return t;
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> _resumeTrip(Trip trip) async {
+    await _service.resumeTrip(trip);
+    await _loadTrips();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trip resumed.')),
+      );
+    }
+  }
+
+>>>>>>> origin/exp
   Future<void> _endTrip() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -119,6 +164,52 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     await _loadTrips();
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> _deleteActiveTrip() async {
+    final activeTrip = _service.activeTrip;
+    if (activeTrip == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0D2E31),
+        title: const Text('Delete Active Trip?',
+            style: TextStyle(color: Colors.white)),
+        content: Text(
+          'This will permanently delete the current trip and all '
+          '${activeTrip.catches.length} catch${activeTrip.catches.length == 1 ? '' : 'es'} logged so far. '
+          'This cannot be undone.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    await _service.deleteTrip(activeTrip.id);
+    await _loadTrips();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trip deleted.')),
+      );
+    }
+  }
+
+>>>>>>> origin/exp
   @override
   Widget build(BuildContext context) {
     final activeTrip = _service.activeTrip;
@@ -195,6 +286,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 ),
               ],
             )
+<<<<<<< HEAD
           : FloatingActionButton.extended(
               heroTag: 'start_trip',
               backgroundColor: const Color(0xFF0D4F54),
@@ -202,6 +294,31 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
               icon: const Icon(Icons.anchor, color: Colors.white),
               label: const Text('Start Trip',
                   style: TextStyle(color: Colors.white)),
+=======
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_todayEndedTrip != null) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'resume_trip',
+                    backgroundColor: const Color(0xFF1A5C62),
+                    onPressed: () => _resumeTrip(_todayEndedTrip!),
+                    icon: const Icon(Icons.play_arrow, color: Colors.white),
+                    label: const Text('Resume Trip',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                FloatingActionButton.extended(
+                  heroTag: 'start_trip',
+                  backgroundColor: const Color(0xFF0D4F54),
+                  onPressed: _startTrip,
+                  icon: const Icon(Icons.anchor, color: Colors.white),
+                  label: const Text('Start Trip',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
+>>>>>>> origin/exp
             ),
     );
   }
@@ -226,6 +343,17 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
           ),
+<<<<<<< HEAD
+=======
+          IconButton(
+            icon: const Icon(Icons.delete_outline,
+                color: Colors.white54, size: 20),
+            onPressed: _deleteActiveTrip,
+            tooltip: 'Delete trip',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+>>>>>>> origin/exp
         ],
       ),
     );
@@ -256,6 +384,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     );
   }
 
+<<<<<<< HEAD
   void _showTripDetail(Trip trip) {
     showModalBottomSheet(
       context: context,
@@ -393,5 +522,10 @@ class _TripDetailSheet extends StatelessWidget {
         ),
       ),
     );
+=======
+  Future<void> _showTripDetail(Trip trip) async {
+    final changed = await TripDetailScreen.open(context, trip);
+    if (changed) await _loadTrips();
+>>>>>>> origin/exp
   }
 }

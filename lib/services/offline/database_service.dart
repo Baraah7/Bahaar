@@ -71,6 +71,19 @@ class DatabaseService {
     return db.query('trips', orderBy: 'start_time DESC');
   }
 
+<<<<<<< HEAD
+=======
+  /// Returns all trips that have no end_time, ordered oldest-first.
+  Future<List<Map<String, dynamic>>> getOpenTrips() async {
+    final db = await database;
+    return db.query(
+      'trips',
+      where: 'end_time IS NULL',
+      orderBy: 'start_time ASC',
+    );
+  }
+
+>>>>>>> origin/exp
   Future<Map<String, dynamic>?> getTrip(String id) async {
     final db = await database;
     final rows = await db.query('trips', where: 'id = ?', whereArgs: [id]);
@@ -83,6 +96,19 @@ class DatabaseService {
     await db.delete('trips', where: 'id = ?', whereArgs: [id]);
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> clearTripEndTime(String id) async {
+    final db = await database;
+    await db.update(
+      'trips',
+      {'end_time': null, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+>>>>>>> origin/exp
   // ─── Catches ─────────────────────────────────────────────────
 
   Future<void> insertCatch(Map<String, dynamic> row) async {
@@ -101,6 +127,14 @@ class DatabaseService {
     );
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> updateCatch(String id, Map<String, dynamic> values) async {
+    final db = await database;
+    await db.update('catches', values, where: 'id = ?', whereArgs: [id]);
+  }
+
+>>>>>>> origin/exp
   Future<void> deleteCatch(String id) async {
     final db = await database;
     await db.delete('catches', where: 'id = ?', whereArgs: [id]);

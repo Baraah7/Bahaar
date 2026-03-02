@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
+<<<<<<< HEAD
+=======
+import 'package:Bahaar/screens/location_picker_screen.dart';
+>>>>>>> origin/exp
 
 /// Bottom sheet form for logging a single catch during an active trip.
 class CatchForm extends StatefulWidget {
@@ -31,6 +35,10 @@ class _CatchFormState extends State<CatchForm> {
 
   bool _locating = false;
   bool _locationLocked = false; // true once GPS populated the fields
+<<<<<<< HEAD
+=======
+  bool _mapPinned = false;     // true when location was pinned on the map
+>>>>>>> origin/exp
 
   // Common Gulf species for quick-pick
   static const _quickSpecies = [
@@ -75,6 +83,22 @@ class _CatchFormState extends State<CatchForm> {
     if (mounted) setState(() => _locating = false);
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> _pickOnMap() async {
+    final current = _parseLocation();
+    final picked = await LocationPickerScreen.open(context, initial: current);
+    if (picked != null && mounted) {
+      setState(() {
+        _latCtrl.text = picked.latitude.toStringAsFixed(6);
+        _lonCtrl.text = picked.longitude.toStringAsFixed(6);
+        _locationLocked = true;
+        _mapPinned = true;
+      });
+    }
+  }
+
+>>>>>>> origin/exp
   LatLng? _parseLocation() {
     final lat = double.tryParse(_latCtrl.text.trim());
     final lon = double.tryParse(_lonCtrl.text.trim());
@@ -209,6 +233,7 @@ class _CatchFormState extends State<CatchForm> {
                           strokeWidth: 2, color: Colors.teal),
                     )
                   else
+<<<<<<< HEAD
                     GestureDetector(
                       onTap: _fetchLocation,
                       child: const Row(
@@ -221,6 +246,38 @@ class _CatchFormState extends State<CatchForm> {
                                   color: Colors.teal, fontSize: 11)),
                         ],
                       ),
+=======
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: _fetchLocation,
+                          child: const Row(
+                            children: [
+                              Icon(Icons.my_location,
+                                  color: Colors.teal, size: 14),
+                              SizedBox(width: 4),
+                              Text('Re-fetch GPS',
+                                  style: TextStyle(
+                                      color: Colors.teal, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: _pickOnMap,
+                          child: const Row(
+                            children: [
+                              Icon(Icons.map_outlined,
+                                  color: Colors.teal, size: 14),
+                              SizedBox(width: 4),
+                              Text('Pin on Map',
+                                  style: TextStyle(
+                                      color: Colors.teal, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ],
+>>>>>>> origin/exp
                     ),
                 ],
               ),
@@ -276,9 +333,17 @@ class _CatchFormState extends State<CatchForm> {
               ),
               const SizedBox(height: 4),
               Text(
+<<<<<<< HEAD
                 _locationLocked
                     ? 'GPS location auto-filled — edit if needed.'
                     : 'Location blank — GPS unavailable.',
+=======
+                _mapPinned
+                    ? 'Location pinned on map.'
+                    : _locationLocked
+                        ? 'GPS location auto-filled — edit if needed.'
+                        : 'Location blank — GPS unavailable.',
+>>>>>>> origin/exp
                 style:
                     const TextStyle(color: Colors.white38, fontSize: 10),
               ),
