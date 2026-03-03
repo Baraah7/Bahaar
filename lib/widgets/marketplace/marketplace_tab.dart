@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';
 import '../../l10n/app_localizations.dart';

@@ -54,6 +54,9 @@ flutter:
 
   assets:
     - secrets.env
+    - assets/logo/app_icon.png
+    - assets/logo/appIcon.png
+    - assets/logo/logo.png
     - assets/data/gulf_test_features.geojson
     - assets/data/marinas.geojson
     - assets/data/fishing_activity_sample.geojson

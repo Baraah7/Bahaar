@@ -1,4 +1,4 @@
-import 'dart:developer';
+﻿import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
@@ -7,6 +7,7 @@ import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 import 'package:Bahaar/screens/trip_detail_screen.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class FishingLogScreen extends StatefulWidget {
   const FishingLogScreen({super.key});
@@ -103,7 +104,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0E7490)),
+                backgroundColor: AppColors.accent),
             child:
                 const Text('End Trip', style: TextStyle(color: Colors.white)),
           ),
@@ -198,11 +199,11 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     final activeTrip = _service.activeTrip;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.cream,
       appBar: AppBar(
         title: const Text('Fishing Log',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        backgroundColor: const Color(0xFF0D4F54),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
@@ -216,7 +217,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF0D4F54)))
+              child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
               children: [
                 // Active trip banner
@@ -261,7 +262,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 const SizedBox(height: 8),
                 FloatingActionButton.extended(
                   heroTag: 'log_catch',
-                  backgroundColor: const Color(0xFF0E7490),
+                  backgroundColor: AppColors.accent,
                   onPressed: _logCatch,
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: const Text('Log Catch',
@@ -275,7 +276,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 if (_todayEndedTrip != null) ...[
                   FloatingActionButton.extended(
                     heroTag: 'resume_trip',
-                    backgroundColor: const Color(0xFF1A5C62),
+                    backgroundColor: AppColors.primary,
                     onPressed: () => _resumeTrip(_todayEndedTrip!),
                     icon: const Icon(Icons.play_arrow, color: Colors.white),
                     label: const Text('Resume Trip',
@@ -285,7 +286,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 ],
                 FloatingActionButton.extended(
                   heroTag: 'start_trip',
-                  backgroundColor: const Color(0xFF0D4F54),
+                  backgroundColor: AppColors.primary,
                   onPressed: _startTrip,
                   icon: const Icon(Icons.anchor, color: Colors.white),
                   label: const Text('Start Trip',
@@ -305,7 +306,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFF0D4F54),
+      color: AppColors.primary,
       child: Row(
         children: [
           const Icon(Icons.circle, color: Colors.greenAccent, size: 10),

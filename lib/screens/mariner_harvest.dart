@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/marketplace/fish_listing.dart';
@@ -11,6 +11,7 @@ import '../widgets/marketplace/sell_fish_form.dart';
 import '../widgets/marketplace/fish_details_sheet.dart';
 import '../widgets/marketplace/orders_tab.dart';
 import '../providers/authentication_provider.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class MarinerHarvestPage extends ConsumerStatefulWidget {
   const MarinerHarvestPage({super.key});
@@ -97,7 +98,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     onFishTap: (listing) => _showFishDetails(listing),
                   ),
                   Container(
-                    color: const Color(0xFFF5F7FA),
+                    color: AppColors.cream,
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.all(16),
@@ -115,7 +116,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     ),
                   ),
                   Container(
-                    color: const Color(0xFFF5F7FA),
+                    color: AppColors.cream,
                     child: OrdersTab(
                       marketplaceService: _marketplaceService,
                       currentUserId: user?.id,
@@ -137,8 +138,8 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF0D4F54),
-            Color(0xFF0E7490),
+            AppColors.primary,
+            AppColors.accent,
           ],
         ),
       ),
@@ -190,7 +191,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                labelColor: const Color(0xFF0D4F54),
+                labelColor: AppColors.primary,
                 unselectedLabelColor: Colors.white.withValues(alpha: 0.8),
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
@@ -370,7 +371,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                   setState(() {});
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D4F54),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -412,7 +413,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
               Text(l10n.yourFishListingPosted),
             ],
           ),
-          backgroundColor: const Color(0xFF0D4F54),
+          backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),

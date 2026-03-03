@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/authentication_provider.dart';
 import '../models/registration/user.dart' as app_user;
 import 'edit_profile_screen.dart';
 import '../widgets/profile/profile_avatar.dart';
 import '../widgets/profile/profile_info_tile.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -22,7 +23,7 @@ class ProfileScreen extends ConsumerWidget {
         : '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.cream,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context, user, fullName),
@@ -40,7 +41,7 @@ class ProfileScreen extends ConsumerWidget {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
-      backgroundColor: const Color(0xFF0D4F54),
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       leading: const BackButton(color: Colors.white),
       actions: [
@@ -71,7 +72,7 @@ class _HeaderBackground extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0D4F54), Color(0xFF0E7490)],
+          colors: [AppColors.primary, AppColors.accent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -174,7 +175,7 @@ class _SectionLabel extends StatelessWidget {
       style: const TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        color: Color(0xFF0D4F54),
+        color: AppColors.primary,
         letterSpacing: 1.0,
       ),
     );
@@ -189,20 +190,20 @@ class _GuestBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D4F54).withValues(alpha: 0.07),
+        color: AppColors.primary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFF0D4F54).withValues(alpha: 0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
         ),
       ),
       child: const Row(
         children: [
-          Icon(Icons.info_outline, color: Color(0xFF0D4F54)),
+          Icon(Icons.info_outline, color: AppColors.primary),
           SizedBox(width: 12),
           Expanded(
             child: Text(
               'Sign in to access your full profile and seller features.',
-              style: TextStyle(color: Color(0xFF0D4F54), fontSize: 13),
+              style: TextStyle(color: AppColors.primary, fontSize: 13),
             ),
           ),
         ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/language_provider.dart';
 import '../l10n/app_localizations.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -15,7 +16,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings),
-        backgroundColor: const Color(0xFF0077BE),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
@@ -33,7 +34,7 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
                   title: const Text('English'),
                   trailing: locale.languageCode == 'en'
-                      ? const Icon(Icons.check_circle, color: Color(0xFF0077BE))
+                      ? const Icon(Icons.check_circle, color: AppColors.primary)
                       : const Icon(Icons.circle_outlined, color: Colors.grey),
                   onTap: () {
                     ref.read(languageProvider.notifier).setLanguage(const Locale('en'));
@@ -44,7 +45,7 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Text('🇸🇦', style: TextStyle(fontSize: 24)),
                   title: const Text('العربية'),
                   trailing: locale.languageCode == 'ar'
-                      ? const Icon(Icons.check_circle, color: Color(0xFF0077BE))
+                      ? const Icon(Icons.check_circle, color: AppColors.primary)
                       : const Icon(Icons.circle_outlined, color: Colors.grey),
                   onTap: () {
                     ref.read(languageProvider.notifier).setLanguage(const Locale('ar'));
@@ -113,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF0077BE),
+          color: AppColors.primary,
         ),
       ),
     );

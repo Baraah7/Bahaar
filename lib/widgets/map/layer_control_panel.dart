@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/models/fishing/fish_probability_model.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
 
 /// Control panel widget for managing all map layers
-class LayerControlPanel extends StatelessWidget {
+class LayerControlPanel extends StatefulWidget {
   final MapLayerManager layerManager;
   final GeoJsonLayerBuilder? geoJsonBuilder;
   final bool maskInitialized;
@@ -12,6 +11,7 @@ class LayerControlPanel extends StatelessWidget {
   final VoidCallback? onEnterAdminEdit;
   final VoidCallback? onEnterFeatureEdit;
   final VoidCallback? onEnterOutlineEdit;
+  final VoidCallback? onOpenPrediction;
 
   const LayerControlPanel({
     super.key,
@@ -22,441 +22,565 @@ class LayerControlPanel extends StatelessWidget {
     this.onEnterAdminEdit,
     this.onEnterFeatureEdit,
     this.onEnterOutlineEdit,
+    this.onOpenPrediction,
   });
+
+  @override
+  State<LayerControlPanel> createState() => _LayerControlPanelState();
+}
+
+class _LayerControlPanelState extends State<LayerControlPanel> {
+  final Set<String> _expanded = {};
+
+  @override
+  void initState() {
+    super.initState();
+    widget.layerManager.addListener(_onLayerChange);
+  }
+
+  @override
+  void dispose() {
+    widget.layerManager.removeListener(_onLayerChange);
+    super.dispose();
+  }
+
+  void _onLayerChange() => setState(() {});
+
+  MapLayerManager get lm => widget.layerManager;
+
+  bool _isExpanded(String key) => _expanded.contains(key);
+
+  void _toggleSection(String key) {
+    setState(() {
+      _expanded.contains(key) ? _expanded.remove(key) : _expanded.add(key);
+    });
+  }
+
+  // ────────────────────────────────────────────
+  // Build
+  // ────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
-      constraints: const BoxConstraints(
-        maxWidth: 300,
-        maxHeight: 600,
-      ),
+      constraints: const BoxConstraints(maxWidth: 300, maxHeight: 600),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const Divider(),
-            _buildDepthLayerSection(),
-            const Divider(),
-            _buildGeoJsonSection(),
-            const Divider(),
-            _buildExclusionZonesSection(),
-            const Divider(),
-            _buildFishingActivitySection(),
-            const Divider(),
-            _buildFishProbabilitySection(),
-            const Divider(),
-            _buildNavigationMaskSection(),
-            const Divider(),
-            _buildDepthSoundingsSection(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.layers, size: 20, color: Colors.blue),
-            SizedBox(width: 8),
-            Text(
-              'Map Layers',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        IconButton(
-          icon: const Icon(Icons.close, size: 20),
-          onPressed: onClose,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDepthLayerSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Depth Visualization',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-
-        // Depth layer toggle
-        SwitchListTile(
-          title: const Text('Show Depth Layer', style: TextStyle(fontSize: 13)),
-          value: layerManager.showDepthLayer,
-          onChanged: (val) => layerManager.showDepthLayer = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-
-        if (layerManager.showDepthLayer) ...[
-          // Visualization type selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Visualization Type',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                ...DepthVisualizationType.values.map((type) {
-                  return RadioListTile<DepthVisualizationType>(
-                    title: Text(
-                      type.displayName,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    subtitle: Text(
-                      type.description,
-                      style: const TextStyle(fontSize: 9),
-                    ),
-                    value: type,
-                    groupValue: layerManager.depthVisualizationType,
-                    onChanged: (val) {
-                      if (val != null) {
-                        layerManager.depthVisualizationType = val;
-                      }
-                    },
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  );
-                }),
-                const SizedBox(height: 8),
-
-                // Opacity slider
-                const Text(
-                  'Layer Opacity',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                Slider(
-                  value: layerManager.depthLayerOpacity,
-                  min: 0.0,
-                  max: 1.0,
-                  divisions: 10,
-                  label: '${(layerManager.depthLayerOpacity * 100).round()}%',
-                  onChanged: (val) => layerManager.depthLayerOpacity = val,
-                ),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bathymetric: Colored depth map',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      Text(
-                        'Nautical: Navigation symbols',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      Text(
-                        'Combined: Both layers together',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Best visibility: Zoom 10+',
-                        style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildGeoJsonSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Protected Zones',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Protected Zones', style: TextStyle(fontSize: 13)),
-          secondary: const Icon(Icons.shield, size: 18, color: Colors.red),
-          subtitle: geoJsonBuilder != null
-              ? Text(
-                  '${geoJsonBuilder!.getFeatureCount('protected_zone') + geoJsonBuilder!.getFeatureCount('reef')} features',
-                  style: const TextStyle(fontSize: 10),
-                )
-              : null,
-          value: layerManager.showProtectedZones,
-          onChanged: (val) => layerManager.showProtectedZones = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExclusionZonesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Oil/Gas Exclusion Zones',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Show Exclusion Zones', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            layerManager.showExclusionZones
-                ? '500 m UNCLOS safety buffers'
-                : 'Hidden (safety rules still apply)',
-            style: const TextStyle(fontSize: 10),
-          ),
-          secondary: const Icon(Icons.oil_barrel, size: 18, color: Colors.red),
-          value: layerManager.showExclusionZones,
-          onChanged: (val) => layerManager.showExclusionZones = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFishingActivitySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Fishing Activity',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-
-        // Master toggle
-        SwitchListTile(
-          title:
-              const Text('Show Fishing Activity', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            layerManager.showFishingActivity
-                ? 'GFW vessel tracks & events'
-                : 'Disabled',
-            style: const TextStyle(fontSize: 10),
-          ),
-          value: layerManager.showFishingActivity,
-          onChanged: (val) => layerManager.showFishingActivity = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-
-        if (layerManager.showFishingActivity) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                _buildFishingSubToggle(
-                  'Vessel Tracks',
-                  Icons.route,
-                  Colors.orange,
-                  layerManager.showFishingActivityTracks,
-                  (val) => layerManager.showFishingActivityTracks = val,
-                ),
-                _buildFishingSubToggle(
-                  'Fishing Events',
-                  Icons.phishing,
-                  Colors.deepOrange,
-                  layerManager.showFishingActivityEvents,
-                  (val) => layerManager.showFishingActivityEvents = val,
-                ),
-                _buildFishingSubToggle(
-                  'Intensity Heatmap',
-                  Icons.thermostat,
-                  Colors.red,
-                  layerManager.showFishingActivityHeatmap,
-                  (val) => layerManager.showFishingActivityHeatmap = val,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildFishingSubToggle(
-    String title,
-    IconData icon,
-    Color color,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return SwitchListTile(
-      title: Row(
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(title, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
-      value: value,
-      onChanged: onChanged,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-    );
-  }
-
-  Widget _buildNavigationMaskSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Navigation Mask',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Show Mask Boundary', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            maskInitialized ? 'Coverage area outline' : 'Loading...',
-            style: const TextStyle(fontSize: 10),
-          ),
-          value: layerManager.showMaskOverlay,
-          onChanged: maskInitialized
-              ? (val) => layerManager.showMaskOverlay = val
-              : null,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        const Divider(),
-        _buildAdminSection(),
-      ],
-    );
-  }
-
-  Widget _buildFishProbabilitySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Fish Probability',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Show Fish Heatmap', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            layerManager.showFishProbabilityHeatmap
-                ? 'CMEMS SST + Chlorophyll'
-                : 'Disabled',
-            style: const TextStyle(fontSize: 10),
-          ),
-          value: layerManager.showFishProbabilityHeatmap,
-          onChanged: (val) => layerManager.showFishProbabilityHeatmap = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        if (layerManager.showFishProbabilityHeatmap) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Species',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                ...FishSpecies.values.map((species) {
-                  final isSelected =
-                      layerManager.selectedSpecies.contains(species);
-                  return SwitchListTile(
-                    title: Row(
-                      children: [
-                        Icon(Icons.set_meal,
-                            size: 14, color: species.color),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${species.englishName}  ${species.arabicName}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    value: isSelected,
-                    onChanged: (_) => layerManager.toggleSpecies(species),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  );
-                }),
-                const SizedBox(height: 6),
-                _buildProbabilityLegend(),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildProbabilityLegend() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.teal.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Probability',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          _legendRow(Colors.grey.shade300, 'Low  (<40%)'),
-          _legendRow(Colors.teal.withValues(alpha: 0.35), 'Moderate  (40–60%)'),
-          _legendRow(Colors.teal.withValues(alpha: 0.52), 'High  (60–80%)'),
-          _legendRow(Colors.teal.withValues(alpha: 0.65), 'Very High  (>80%)'),
-          const SizedBox(height: 4),
-          const Text(
-            'Colour varies by species',
-            style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
+          _buildHeader(),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSection(
+                    key: 'depth',
+                    title: 'Depth Visualization',
+                    icon: Icons.water_drop_outlined,
+                    color: Colors.blue,
+                    isActive: lm.showDepthLayer,
+                    content: _buildDepthContent(),
+                  ),
+                  _buildSection(
+                    key: 'protected',
+                    title: 'Protected Zones',
+                    icon: Icons.shield_outlined,
+                    color: Colors.green,
+                    isActive: lm.showProtectedZones,
+                    content: _buildProtectedZonesContent(),
+                  ),
+                  _buildSection(
+                    key: 'exclusion',
+                    title: 'Oil & Gas Exclusion',
+                    icon: Icons.oil_barrel,
+                    color: Colors.red,
+                    isActive: lm.showExclusionZones,
+                    content: _buildExclusionContent(),
+                  ),
+                  _buildSection(
+                    key: 'spots',
+                    title: 'Fishing Spot Suggestions',
+                    icon: Icons.place,
+                    color: Colors.indigo,
+                    isActive: lm.showFishingSpots,
+                    content: _buildFishingSpotsContent(),
+                  ),
+                  _buildSection(
+                    key: 'mask',
+                    title: 'Navigation & Admin',
+                    icon: Icons.admin_panel_settings_outlined,
+                    color: Colors.deepPurple,
+                    isActive: lm.showMaskOverlay,
+                    content: _buildNavigationMaskContent(),
+                  ),
+                  if (widget.onOpenPrediction != null) ...[
+                    const SizedBox(height: 6),
+                    Divider(color: Colors.grey.shade100, height: 1),
+                    const SizedBox(height: 10),
+                    _buildPredictionButton(),
+                  ],
+                ],
+              ),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Header
+  // ────────────────────────────────────────────
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100, width: 1.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.layers, size: 17, color: Colors.blue),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            'Map Layers',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.1,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(Icons.close, size: 17, color: Colors.grey.shade500),
+            onPressed: widget.onClose,
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Collapsible section wrapper
+  // ────────────────────────────────────────────
+
+  Widget _buildSection({
+    required String key,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isActive,
+    required Widget content,
+  }) {
+    final expanded = _isExpanded(key);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => _toggleSection(key),
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+            decoration: BoxDecoration(
+              color: expanded ? color.withValues(alpha: 0.07) : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? color.withValues(alpha: 0.12)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 15,
+                    color: isActive ? color : Colors.grey.shade400,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: isActive ? Colors.black87 : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                if (isActive)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (expanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 6, right: 4, bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [const SizedBox(height: 4), content],
+            ),
+          ),
+        const SizedBox(height: 2),
+      ],
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Shared helpers
+  // ────────────────────────────────────────────
+
+  Widget _buildToggleRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    String? subtitle,
+    required bool value,
+    ValueChanged<bool>? onChanged,
+  }) {
+    final active = value && onChanged != null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: active
+                  ? iconColor.withValues(alpha: 0.12)
+                  : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(
+              icon,
+              size: 15,
+              color: active ? iconColor : Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: onChanged != null ? Colors.black87 : Colors.grey,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: iconColor,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminAction({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String subtitle,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: enabled
+                  ? color.withValues(alpha: 0.35)
+                  : Colors.grey.shade200,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 17,
+                color: enabled ? color : Colors.grey.shade400,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: enabled ? Colors.black87 : Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: Colors.grey.shade400,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Section content builders
+  // ────────────────────────────────────────────
+
+  Widget _buildDepthContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggleRow(
+          icon: Icons.water_drop_outlined,
+          iconColor: Colors.blue,
+          label: 'Show Depth Layer',
+          value: lm.showDepthLayer,
+          onChanged: (val) => lm.showDepthLayer = val,
+        ),
+        if (lm.showDepthLayer) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Visualization Type',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            children: DepthVisualizationType.values.map((type) {
+              final selected = lm.depthVisualizationType == type;
+              return ChoiceChip(
+                label: Text(
+                  type.displayName,
+                  style: const TextStyle(fontSize: 11),
+                ),
+                selected: selected,
+                onSelected: (_) => lm.depthVisualizationType = type,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                visualDensity: VisualDensity.compact,
+                selectedColor: Colors.blue.withValues(alpha: 0.15),
+                checkmarkColor: Colors.blue,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                'Opacity',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${(lm.depthLayerOpacity * 100).round()}%',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            ),
+            child: Slider(
+              value: lm.depthLayerOpacity,
+              min: 0.0,
+              max: 1.0,
+              divisions: 10,
+              activeColor: Colors.blue,
+              inactiveColor: Colors.blue.withValues(alpha: 0.15),
+              onChanged: (val) => lm.depthLayerOpacity = val,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProtectedZonesContent() {
+    final featureCount = widget.geoJsonBuilder != null
+        ? widget.geoJsonBuilder!.getFeatureCount('protected_zone') +
+            widget.geoJsonBuilder!.getFeatureCount('reef')
+        : 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggleRow(
+          icon: Icons.shield_outlined,
+          iconColor: Colors.green,
+          label: 'Protected Zones',
+          subtitle: featureCount > 0
+              ? '$featureCount features loaded'
+              : 'Marine reserves & reefs',
+          value: lm.showProtectedZones,
+          onChanged: (val) => lm.showProtectedZones = val,
+        ),
+        if (lm.showProtectedZones) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _legendRow(Colors.red.withValues(alpha: 0.5), 'MPA — restricted area'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildExclusionContent() {
+    return _buildToggleRow(
+      icon: Icons.oil_barrel,
+      iconColor: Colors.red,
+      label: 'Show Exclusion Zones',
+      subtitle: lm.showExclusionZones
+          ? '500 m UNCLOS safety buffers visible'
+          : 'Safety rules still apply when hidden',
+      value: lm.showExclusionZones,
+      onChanged: (val) => lm.showExclusionZones = val,
+    );
+  }
+
+  Widget _buildFishingSpotsContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggleRow(
+          icon: Icons.place,
+          iconColor: Colors.indigo,
+          label: 'Show Fishing Spots',
+          subtitle: 'Zones, MPAs & confirmed locations',
+          value: lm.showFishingSpots,
+          onChanged: (val) => lm.showFishingSpots = val,
+        ),
+        if (lm.showFishingSpots) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.15)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _legendRow(Colors.green.withValues(alpha: 0.6), 'High confidence spot'),
+                _legendRow(Colors.orange.withValues(alpha: 0.6), 'Medium confidence spot'),
+                _legendRow(Colors.blue.withValues(alpha: 0.25), 'Fishing zone'),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -465,114 +589,153 @@ class LayerControlPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Container(width: 16, height: 10, color: color),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 9)),
+          Container(
+            width: 18,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontSize: 10)),
         ],
       ),
     );
   }
 
-  Widget _buildDepthSoundingsSection() {
+  Widget _buildNavigationMaskContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Depth Soundings (GEBCO)',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        _buildToggleRow(
+          icon: Icons.map_outlined,
+          iconColor: Colors.deepPurple,
+          label: 'Show Mask Boundary',
+          subtitle: widget.maskInitialized
+              ? 'Coverage area outline'
+              : 'Loading...',
+          value: lm.showMaskOverlay,
+          onChanged: widget.maskInitialized
+              ? (val) => lm.showMaskOverlay = val
+              : null,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(
+              Icons.admin_panel_settings_outlined,
+              size: 13,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              'Admin Tools',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Show Depth Soundings', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            layerManager.showDepthSoundings
-                ? 'GEBCO bathymetric tiles'
-                : 'Disabled',
-            style: const TextStyle(fontSize: 10),
-          ),
-          secondary: const Icon(Icons.water, size: 18, color: Colors.blueAccent),
-          value: layerManager.showDepthSoundings,
-          onChanged: (val) => layerManager.showDepthSoundings = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        _buildAdminAction(
+          icon: Icons.edit_outlined,
+          color: Colors.orange,
+          label: 'Edit Navigation Mask',
+          subtitle: widget.maskInitialized
+              ? 'Paint water / land cells'
+              : 'Loading...',
+          onTap: widget.maskInitialized && widget.onEnterAdminEdit != null
+              ? () {
+                  widget.onEnterAdminEdit!();
+                  widget.onClose();
+                }
+              : null,
+        ),
+        _buildAdminAction(
+          icon: Icons.border_style,
+          color: Colors.teal,
+          label: 'Edit Boundary Outline',
+          subtitle: widget.maskInitialized
+              ? 'Erase / restore boundary'
+              : 'Loading...',
+          onTap: widget.maskInitialized && widget.onEnterOutlineEdit != null
+              ? () {
+                  widget.onEnterOutlineEdit!();
+                  widget.onClose();
+                }
+              : null,
+        ),
+        _buildAdminAction(
+          icon: Icons.map_outlined,
+          color: Colors.deepPurple,
+          label: 'Edit Map Features',
+          subtitle: 'Add / move / delete features',
+          onTap: widget.onEnterFeatureEdit != null
+              ? () {
+                  widget.onEnterFeatureEdit!();
+                  widget.onClose();
+                }
+              : null,
         ),
       ],
     );
   }
 
-  Widget _buildAdminSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.admin_panel_settings, size: 16, color: Colors.orange),
-            SizedBox(width: 4),
-            Text(
-              'Admin Tools',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+  Widget _buildPredictionButton() {
+    return InkWell(
+      onTap: () {
+        widget.onOpenPrediction!();
+        widget.onClose();
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.teal.shade400, Colors.blue.shade500],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.teal.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ListTile(
-          leading: const Icon(Icons.edit, size: 18, color: Colors.orange),
-          title: const Text('Edit Mask', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            maskInitialized
-                ? 'Paint water/land cells'
-                : 'Loading...',
-            style: const TextStyle(fontSize: 10),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          onTap: maskInitialized && onEnterAdminEdit != null
-              ? () {
-                  onEnterAdminEdit!();
-                  onClose();
-                }
-              : null,
-          enabled: maskInitialized,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        child: const Row(
+          children: [
+            Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fishing Prediction',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'AI-powered catch probability',
+                    style: TextStyle(color: Colors.white70, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white70),
+          ],
         ),
-        ListTile(
-          leading: const Icon(Icons.border_style, size: 18, color: Colors.teal),
-          title: const Text('Edit Outline', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            maskInitialized
-                ? 'Erase/restore boundary outline'
-                : 'Loading...',
-            style: const TextStyle(fontSize: 10),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          onTap: maskInitialized && onEnterOutlineEdit != null
-              ? () {
-                  onEnterOutlineEdit!();
-                  onClose();
-                }
-              : null,
-          enabled: maskInitialized,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        ListTile(
-          leading: const Icon(Icons.map, size: 18, color: Colors.purple),
-          title: const Text('Edit Features', style: TextStyle(fontSize: 13)),
-          subtitle: const Text(
-            'Add/move/delete map features',
-            style: TextStyle(fontSize: 10),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          onTap: onEnterFeatureEdit != null
-              ? () {
-                  onEnterFeatureEdit!();
-                  onClose();
-                }
-              : null,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -67,7 +68,7 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
-  int _index = 1;
+  int _index = 2;
   late final PageController _controller = PageController(initialPage: _index);
 
   @override
@@ -75,14 +76,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.cream,
       appBar: AppBar(
         title: Text(
           l10n.appName,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
-        backgroundColor: Color(0xFF0D4F54),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.cream,
         centerTitle: true,
         elevation: 0,
         actions: [
@@ -116,10 +117,10 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         },
 
         children: const [
+          MarinerHarvestPage(),
           IntegratedMap(),
           Weather(),
           FishRecognitionScreen(),
-          MarinerHarvestPage(),
           FishingLogScreen(),
         ]
       ),
@@ -127,9 +128,9 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF0D4F54),
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white60,
+        backgroundColor: AppColors.primary,
+        selectedItemColor: AppColors.tan,
+        unselectedItemColor: AppColors.cream.withValues(alpha: 0.55),
         onTap: (index) {
           _controller.animateToPage(
             index,
@@ -137,31 +138,31 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             curve: Curves.easeInOut,
           );
         },
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',  
-            backgroundColor:Color(0xFF0D4F54),
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.cloud),
-            label: 'Weather',
-            backgroundColor: Color(0xFF0D4F54)
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Fish ID',
-            backgroundColor: Color(0xFF0D4F54)
-          ),
-          const BottomNavigationBarItem(
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(Icons.sailing),
             label: 'Mariner Harvest',
-            backgroundColor: Color(0xFF0D4F54)
+            backgroundColor: AppColors.primary,
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Map',
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.cloud),
+            label: 'Weather',
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera_alt),
+            label: 'Fish ID',
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.anchor),
             label: 'Fishing Log',
-            backgroundColor: Color(0xFF0D4F54)
+            backgroundColor: AppColors.primary,
           ),
         ],
       ),

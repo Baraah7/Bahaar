@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +7,7 @@ import '../providers/fish_classification_provider.dart';
 import '../providers/language_provider.dart';
 import '../models/fishing/fish_probability_model.dart';
 import '../l10n/app_localizations.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class FishRecognitionScreen extends ConsumerStatefulWidget {
   const FishRecognitionScreen({super.key});
@@ -143,9 +144,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF0D4F54),
-                Color(0xFF0E7490),
-                Color(0xFF0D4F54),
+                AppColors.primary,
+                AppColors.accent,
+                AppColors.primary,
               ],
             ),
           ),
@@ -319,7 +320,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                 icon,
                 size: 28,
                 color: isPrimary
-                    ? const Color(0xFF0E7490)
+                    ? AppColors.accent
                     : Colors.white,
               ),
               const SizedBox(height: 8),
@@ -329,7 +330,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: isPrimary
-                      ? const Color(0xFF0E7490)
+                      ? AppColors.accent
                       : Colors.white,
                 ),
               ),
@@ -629,7 +630,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                       Icons.search_rounded,
                       color: classificationState.isLoading
                           ? Colors.grey
-                          : const Color(0xFF0E7490),
+                          : AppColors.accent,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -638,7 +639,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                       style: TextStyle(
                         color: classificationState.isLoading
                             ? Colors.grey
-                            : const Color(0xFF0E7490),
+                            : AppColors.accent,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -782,14 +783,14 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     children: [
                       const Icon(
                         Icons.refresh_rounded,
-                        color: Color(0xFF0E7490),
+                        color: AppColors.accent,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
                       Text(
                         l10n.tryAgain,
                         style: const TextStyle(
-                          color: Color(0xFF0E7490),
+                          color: AppColors.accent,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),

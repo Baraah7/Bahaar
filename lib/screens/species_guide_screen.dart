@@ -1,4 +1,4 @@
-// lib/screens/species_guide_screen.dart
+﻿// lib/screens/species_guide_screen.dart
 // Searchable species grid + tappable detail screen (nested in the same file).
 
 import 'package:flutter/material.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utilities/weather_api_service.dart';
 import '../services/world_tides_service.dart';
@@ -77,9 +77,9 @@ class _WeatherPageState extends State<Weather> {
     } else if (condition.contains('fog') || condition.contains('mist')) {
       return [const Color(0xFF37474F), const Color(0xFF546E7A), const Color(0xFF78909C)];
     } else {
-      // Clear/Sunny - ocean-inspired deep teal gradients
+      // Clear/Sunny - ocean-inspired deep sea gradients
       return isDay
-          ? [const Color(0xFF0D4F54), const Color(0xFF0E7490), const Color(0xFF0D4F54)]
+          ? [const Color(0xFF1B4965), const Color(0xFF2E86AB), const Color(0xFF1B4965)]
           : [const Color(0xFF0D1B2A), const Color(0xFF1B3A4B), const Color(0xFF065A60)];
     }
   }

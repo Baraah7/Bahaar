@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
 import 'package:intl/intl.dart';
 
