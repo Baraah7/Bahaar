@@ -1425,17 +1425,17 @@ class _IntegratedMapState extends State<IntegratedMap> {
           },
         ),
 
-        // GeoJSON layers
+        // GeoJSON layers (protected zones)
         if (_geoJsonBuilder != null)
           ListenableBuilder(
             listenable: _layerManager,
             builder: (context, _) {
-              if (!_layerManager.showGeoJsonLayers) {
+              if (!_layerManager.showProtectedZones) {
                 return const SizedBox.shrink();
               }
               return GeoJsonMapLayers(
                 builder: _geoJsonBuilder!,
-                showProtectedZones: _layerManager.showProtectedZones,
+                showProtectedZones: true,
               );
             },
           ),
@@ -1463,9 +1463,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
         ),
 
         // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
-        ExclusionZoneLayer(
-          service: _exclusionZoneService,
-          isVisible: _layerManager.showExclusionZones,
+        ListenableBuilder(
+          listenable: _layerManager,
+          builder: (context, _) => ExclusionZoneLayer(
+            service: _exclusionZoneService,
+            isVisible: _layerManager.showExclusionZones,
+          ),
         ),
 
         // Territorial water boundary — live-editable outline layer.
@@ -1669,8 +1672,14 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ),
 
         // Bahaar fishing zones, MPA circles, and confirmed spot markers
-        BahaarOverlayLayer(
-          onGetPrediction: _navigateToPrediction,
+        ListenableBuilder(
+          listenable: _layerManager,
+          builder: (context, _) => _layerManager.showFishingSpots
+              ? BahaarOverlayLayer(
+                  onGetPrediction: _navigateToPrediction,
+                  showMpaCircles: _layerManager.showProtectedZones,
+                )
+              : const SizedBox.shrink(),
         ),
 
         // User location marker
@@ -1764,79 +1773,143 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   Widget _buildNavigationStatusIndicator(AppLocalizations l10n) {
+    final ready = _maskInitialized;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: _maskInitialized ? Colors.green : Colors.grey,
+        color: ready ? Colors.green.shade600 : Colors.grey.shade500,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _maskInitialized ? Icons.check_circle : Icons.hourglass_empty,
-            color: Colors.white,
-            size: 16,
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(
-            _maskInitialized ? l10n.navigationReady : l10n.loading,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            ready ? l10n.navigationReady : l10n.loading,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildZoomControls() {
-    return Column(
-      children: [
-        FloatingActionButton.small(
-          heroTag: 'zoom_in',
-          onPressed: _mapReady ? () {
-            _mapController.move(
-              _mapController.camera.center,
-              _mapController.camera.zoom + 1,
-            );
-          } : null,
-          backgroundColor: Colors.white,
-          child: const Icon(Icons.add, color: Colors.blue),
+  Widget _buildMapIconButton({
+    required IconData icon,
+    required String tooltip,
+    VoidCallback? onPressed,
+    bool isActive = false,
+    Color activeColor = Colors.blue,
+  }) {
+    final iconColor = onPressed == null
+        ? Colors.grey.shade400
+        : isActive
+            ? activeColor
+            : Colors.blueGrey.shade700;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Icon(icon, size: 22, color: iconColor),
+          ),
         ),
-        const SizedBox(height: 8),
-        FloatingActionButton.small(
-          heroTag: 'zoom_out',
-          onPressed: _mapReady ? () {
-            _mapController.move(
-              _mapController.camera.center,
-              _mapController.camera.zoom - 1,
-            );
-          } : null,
-          backgroundColor: Colors.white,
-          child: const Icon(Icons.remove, color: Colors.blue),
-        ),
-        const SizedBox(height: 8),
-        FloatingActionButton.small(
-          heroTag: 'my_location',
-          onPressed: _mapReady && _locationData != null ? () {
-            _mapController.move(
-              LatLng(
-                _locationData!.latitude ?? MapConstants.defaultLatitude,
-                _locationData!.longitude ?? MapConstants.defaultLongitude,
-              ),
-              14,
-            );
-          } : null,
-          backgroundColor: Colors.white,
-          child: const Icon(Icons.my_location, color: Colors.blue),
-        ),
-      ],
+      ),
     );
+  }
+
+  Widget _buildButtonGroup(List<Widget> buttons) {
+    final children = <Widget>[];
+    for (int i = 0; i < buttons.length; i++) {
+      children.add(buttons[i]);
+      if (i < buttons.length - 1) {
+        children.add(Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Colors.grey.shade200,
+        ));
+      }
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZoomControls() {
+    return _buildButtonGroup([
+      _buildMapIconButton(
+        icon: Icons.add,
+        tooltip: 'Zoom in',
+        onPressed: _mapReady
+            ? () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom + 1,
+                )
+            : null,
+      ),
+      _buildMapIconButton(
+        icon: Icons.remove,
+        tooltip: 'Zoom out',
+        onPressed: _mapReady
+            ? () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom - 1,
+                )
+            : null,
+      ),
+      _buildMapIconButton(
+        icon: Icons.my_location,
+        tooltip: 'My location',
+        onPressed: _mapReady && _locationData != null
+            ? () => _mapController.move(
+                  LatLng(
+                    _locationData!.latitude ?? MapConstants.defaultLatitude,
+                    _locationData!.longitude ?? MapConstants.defaultLongitude,
+                  ),
+                  14,
+                )
+            : null,
+      ),
+    ]);
   }
 
   // ============================================================
@@ -1923,6 +1996,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     onEnterAdminEdit: _enterAdminEditMode,
                     onEnterFeatureEdit: _enterFeatureEditMode,
                     onEnterOutlineEdit: _enterOutlineEditMode,
+                    onOpenPrediction: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PredictionScreen(),
+                      ),
+                    ),
                   ),
                 );
               }
@@ -2015,46 +2094,77 @@ class _IntegratedMapState extends State<IntegratedMap> {
             },
           ),
 
-          // Layer control toggle button (top left, when panel hidden and not in edit mode)
+          // Left toolbar (layers, legend, navigate) — hidden during edit modes
           ListenableBuilder(
             listenable: _layerManager,
             builder: (context, _) {
-              if (!_layerManager.showLayerControls && !_layerManager.isAdminEditMode && !_layerManager.isFeatureEditMode && !_isOutlineEditMode) {
-                return Positioned(
-                  top: 30,
-                  left: 10,
-                  child: FloatingActionButton.small(
-                    heroTag: 'layer_controls',
-                    onPressed: () => _layerManager.showLayerControls = true,
-                    backgroundColor: Colors.white,
-                    child: const Icon(Icons.layers, color: Colors.blue),
-                  ),
-                );
+              if (_layerManager.isAdminEditMode ||
+                  _layerManager.isFeatureEditMode ||
+                  _isOutlineEditMode) {
+                return const SizedBox.shrink();
               }
-              return const SizedBox.shrink();
+              return Positioned(
+                top: 90,
+                left: 12,
+                child: Column(
+                  children: [
+                    _buildButtonGroup([
+                      _buildMapIconButton(
+                        icon: _layerManager.showLayerControls
+                            ? Icons.layers
+                            : Icons.layers_outlined,
+                        tooltip: 'Layers',
+                        onPressed: () => _layerManager.showLayerControls =
+                            !_layerManager.showLayerControls,
+                        isActive: _layerManager.showLayerControls,
+                      ),
+                      _buildMapIconButton(
+                        icon: _showDepthLegend
+                            ? Icons.legend_toggle
+                            : Icons.legend_toggle_outlined,
+                        tooltip: 'Depth legend',
+                        onPressed: () =>
+                            setState(() => _showDepthLegend = !_showDepthLegend),
+                        isActive: _showDepthLegend,
+                      ),
+                    ]),
+                    const SizedBox(height: 8),
+                    _buildButtonGroup([
+                      _buildMapIconButton(
+                        icon: _currentRoute != null || _showPortSelection
+                            ? Icons.close
+                            : Icons.directions_boat_outlined,
+                        tooltip: _currentRoute != null
+                            ? 'Clear route'
+                            : _showPortSelection
+                                ? 'Cancel'
+                                : 'Navigate to port',
+                        onPressed: _maskInitialized
+                            ? () {
+                                if (_currentRoute != null) {
+                                  _clearRoute();
+                                } else if (_showPortSelection) {
+                                  setState(() => _showPortSelection = false);
+                                } else {
+                                  _openPortSelection();
+                                }
+                              }
+                            : null,
+                        isActive: _currentRoute != null || _showPortSelection,
+                        activeColor: Colors.orange,
+                      ),
+                    ]),
+                  ],
+                ),
+              );
             },
           ),
 
-          // Depth legend toggle button (top left, below layer control)
-          Positioned(
-            top: 80,
-            left: 10,
-            child: FloatingActionButton.small(
-              heroTag: 'depth_legend',
-              onPressed: () => setState(() => _showDepthLegend = !_showDepthLegend),
-              backgroundColor: Colors.white,
-              child: Icon(
-                _showDepthLegend ? Icons.info : Icons.info_outline,
-                color: Colors.blue,
-              ),
-            ),
-          ),
-
-          // Depth legend (when visible)
+          // Depth legend (when visible, bottom left)
           if (_showDepthLegend && _layerManager.showDepthLayer)
             Positioned(
-              top: 110,
-              left: 10,
+              bottom: 110,
+              left: 12,
               child: DepthLegend(),
             ),
 
@@ -2095,36 +2205,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
               isRecalculating: _navigationManager!.isRecalculating,
             ),
 
-          // Navigation FAB button (top left, below depth legend)
-          Positioned(
-            top: 130,
-            left: 10,
-            child: FloatingActionButton.small(
-              heroTag: 'navigation',
-              onPressed: _maskInitialized
-                  ? () {
-                      if (_currentRoute != null) {
-                        _clearRoute();
-                      } else if (_showPortSelection) {
-                        setState(() => _showPortSelection = false);
-                      } else {
-                        _openPortSelection();
-                      }
-                    }
-                  : null,
-              backgroundColor: _currentRoute != null || _showPortSelection ? Colors.orange : Colors.blue,
-              child: Icon(
-                _currentRoute != null || _showPortSelection ? Icons.close : Icons.directions_boat,
-                color: Colors.white,
-              ),
-            ),
-          ),
-
           // Port selection instructions (when active)
           if (_showPortSelection && _currentRoute == null)
             Positioned(
-              top: 180,
-              left: 10,
+              top: 90,
+              left: 68,
+              right: 16,
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(

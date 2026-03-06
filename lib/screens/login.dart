@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/authentication_provider.dart';
 import '../utilities/authentication_validation.dart';
+import 'auth_background.dart';
 import 'signup.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -12,215 +14,246 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final _formKey   = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl  = TextEditingController();
+  bool _obscure    = true;
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final authProvider = ref.read(authProviderProvider);
-    final success = await authProvider.login(
-      email: emailController.text.trim(),
-      password: passwordController.text,
+    if (!_formKey.currentState!.validate()) return;
+    final auth = ref.read(authProviderProvider);
+    final ok = await auth.login(
+      email: _emailCtrl.text.trim(),
+      password: _passCtrl.text,
     );
-
     if (!mounted) return;
-
-    if (!success && authProvider.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error!),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    if (!ok && auth.error != null) _err(auth.error!);
   }
 
-  Future<void> _handleGuestLogin() async {
-    final authProvider = ref.read(authProviderProvider);
-    final success = await authProvider.signInAsGuest();
-
+  Future<void> _handleGuest() async {
+    final auth = ref.read(authProviderProvider);
+    final ok = await auth.signInAsGuest();
     if (!mounted) return;
-
-    if (!success && authProvider.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error!),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    if (!ok && auth.error != null) _err(auth.error!);
   }
 
-  void _navigateToSignUp() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SignUpScreen()),
-    );
+  void _err(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: Colors.red.shade700,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
   }
-
+  
   @override
   Widget build(BuildContext context) {
-    final authProvider = ref.watch(authProviderProvider);
+    final auth = ref.watch(authProviderProvider);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 60),
-              const Text(
-                'Welcome to',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Color(0xFF666666),
-                ),
-                textAlign: TextAlign.center,
+      backgroundColor: const Color(0xFF082028),
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AuthBackground()),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 32,
               ),
-              const Text(
-                'Bahaar',
-                style: TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 22, 62, 98),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: size.height
+                      - MediaQuery.of(context).padding.top
+                      - MediaQuery.of(context).padding.bottom,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 60),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: AuthenticationValidation.validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      obscureText: true,
-                      validator: AuthenticationValidation.validatePassword,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: authProvider.isLoading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 22, 62, 98),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+
+                        // ── Hero ─────────────────────────────────────────────
+                        const SizedBox(height: 52),
+                        Center(
+                          child: Image.asset(
+                            'assets/logo/appIcon.png',
+                            width: 82, height: 82, fit: BoxFit.contain,
                           ),
                         ),
-                        child: authProvider.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 22),
+                        const Center(
+                          child: Text(
+                            'بحـــــــــــــــــار',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            'Ready to continue your journey?\nYour path is right here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.70),
+                              height: 1.6,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 42),
+
+                        // ── Form ─────────────────────────────────────────────
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              AuthField(
+                                controller: _emailCtrl,
+                                label: 'Enter email',
+                                keyboardType: TextInputType.emailAddress,
+                                validator: AuthenticationValidation.validateEmail,
                               ),
-                      ),
+                              const SizedBox(height: 14),
+                              AuthField(
+                                controller: _passCtrl,
+                                label: 'Password',
+                                obscure: _obscure,
+                                validator: AuthenticationValidation.validatePassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscure
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    size: 18,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  onPressed: () =>
+                                      setState(() => _obscure = !_obscure),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // ── Forgot password ───────────────────────────────────
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: () => ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('Password reset coming soon'),
+                              behavior: SnackBarBehavior.floating,
+                            )),
+                            child: Text(
+                              'Forgot password?',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: Colors.white.withValues(alpha: 0.90),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // ── Log In button ─────────────────────────────────────
+                        AuthGradientButton(
+                          label: 'Log In',
+                          isLoading: auth.isLoading,
+                          onPressed: auth.isLoading ? null : _handleLogin,
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // ── OR divider ────────────────────────────────────────
+                        Row(children: [
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.14))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.14))),
+                        ]),
+
+                        const SizedBox(height: 18),
+
+                        // ── Continue as Guest ─────────────────────────────────
+                        Center(
+                          child: GestureDetector(
+                            onTap: auth.isLoading ? null : _handleGuest,
+                            child: Text(
+                              'Continue as Guest',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.75),
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // ── Sign up link ──────────────────────────────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.75),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const SignUpScreen()),
+                              ),
+                              child: const Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.accent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey[400])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'OR',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey[400])),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: authProvider.isLoading ? null : _handleGuestLogin,
-                  icon: const Icon(Icons.person_outline),
-                  label: const Text(
-                    'Continue as Guest',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color.fromARGB(255, 22, 62, 98),
-                    side: const BorderSide(color: Color.fromARGB(255, 22, 62, 98)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Don't have an account? ",
-                    style: TextStyle(color: Color(0xFF666666)),
-                  ),
-                  GestureDetector(
-                    onTap: _navigateToSignUp,
-                    child: const Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 22, 62, 98),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -8,13 +8,13 @@ class MapLayerManager extends ChangeNotifier {
   bool _showBaseMap = true;
 
   // Depth layer configuration
-  bool _showDepthLayer = true;
+  bool _showDepthLayer = false;
   double _depthLayerOpacity = 0.7;
   DepthVisualizationType _depthVisualizationType = DepthVisualizationType.bathymetric;
 
   // GeoJSON layers — only protected zones remain
-  bool _showGeoJsonLayers = true;
-  bool _showProtectedZones = true;
+  bool _showGeoJsonLayers = false;
+  bool _showProtectedZones = false;
 
   // Fishing activity layer
   bool _showFishingActivity = false;
@@ -31,11 +31,14 @@ class MapLayerManager extends ChangeNotifier {
     FishSpecies.shrimp,
   };
 
+  // Fishing spot suggestions (BahaarOverlayLayer)
+  bool _showFishingSpots = false;
+
   // Exclusion zones (oil/gas platforms)
-  bool _showExclusionZones = true;
+  bool _showExclusionZones = false;
 
   // GEBCO depth soundings tile layer
-  bool _showDepthSoundings = true;
+  bool _showDepthSoundings = false;
 
   // Navigation mask
   bool _showMaskOverlay = false;
@@ -64,6 +67,7 @@ class MapLayerManager extends ChangeNotifier {
   bool get showFishingActivityHeatmap => _showFishingActivityHeatmap;
   bool get showFishProbabilityHeatmap => _showFishProbabilityHeatmap;
   Set<FishSpecies> get selectedSpecies => Set.unmodifiable(_selectedSpecies);
+  bool get showFishingSpots => _showFishingSpots;
   bool get showExclusionZones => _showExclusionZones;
   bool get showDepthSoundings => _showDepthSoundings;
   bool get showMaskOverlay => _showMaskOverlay;
@@ -160,6 +164,13 @@ class MapLayerManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  set showFishingSpots(bool value) {
+    if (_showFishingSpots != value) {
+      _showFishingSpots = value;
+      notifyListeners();
+    }
+  }
+
   set showExclusionZones(bool value) {
     if (_showExclusionZones != value) {
       _showExclusionZones = value;
@@ -232,11 +243,11 @@ class MapLayerManager extends ChangeNotifier {
   /// Reset all layers to default state
   void resetToDefaults() {
     _showBaseMap = true;
-    _showDepthLayer = true;
+    _showDepthLayer = false;
     _depthLayerOpacity = 0.7;
     _depthVisualizationType = DepthVisualizationType.bathymetric;
-    _showGeoJsonLayers = true;
-    _showProtectedZones = true;
+    _showGeoJsonLayers = false;
+    _showProtectedZones = false;
     _showFishingActivity = false;
     _showFishingActivityTracks = true;
     _showFishingActivityEvents = true;
@@ -248,8 +259,9 @@ class MapLayerManager extends ChangeNotifier {
       FishSpecies.seaBass,
       FishSpecies.shrimp,
     };
-    _showExclusionZones = true;
-    _showDepthSoundings = true;
+    _showFishingSpots = false;
+    _showExclusionZones = false;
+    _showDepthSoundings = false;
     _showMaskOverlay = false;
     _showLayerControls = false;
     _isFeatureEditMode = false;

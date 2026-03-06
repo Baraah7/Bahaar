@@ -39,24 +39,6 @@
     },
     {
       "type": "Feature",
-      "id": "marina_003",
-      "properties": {
-        "name": "Durrat Marina",
-        "type": "marina",
-        "access": "customers",
-        "depth_m": 4.0,
-        "facilities": ["parking", "fuel", "restroom", "restaurant", "shower"],
-        "osm_id": null,
-        "validated": true,
-        "description": "Luxury marina with full facilities for residents and guests"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [50.7100, 25.7800]
-      }
-    },
-    {
-      "type": "Feature",
       "id": "marina_004",
       "properties": {
         "name": "Muharraq Boat Ramp",

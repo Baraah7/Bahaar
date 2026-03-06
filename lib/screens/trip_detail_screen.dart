@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/screens/location_picker_screen.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 /// Full-screen view of a single trip. Allows editing and deleting each catch.
 class TripDetailScreen extends StatefulWidget {
@@ -85,7 +86,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       builder: (ctx, child) => Theme(
         data: ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF0E7490),
+            primary: AppColors.accent,
             surface: Color(0xFF0D2E31),
           ),
         ),
@@ -200,7 +201,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         appBar: AppBar(
           title: Text(dateStr,
               style: const TextStyle(fontSize: 16)),
-          backgroundColor: const Color(0xFF0D4F54),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           leading: BackButton(
             onPressed: () => Navigator.of(context).pop(_dirty),
@@ -208,7 +209,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addCatch,
-          backgroundColor: const Color(0xFF0E7490),
+          backgroundColor: AppColors.accent,
           icon: const Icon(Icons.add, color: Colors.white),
           label: const Text('Add Catch',
               style: TextStyle(color: Colors.white)),
@@ -307,7 +308,7 @@ class _CatchCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF0E7490).withValues(alpha: 0.25),
+                color: AppColors.accent.withValues(alpha: 0.25),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.set_meal,
@@ -386,7 +387,7 @@ class _CatchCard extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined,
-                      color: Colors.teal, size: 20),
+                      color: AppColors.accent, size: 20),
                   onPressed: onEdit,
                   tooltip: 'Edit',
                   padding: EdgeInsets.zero,
@@ -575,8 +576,8 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                     label: Text(s,
                         style: const TextStyle(
                             color: Colors.white, fontSize: 12)),
-                    backgroundColor: const Color(0xFF1A5C62),
-                    side: const BorderSide(color: Colors.teal),
+                    backgroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.accent),
                     onPressed: () =>
                         setState(() => _speciesCtrl.text = s),
                   );
@@ -636,11 +637,11 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                     child: const Row(
                       children: [
                         Icon(Icons.map_outlined,
-                            color: Colors.teal, size: 14),
+                            color: AppColors.accent, size: 14),
                         SizedBox(width: 4),
                         Text('Pin on Map',
                             style: TextStyle(
-                                color: Colors.teal, fontSize: 11)),
+                                color: AppColors.accent, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -712,7 +713,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                   icon: Icon(widget.entry == null ? Icons.add : Icons.save),
                   label: Text(widget.entry == null ? 'Add Catch' : 'Save Changes'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0E7490),
+                    backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
                     padding:
                         const EdgeInsets.symmetric(vertical: 14),
@@ -743,7 +744,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0E7490)),
+        borderSide: const BorderSide(color: AppColors.accent),
       ),
       errorStyle: const TextStyle(
           color: Colors.orangeAccent, fontSize: 10),

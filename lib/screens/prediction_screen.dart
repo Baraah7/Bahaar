@@ -1,4 +1,4 @@
-// lib/screens/prediction_screen.dart
+﻿// lib/screens/prediction_screen.dart
 // Fish-probability prediction screen.
 // Can be opened from the map (with pre-filled lat/lng + species) or
 // standalone from the bottom navigation bar.

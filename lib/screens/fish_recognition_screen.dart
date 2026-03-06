@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +7,7 @@ import '../providers/fish_classification_provider.dart';
 import '../providers/language_provider.dart';
 import '../models/fishing/fish_probability_model.dart';
 import '../l10n/app_localizations.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class FishRecognitionScreen extends ConsumerStatefulWidget {
   const FishRecognitionScreen({super.key});
@@ -143,9 +144,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF0D4F54),
-                Color(0xFF0E7490),
-                Color(0xFF0D4F54),
+                AppColors.primary,
+                AppColors.accent,
+                AppColors.primary,
               ],
             ),
           ),
@@ -209,8 +210,11 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ] else ...[
               _buildImagePreview(classificationState, l10n),
               const SizedBox(height: 20),
-              if (classificationState.result != null)
+              if (classificationState.result != null) ...[
                 _buildResultCard(context, classificationState.result!, l10n),
+                const SizedBox(height: 16),
+                _buildFishInfoCard(classificationState.result!),
+              ],
               if (classificationState.error != null)
                 _buildErrorCard(classificationState.error!),
               const SizedBox(height: 16),
@@ -319,7 +323,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                 icon,
                 size: 28,
                 color: isPrimary
-                    ? const Color(0xFF0E7490)
+                    ? AppColors.accent
                     : Colors.white,
               ),
               const SizedBox(height: 8),
@@ -329,7 +333,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: isPrimary
-                      ? const Color(0xFF0E7490)
+                      ? AppColors.accent
                       : Colors.white,
                 ),
               ),
@@ -505,6 +509,94 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
+  static const _fishInfo = {
+    'Gilt-Head Bream': {
+      'scientific': 'Sparus aurata',
+      'habitat': 'Coastal waters & lagoons',
+      'size': '20 – 50 cm',
+      'season': 'Spring & Autumn',
+      'diet': 'Mollusks, crustaceans, sea urchins',
+      'flavor': 'Mild, delicate white flesh',
+    },
+    'Hourse Mackerel': {
+      'scientific': 'Trachurus trachurus',
+      'habitat': 'Open sea & coastal waters',
+      'size': '15 – 30 cm',
+      'season': 'Summer',
+      'diet': 'Small fish, plankton, crustaceans',
+      'flavor': 'Firm, slightly oily flesh',
+    },
+    'Sea Bass': {
+      'scientific': 'Dicentrarchus labrax',
+      'habitat': 'Coastal waters & estuaries',
+      'size': '30 – 60 cm',
+      'season': 'Spring & Summer',
+      'diet': 'Fish, crustaceans, cephalopods',
+      'flavor': 'Delicate, mild white flesh',
+    },
+    'Shrimp': {
+      'scientific': 'Various species',
+      'habitat': 'Shallow coastal waters',
+      'size': '5 – 20 cm',
+      'season': 'Year-round',
+      'diet': 'Algae, plankton, organic matter',
+      'flavor': 'Sweet, tender',
+    },
+  };
+
+  Widget _buildFishInfoCard(dynamic result) {
+    final info = _fishInfo[result.className];
+    if (info == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'Fish Info',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  info['scientific']!,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _InfoGrid(items: [
+            _InfoItem(Icons.place_outlined, 'Habitat', info['habitat']!),
+            _InfoItem(Icons.straighten_rounded, 'Size', info['size']!),
+            _InfoItem(Icons.wb_sunny_outlined, 'Best Season', info['season']!),
+            _InfoItem(Icons.restaurant_outlined, 'Diet', info['diet']!),
+            _InfoItem(Icons.star_outline_rounded, 'Flavor', info['flavor']!),
+          ]),
+        ],
+      ),
+    );
+  }
+
   Widget _buildConfidenceIndicator(double confidence, bool isConfident) {
     final percentage = (confidence * 100).toInt();
     final color = isConfident
@@ -629,7 +721,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                       Icons.search_rounded,
                       color: classificationState.isLoading
                           ? Colors.grey
-                          : const Color(0xFF0E7490),
+                          : AppColors.accent,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -638,7 +730,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                       style: TextStyle(
                         color: classificationState.isLoading
                             ? Colors.grey
-                            : const Color(0xFF0E7490),
+                            : AppColors.accent,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -782,14 +874,14 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     children: [
                       const Icon(
                         Icons.refresh_rounded,
-                        color: Color(0xFF0E7490),
+                        color: AppColors.accent,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
                       Text(
                         l10n.tryAgain,
                         style: const TextStyle(
-                          color: Color(0xFF0E7490),
+                          color: AppColors.accent,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),
@@ -802,6 +894,54 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InfoItem {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _InfoItem(this.icon, this.label, this.value);
+}
+
+class _InfoGrid extends StatelessWidget {
+  final List<_InfoItem> items;
+  const _InfoGrid({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: items.map((item) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(item.icon, size: 15, color: Colors.white60),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 90,
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                item.value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      )).toList(),
     );
   }
 }

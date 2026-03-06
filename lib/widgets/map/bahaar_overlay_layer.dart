@@ -1,4 +1,4 @@
-// lib/widgets/map/bahaar_overlay_layer.dart
+﻿// lib/widgets/map/bahaar_overlay_layer.dart
 // Renders three overlay types onto the existing FlutterMap:
 //   1. Zone polygons  – northern/eastern/western, semi-transparent fills.
 //   2. MPA circles    – red semi-transparent circles; tap → bottom sheet.
@@ -21,16 +21,24 @@ class BahaarOverlayLayer extends StatelessWidget {
   /// Receives the spot's [LatLng] and [speciesId] (first species of the spot).
   final void Function(LatLng latLng, String speciesId)? onGetPrediction;
 
-  const BahaarOverlayLayer({super.key, this.onGetPrediction});
+  /// When true the MPA red circles are rendered (controlled by the
+  /// Protected Zones toggle, not the Fishing Spots toggle).
+  final bool showMpaCircles;
+
+  const BahaarOverlayLayer({
+    super.key,
+    this.onGetPrediction,
+    this.showMpaCircles = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        _ZonePolygonLayer(),
-        _MpaCircleLayer(
-          onMpaTapped: (mpa) => _showMpaSheet(context, mpa),
-        ),
+        if (showMpaCircles)
+          _MpaCircleLayer(
+            onMpaTapped: (mpa) => _showMpaSheet(context, mpa),
+          ),
         _SpotMarkerLayer(
           onSpotTapped: (spot) => _showSpotSheet(context, spot),
         ),
@@ -267,36 +275,6 @@ class _InfoChip extends StatelessWidget {
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
       ]),
     );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Zone polygon layer
-// ---------------------------------------------------------------------------
-
-class _ZonePolygonLayer extends StatelessWidget {
-  static const Map<String, Color> _zoneColors = {
-    'northern': Colors.blue,
-    'eastern': Colors.green,
-    'western': Colors.orange,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final polygons = kZonePolygons.entries.map((entry) {
-      final color = _zoneColors[entry.key] ?? Colors.grey;
-      final points = entry.value
-          .map((p) => LatLng(p[0], p[1]))
-          .toList();
-      return Polygon(
-        points: points,
-        color: color.withValues(alpha: 0.15),
-        borderColor: color.withValues(alpha: 0.5),
-        borderStrokeWidth: 1.5,
-      );
-    }).toList();
-
-    return PolygonLayer(polygons: polygons);
   }
 }
 

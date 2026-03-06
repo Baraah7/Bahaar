@@ -26,7 +26,7 @@ class ProfileAvatar extends StatelessWidget {
       ),
       child: CircleAvatar(
         radius: radius,
-        backgroundColor: const Color(0xFF065A60),
+        backgroundColor: const Color(0xFF004D63),
         child: Text(
           _initials,
           style: TextStyle(

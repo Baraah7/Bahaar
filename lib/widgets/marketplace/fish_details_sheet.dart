@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
@@ -816,7 +816,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   }
 
   Widget _buildSellerCard() {
-    return buildSellerCard(widget.listing);
+    return buildSellerCard(context, widget.listing);
   }
 
   Widget _buildPaymentOption(PaymentMethod method) {
