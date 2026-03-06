@@ -260,11 +260,15 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (context, scrollController) => Column(
           children: [
+            const SizedBox(height: 8),
             Container(
               width: 40,
               height: 4,
@@ -276,46 +280,57 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                l10n.filterByFishType,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.filterByFishType,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            ListTile(
-              leading: Icon(Icons.all_inclusive_rounded, color: Colors.grey.shade600),
-              title: Text(l10n.allTypes, style: const TextStyle(fontWeight: FontWeight.w500)),
-              selected: _selectedTypeFilter == null,
-              selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              onTap: () {
-                setState(() => _selectedTypeFilter = null);
-                Navigator.pop(context);
-              },
-            ),
-            ...FishType.values.map((type) => ListTile(
-                  leading: Icon(
-                    type == FishType.shrimp
-                        ? Icons.set_meal_rounded
-                        : type == FishType.crab
-                            ? Icons.pest_control_rounded
-                            : Icons.phishing_rounded,
-                    color: const Color(0xFF0E7490),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.only(bottom: 16),
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.all_inclusive_rounded, color: Colors.grey.shade600),
+                    title: Text(l10n.allTypes, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    selected: _selectedTypeFilter == null,
+                    selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onTap: () {
+                      setState(() => _selectedTypeFilter = null);
+                      Navigator.pop(context);
+                    },
                   ),
-                  title: Text(type.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
-                  subtitle: Text(type.arabicName, style: TextStyle(color: Colors.grey.shade500)),
-                  selected: _selectedTypeFilter == type,
-                  selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  onTap: () {
-                    setState(() => _selectedTypeFilter = type);
-                    Navigator.pop(context);
-                  },
-                )),
+                  ...FishType.values.map((type) => ListTile(
+                        leading: Icon(
+                          type == FishType.shrimp
+                              ? Icons.set_meal_rounded
+                              : type == FishType.crab
+                                  ? Icons.pest_control_rounded
+                                  : Icons.phishing_rounded,
+                          color: const Color(0xFF0E7490),
+                        ),
+                        title: Text(type.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
+                        subtitle: Text(type.arabicName, style: TextStyle(color: Colors.grey.shade500)),
+                        selected: _selectedTypeFilter == type,
+                        selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onTap: () {
+                          setState(() => _selectedTypeFilter = type);
+                          Navigator.pop(context);
+                        },
+                      )),
+                ],
+              ),
+            ),
           ],
         ),
       ),

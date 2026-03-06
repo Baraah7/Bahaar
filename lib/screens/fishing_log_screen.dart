@@ -1,5 +1,6 @@
 ﻿import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
@@ -198,56 +199,71 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
   Widget build(BuildContext context) {
     final activeTrip = _service.activeTrip;
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(
-        title: const Text('Fishing Log',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadTrips,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary))
-          : Column(
-              children: [
-                // Active trip banner
-                if (activeTrip != null) _buildActiveBanner(activeTrip),
-
-                // Trip list
-                Expanded(
-                  child: _trips.isEmpty
-                      ? _buildEmpty()
-                      : RefreshIndicator(
-                          onRefresh: _loadTrips,
-                          child: ListView.builder(
-                            itemCount: _trips.length,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 8),
-                            itemBuilder: (ctx, i) {
-                              final trip = _trips[i];
-                              return TripCard(
-                                trip: trip,
-                                onTap: () => _showTripDetail(trip),
-                                onDelete: trip.isActive
-                                    ? null
-                                    : () => _deleteTrip(trip.id),
-                              );
-                            },
-                          ),
-                        ),
-                ),
-              ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Fishing Log',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+              color: Colors.white,
             ),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: _loadTrips,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primary, AppColors.accent, AppColors.primary],
+            ),
+          ),
+          child: SafeArea(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white))
+                : Column(
+                    children: [
+                      if (activeTrip != null) _buildActiveBanner(activeTrip),
+                      Expanded(
+                        child: _trips.isEmpty
+                            ? _buildEmpty()
+                            : RefreshIndicator(
+                                onRefresh: _loadTrips,
+                                child: ListView.builder(
+                                  itemCount: _trips.length,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  itemBuilder: (ctx, i) {
+                                    final trip = _trips[i];
+                                    return TripCard(
+                                      trip: trip,
+                                      onTap: () => _showTripDetail(trip),
+                                      onDelete: trip.isActive
+                                          ? null
+                                          : () => _deleteTrip(trip.id),
+                                    );
+                                  },
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
       floatingActionButton: activeTrip != null
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -294,6 +310,7 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
                 ),
               ],
             ),
+      ),
     );
   }
 
@@ -335,19 +352,19 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.anchor, size: 64, color: Colors.grey.shade400),
+          Icon(Icons.anchor, size: 64, color: Colors.white.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
             'No trips yet',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade600),
+                color: Colors.white.withValues(alpha: 0.9)),
           ),
           const SizedBox(height: 8),
           Text(
             'Tap "Start Trip" to begin logging your catches.',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],

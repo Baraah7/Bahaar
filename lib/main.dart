@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -129,7 +129,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         currentIndex: _index,
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.primary,
-        selectedItemColor: AppColors.tan,
+        selectedItemColor: const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.85),
         unselectedItemColor: AppColors.cream.withValues(alpha: 0.55),
         onTap: (index) {
           _controller.animateToPage(
@@ -141,7 +141,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.sailing),
-            label: 'Mariner Harvest',
+            label: 'Marketplace',
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
@@ -152,7 +152,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.cloud),
             label: 'Weather',
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.accent,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.camera_alt),

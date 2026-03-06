@@ -22,15 +22,27 @@ class TripCard extends StatelessWidget {
     final durationStr = _formatDuration(duration);
     final totalWeight = trip.totalWeightKg;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: const Color(0xFF0D4F54),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.05),
+          ],
+        ),
         borderRadius: BorderRadius.circular(14),
-        child: Padding(
+        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +136,8 @@ class TripCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   String _formatDuration(Duration d) {

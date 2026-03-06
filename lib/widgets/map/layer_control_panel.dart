@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 /// Control panel widget for managing all map layers
 class LayerControlPanel extends StatefulWidget {
@@ -89,7 +90,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     key: 'depth',
                     title: 'Depth Visualization',
                     icon: Icons.water_drop_outlined,
-                    color: Colors.blue,
+                    color: AppColors.red,
                     isActive: lm.showDepthLayer,
                     content: _buildDepthContent(),
                   ),
@@ -97,7 +98,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     key: 'protected',
                     title: 'Protected Zones',
                     icon: Icons.shield_outlined,
-                    color: Colors.green,
+                    color: AppColors.red,
                     isActive: lm.showProtectedZones,
                     content: _buildProtectedZonesContent(),
                   ),
@@ -105,7 +106,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     key: 'exclusion',
                     title: 'Oil & Gas Exclusion',
                     icon: Icons.oil_barrel,
-                    color: Colors.red,
+                    color: AppColors.red,
                     isActive: lm.showExclusionZones,
                     content: _buildExclusionContent(),
                   ),
@@ -113,7 +114,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     key: 'spots',
                     title: 'Fishing Spot Suggestions',
                     icon: Icons.place,
-                    color: Colors.indigo,
+                    color: AppColors.red,
                     isActive: lm.showFishingSpots,
                     content: _buildFishingSpotsContent(),
                   ),
@@ -121,7 +122,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     key: 'mask',
                     title: 'Navigation & Admin',
                     icon: Icons.admin_panel_settings_outlined,
-                    color: Colors.deepPurple,
+                    color: AppColors.red,
                     isActive: lm.showMaskOverlay,
                     content: _buildNavigationMaskContent(),
                   ),
@@ -156,7 +157,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
+              color: AppColors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.layers, size: 17, color: Colors.blue),
@@ -417,7 +418,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
       children: [
         _buildToggleRow(
           icon: Icons.water_drop_outlined,
-          iconColor: Colors.blue,
+          iconColor: AppColors.red,
           label: 'Show Depth Layer',
           value: lm.showDepthLayer,
           onChanged: (val) => lm.showDepthLayer = val,
@@ -446,8 +447,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                 onSelected: (_) => lm.depthVisualizationType = type,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 visualDensity: VisualDensity.compact,
-                selectedColor: Colors.blue.withValues(alpha: 0.15),
-                checkmarkColor: Colors.blue,
+                selectedColor: AppColors.red.withValues(alpha: 0.15),
+                checkmarkColor: AppColors.red,
               );
             }).toList(),
           ),
@@ -468,7 +469,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue,
+                  color: AppColors.red,
                 ),
               ),
             ],
@@ -484,8 +485,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               min: 0.0,
               max: 1.0,
               divisions: 10,
-              activeColor: Colors.blue,
-              inactiveColor: Colors.blue.withValues(alpha: 0.15),
+              activeColor: AppColors.red,
+              inactiveColor: AppColors.red.withValues(alpha: 0.15),
               onChanged: (val) => lm.depthLayerOpacity = val,
             ),
           ),
@@ -504,7 +505,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
       children: [
         _buildToggleRow(
           icon: Icons.shield_outlined,
-          iconColor: Colors.green,
+          iconColor: AppColors.red,
           label: 'Protected Zones',
           subtitle: featureCount > 0
               ? '$featureCount features loaded'
@@ -519,14 +520,14 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.05),
+                color: AppColors.red.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
+                border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _legendRow(Colors.red.withValues(alpha: 0.5), 'MPA — restricted area'),
+                  _legendRow(AppColors.red.withValues(alpha: 0.5), 'MPA — restricted area'),
                 ],
               ),
             ),
@@ -539,7 +540,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
   Widget _buildExclusionContent() {
     return _buildToggleRow(
       icon: Icons.oil_barrel,
-      iconColor: Colors.red,
+      iconColor: AppColors.red,
       label: 'Show Exclusion Zones',
       subtitle: lm.showExclusionZones
           ? '500 m UNCLOS safety buffers visible'
@@ -555,7 +556,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
       children: [
         _buildToggleRow(
           icon: Icons.place,
-          iconColor: Colors.indigo,
+          iconColor: AppColors.red,
           label: 'Show Fishing Spots',
           subtitle: 'Zones, MPAs & confirmed locations',
           value: lm.showFishingSpots,
@@ -566,9 +567,9 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.indigo.withValues(alpha: 0.05),
+              color: AppColors.red.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.indigo.withValues(alpha: 0.15)),
+              border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +611,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
       children: [
         _buildToggleRow(
           icon: Icons.map_outlined,
-          iconColor: Colors.deepPurple,
+          iconColor: AppColors.red,
           label: 'Show Mask Boundary',
           subtitle: widget.maskInitialized
               ? 'Coverage area outline'
@@ -642,7 +643,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         const SizedBox(height: 8),
         _buildAdminAction(
           icon: Icons.edit_outlined,
-          color: Colors.orange,
+          color: AppColors.red,
           label: 'Edit Navigation Mask',
           subtitle: widget.maskInitialized
               ? 'Paint water / land cells'
@@ -656,7 +657,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         ),
         _buildAdminAction(
           icon: Icons.border_style,
-          color: Colors.teal,
+          color: AppColors.red,
           label: 'Edit Boundary Outline',
           subtitle: widget.maskInitialized
               ? 'Erase / restore boundary'
@@ -670,7 +671,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         ),
         _buildAdminAction(
           icon: Icons.map_outlined,
-          color: Colors.deepPurple,
+          color: AppColors.red,
           label: 'Edit Map Features',
           subtitle: 'Add / move / delete features',
           onTap: widget.onEnterFeatureEdit != null
@@ -696,7 +697,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.teal.shade400, Colors.blue.shade500],
+            colors: [AppColors.brown, AppColors.tan],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),

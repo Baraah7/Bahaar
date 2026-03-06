@@ -6,6 +6,7 @@ import '../models/weather/weather_response_model.dart';
 import '../models/weather/tide_model.dart';
 import '../widgets/weather/weather_list.dart';
 import '../l10n/app_localizations.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 class Weather extends StatefulWidget {
   const Weather({super.key});
@@ -57,31 +58,7 @@ class _WeatherPageState extends State<Weather> {
 
   // Get gradient colors based on time of day and weather condition
   List<Color> _getGradientColors() {
-    if (weatherData == null) {
-      return [const Color(0xFF0D1B2A), const Color(0xFF1B3A4B), const Color(0xFF065A60)];
-    }
-
-    final isDay = weatherData!.currentWeather.is_day == 1;
-    final condition = weatherData!.currentWeather.condition.text.toLowerCase();
-
-    if (condition.contains('rain') || condition.contains('drizzle')) {
-      return isDay
-          ? [const Color(0xFF1A365D), const Color(0xFF2D4A6F), const Color(0xFF4A6FA5)]
-          : [const Color(0xFF0D1321), const Color(0xFF1D2D44), const Color(0xFF3E5C76)];
-    } else if (condition.contains('cloud') || condition.contains('overcast')) {
-      return isDay
-          ? [const Color(0xFF2C3E50), const Color(0xFF4A6572), const Color(0xFF607D8B)]
-          : [const Color(0xFF1A1A2E), const Color(0xFF16213E), const Color(0xFF0F3460)];
-    } else if (condition.contains('snow')) {
-      return [const Color(0xFF2E4057), const Color(0xFF4A6FA5), const Color(0xFF7BA3C4)];
-    } else if (condition.contains('fog') || condition.contains('mist')) {
-      return [const Color(0xFF37474F), const Color(0xFF546E7A), const Color(0xFF78909C)];
-    } else {
-      // Clear/Sunny - ocean-inspired deep sea gradients
-      return isDay
-          ? [const Color(0xFF1B4965), const Color(0xFF2E86AB), const Color(0xFF1B4965)]
-          : [const Color(0xFF0D1B2A), const Color(0xFF1B3A4B), const Color(0xFF065A60)];
-    }
+    return [AppColors.primary, AppColors.accent, AppColors.primary];
   }
  
   @override

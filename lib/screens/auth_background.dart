@@ -82,18 +82,18 @@ class AuthGrainPainter extends CustomPainter {
   bool shouldRepaint(AuthGrainPainter _) => false;
 }
 
-// ── Gradient CTA button ───────────────────────────────────────────────────────
+// ── Gradient CTA button (pill shape) ─────────────────────────────────────────
 
 class AuthGradientButton extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final bool isLoading;
   final VoidCallback? onPressed;
 
   const AuthGradientButton({
     super.key,
     required this.label,
-    required this.icon,
+    this.icon,
     required this.isLoading,
     required this.onPressed,
   });
@@ -102,30 +102,30 @@ class AuthGradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     return SizedBox(
-      height: 52,
+      height: 54,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(27),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(27),
           child: Ink(
             decoration: BoxDecoration(
               gradient: enabled
                   ? const LinearGradient(
-                      colors: [kAuthTeal, kAuthTealDark],
+                      colors: [Color(0xFF004A63), Color(0xFF002535)],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
                   : LinearGradient(
-                      colors: [Colors.grey.shade800, Colors.grey.shade800]),
-              borderRadius: BorderRadius.circular(14),
+                      colors: [Colors.grey.shade700, Colors.grey.shade800]),
+              borderRadius: BorderRadius.circular(27),
               boxShadow: enabled
                   ? [
                       BoxShadow(
-                        color: kAuthTeal.withValues(alpha: 0.45),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
+                        color: const Color(0xFF004A63).withValues(alpha: 0.50),
+                        blurRadius: 22,
+                        offset: const Offset(0, 8),
                       )
                     ]
                   : [],
@@ -144,15 +144,17 @@ class AuthGradientButton extends StatelessWidget {
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(icon, color: Colors.white, size: 18),
-                        const SizedBox(width: 8),
+                        if (icon != null) ...[
+                          Icon(icon, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                        ],
                         Text(
                           label,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ],
@@ -170,7 +172,7 @@ class AuthGradientButton extends StatelessWidget {
 class AuthField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final bool obscure;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
@@ -180,7 +182,7 @@ class AuthField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.label,
-    required this.icon,
+    this.icon,
     this.obscure = false,
     this.keyboardType,
     this.validator,
@@ -196,35 +198,79 @@ class AuthField extends StatelessWidget {
       validator: validator,
       style: const TextStyle(fontSize: 14, color: Color(0xFF0A2A30)),
       decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: AppColors.primary),
-        prefixIcon: Icon(icon, size: 18, color: AppColors.accent),
+        hintText: label,
+        hintStyle: TextStyle(fontSize: 13, color: AppColors.primary),
+        prefixIcon: icon != null
+            ? Icon(icon, size: 18, color: AppColors.accent)
+            : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.55),
+        fillColor: Colors.white.withValues(alpha: 0.20),
         contentPadding:
-            const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            const EdgeInsets.symmetric(vertical: 17, horizontal: 20),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(27),
+          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(27),
+          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08), width: 1),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderRadius: BorderRadius.all(Radius.circular(27)),
           borderSide: BorderSide(color: kAuthTeal, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(27),
           borderSide: BorderSide(color: Colors.red.shade400),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(27),
           borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
         ),
         errorStyle: const TextStyle(color: Color(0xFFFF6B6B)),
+      ),
+    );
+  }
+}
+
+// ── Social sign-in button ─────────────────────────────────────────────────────
+
+class AuthSocialBtn extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const AuthSocialBtn({
+    super.key,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.20), width: 1),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              height: 1,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -98,7 +98,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     onFishTap: (listing) => _showFishDetails(listing),
                   ),
                   Container(
-                    color: AppColors.cream,
+                    color: Colors.grey.shade50,
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.all(16),
@@ -116,7 +116,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     ),
                   ),
                   Container(
-                    color: AppColors.cream,
+                    color: Colors.grey.shade50,
                     child: OrdersTab(
                       marketplaceService: _marketplaceService,
                       currentUserId: user?.id,
