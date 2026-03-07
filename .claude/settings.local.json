@@ -3,7 +3,8 @@
     "allow": [
       "Bash(where:*)",
       "Bash(grep:*)",
-      "Bash(flutter analyze --no-fatal-infos)"
+      "Bash(flutter analyze --no-fatal-infos)",
+      "Bash(xargs cat)"
     ]
   }
 }

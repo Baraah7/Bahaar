@@ -327,7 +327,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Widget _buildSpeciesDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedSpeciesId,
+      initialValue: _selectedSpeciesId,
       decoration: _inputDecoration('اختر نوع السمك'),
       items: kAllSpecies
           .map((s) => DropdownMenuItem(
@@ -395,7 +395,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Widget _buildMethodDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedMethod,
+      initialValue: _selectedMethod,
       decoration: _inputDecoration('طريقة الصيد'),
       items: kMethodNamesAr.entries
           .map((e) => DropdownMenuItem(
