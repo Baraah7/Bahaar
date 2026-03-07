@@ -1,6 +1,9 @@
 ﻿import 'dart:developer';
+import 'package:Bahaar/app_start.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
@@ -9,15 +12,16 @@ import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 import 'package:Bahaar/screens/trip_detail_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:Bahaar/providers/authentication_provider.dart';
 
-class FishingLogScreen extends StatefulWidget {
+class FishingLogScreen extends ConsumerStatefulWidget {
   const FishingLogScreen({super.key});
 
   @override
-  State<FishingLogScreen> createState() => _FishingLogScreenState();
+  ConsumerState<FishingLogScreen> createState() => _FishingLogScreenState();
 }
 
-class _FishingLogScreenState extends State<FishingLogScreen> {
+class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   final _service = TripService.instance;
   List<Trip> _trips = [];
   bool _loading = true;
@@ -197,6 +201,65 @@ class _FishingLogScreenState extends State<FishingLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isGuest = ref.watch(authProviderProvider).isGuest;
+
+    if (isGuest) {
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: AppColors.primary,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(36),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline,
+                      size: 72, color: Colors.white.withValues(alpha: 0.7)),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Sign In Required',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'The fishing log is only available to registered users. Sign in to track your trips and catches.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.75),
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D4F54),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      final nav = Navigator.of(context);
+                      await FirebaseAuth.instance.signOut();
+                      nav.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const AppStart()),
+                        (_) => false,
+                      );
+                    },
+                    child: const Text('Sign In'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final activeTrip = _service.activeTrip;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(

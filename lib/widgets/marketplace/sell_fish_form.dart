@@ -1,14 +1,17 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/fishing/trip_model.dart';
+import '../../app_start.dart';
 
 class SellFishForm extends StatefulWidget {
   final String? currentUserId;
   final String? currentUserName;
   final String? currentUserPhone;
   final String? currentUserLocation;
+  final bool isGuest;
   /// Recent catch entries from the fishing log shown as quick-fill suggestions.
   final List<CatchEntry> recentCatches;
   final Function(FishListing) onSubmit;
@@ -19,6 +22,7 @@ class SellFishForm extends StatefulWidget {
     this.currentUserName,
     this.currentUserPhone,
     this.currentUserLocation,
+    this.isGuest = false,
     this.recentCatches = const [],
     required this.onSubmit,
   });
@@ -779,16 +783,52 @@ class _SellFishFormState extends State<SellFishForm> {
     );
   }
 
-  void _submitForm() {
-    if (widget.currentUserId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please login to create a listing'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  void _showLoginRequired() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
+            SizedBox(width: 10),
+            Text('Login Required'),
+          ],
         ),
-      );
+        content: const Text(
+          'You need to sign in to post a listing.\nGuest accounts cannot sell fish.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0D4F54),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final nav = Navigator.of(context);
+              await FirebaseAuth.instance.signOut();
+              nav.pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const AppStart()),
+                (_) => false,
+              );
+            },
+            child: const Text('Sign In'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitForm() {
+    if (widget.isGuest || widget.currentUserId == null) {
+      _showLoginRequired();
       return;
     }
 

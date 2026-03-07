@@ -1,7 +1,9 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
+import '../../app_start.dart';
 import 'buildSellerCard.dart';
 import 'buildPaymentOption.dart';
 
@@ -11,6 +13,7 @@ class FishDetailsSheet extends StatefulWidget {
   final String? currentUserName;
   final String? currentUserPhone;
   final String? currentUserLocation;
+  final bool isGuest;
   final Function(PaymentMethod, String, String, String?, String?) onBuy;
 
   const FishDetailsSheet({
@@ -20,6 +23,7 @@ class FishDetailsSheet extends StatefulWidget {
     this.currentUserName,
     this.currentUserPhone,
     this.currentUserLocation,
+    this.isGuest = false,
     required this.onBuy,
   });
 
@@ -761,7 +765,55 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
+  void _showLoginRequired() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
+            SizedBox(width: 10),
+            Text('Login Required'),
+          ],
+        ),
+        content: const Text(
+          'You need to sign in to place an order.\nGuest accounts cannot buy or sell fish.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0D4F54),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              Navigator.pop(context); // close bottom sheet
+              final nav = Navigator.of(context);
+              await FirebaseAuth.instance.signOut();
+              nav.pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const AppStart()),
+                (_) => false,
+              );
+            },
+            child: const Text('Sign In'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleBuy() {
+    if (widget.isGuest) {
+      _showLoginRequired();
+      return;
+    }
     if (_formKey.currentState!.validate() && _selectedPayment != null) {
       if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(

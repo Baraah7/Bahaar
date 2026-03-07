@@ -104,6 +104,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                       padding: const EdgeInsets.all(16),
                       child: SellFishForm(
                         currentUserId: user?.id,
+                        isGuest: authProvider.isGuest,
                         currentUserName: fullName?.isNotEmpty == true
                             ? fullName
                             : user?.userName,
@@ -262,6 +263,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
       builder: (context) => FishDetailsSheet(
         listing: listing,
         currentUserId: user?.id,
+        isGuest: authProvider.isGuest,
         currentUserName:
             fullName?.isNotEmpty == true ? fullName : user?.userName,
         currentUserPhone: user?.phone,
