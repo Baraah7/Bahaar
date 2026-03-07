@@ -572,4 +572,183 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get daysAgo => 'أيام مضت';
+
+  @override
+  String get weatherNow => 'الآن';
+
+  @override
+  String get weatherToday => 'اليوم';
+
+  @override
+  String get weatherGusts => 'هبات تصل إلى';
+
+  @override
+  String get weatherDewPoint => 'نقطة الندى';
+
+  @override
+  String get weatherTodayTides => 'مد وجزر اليوم';
+
+  @override
+  String get weatherTideUnavailable => 'بيانات المد والجزر غير متوفرة';
+
+  @override
+  String get weatherHighTide => 'مد عالٍ';
+
+  @override
+  String get weatherLowTide => 'جزر';
+
+  @override
+  String get moonrise => 'شروق القمر';
+
+  @override
+  String get moonset => 'غروب القمر';
+
+  @override
+  String get illuminated => '% مضيء';
+
+  @override
+  String get uvLow => 'منخفض';
+
+  @override
+  String get uvModerate => 'معتدل';
+
+  @override
+  String get uvHigh => 'مرتفع';
+
+  @override
+  String get uvVeryHigh => 'مرتفع جداً';
+
+  @override
+  String get uvExtreme => 'خطير';
+
+  @override
+  String get visibilityClear => 'صافٍ';
+
+  @override
+  String get visibilityGood => 'جيد';
+
+  @override
+  String get visibilityLow => 'ضعيف';
+
+  @override
+  String get feelsLikeSimilar => 'مشابه للحقيقي';
+
+  @override
+  String get feelsLikeWarmer => 'يبدو أدفأ';
+
+  @override
+  String get feelsLikeCooler => 'يبدو أبرد';
+
+  @override
+  String get dayMon => 'الاثنين';
+
+  @override
+  String get dayTue => 'الثلاثاء';
+
+  @override
+  String get dayWed => 'الأربعاء';
+
+  @override
+  String get dayThu => 'الخميس';
+
+  @override
+  String get dayFri => 'الجمعة';
+
+  @override
+  String get daySat => 'السبت';
+
+  @override
+  String get daySun => 'الأحد';
+
+  @override
+  String get loginSubtitle => 'مستعد لمواصلة رحلتك؟\nطريقك هنا.';
+
+  @override
+  String get enterEmail => 'أدخل البريد الإلكتروني';
+
+  @override
+  String get enterPassword => 'أدخل كلمة المرور';
+
+  @override
+  String get passwordResetComingSoon => 'إعادة تعيين كلمة المرور قريباً';
+
+  @override
+  String get logIn => 'تسجيل الدخول';
+
+  @override
+  String get orDivider => 'أو';
+
+  @override
+  String get dontHaveAccount => 'ليس لديك حساب؟ ';
+
+  @override
+  String get backButton => 'رجوع';
+
+  @override
+  String get createYourAccount => 'إنشاء حسابك';
+
+  @override
+  String get signupSubtitle =>
+      'نحن هنا لمساعدتك على بلوغ قمم الصيد.\nهل أنت مستعد؟';
+
+  @override
+  String get firstName => 'الاسم الأول';
+
+  @override
+  String get lastName => 'اسم العائلة';
+
+  @override
+  String get usernameField => 'اسم المستخدم';
+
+  @override
+  String get confirmPasswordField => 'تأكيد كلمة المرور';
+
+  @override
+  String get getStarted => 'ابدأ الآن';
+
+  @override
+  String get alreadyHaveAccount => 'لديك حساب بالفعل؟ ';
+
+  @override
+  String get registrationSuccessful => 'تم التسجيل بنجاح!';
+
+  @override
+  String get validationEnterName => 'يرجى إدخال اسمك';
+
+  @override
+  String get validationNameTooShort => 'يجب أن يكون الاسم حرفين على الأقل';
+
+  @override
+  String get validationEnterEmail => 'يرجى إدخال بريدك الإلكتروني';
+
+  @override
+  String get validationInvalidEmail => 'يرجى إدخال بريد إلكتروني صحيح';
+
+  @override
+  String get validationEnterPassword => 'يرجى إدخال كلمة المرور';
+
+  @override
+  String get validationPasswordTooShort =>
+      'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+
+  @override
+  String get validationEnterUsername => 'يرجى إدخال اسم المستخدم';
+
+  @override
+  String get validationUsernameTooShort =>
+      'يجب أن يكون اسم المستخدم 3 أحرف على الأقل';
+
+  @override
+  String get validationUsernameTooLong =>
+      'يجب أن يكون اسم المستخدم أقل من 20 حرفاً';
+
+  @override
+  String get validationUsernameInvalidChars =>
+      'اسم المستخدم يمكن أن يحتوي على حروف وأرقام وشرطة سفلية فقط';
+
+  @override
+  String get validationConfirmPassword => 'يرجى تأكيد كلمة المرور';
+
+  @override
+  String get validationPasswordsNoMatch => 'كلمتا المرور غير متطابقتين';
 }

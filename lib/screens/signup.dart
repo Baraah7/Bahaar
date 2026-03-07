@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/authentication_provider.dart';
+import '../providers/language_provider.dart';
 import '../utilities/authentication_validation.dart';
+import '../l10n/app_localizations.dart';
 import 'auth_background.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -52,8 +54,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ));
     } else {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Registration successful!'),
+        content: Text(l10n.registrationSuccessful),
         backgroundColor: Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -71,6 +74,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProviderProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: const Color(0xFF082028),
@@ -101,7 +105,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 color: Colors.white.withValues(alpha: 0.70)),
                             const SizedBox(width: 4),
                             Text(
-                              'Back',
+                              l10n.backButton,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.70),
@@ -109,6 +113,29 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () =>
+                            ref.read(languageProvider.notifier).toggleLanguage(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25)),
+                          ),
+                          child: Text(
+                            l10n.localeName == 'ar' ? 'EN' : 'عربي',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -132,8 +159,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           Image.asset('assets/logo/appIcon.png',
                               width: 64, height: 64, fit: BoxFit.contain),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Create Your Account',
+                          Text(
+                            l10n.createYourAccount,
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
@@ -143,7 +170,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "We're here to help you reach the peaks\nof fishing. Are you ready?",
+                            l10n.signupSubtitle,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.white.withValues(alpha: 0.50),
@@ -163,16 +190,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     Expanded(
                                       child: AuthField(
                                         controller: _firstNameCtrl,
-                                        label: 'First name',
-                                        validator: AuthenticationValidation.validateName,
+                                        label: l10n.firstName,
+                                        validator: (val) => AuthenticationValidation.validateName(val, l10n),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: AuthField(
                                         controller: _lastNameCtrl,
-                                        label: 'Last name',
-                                        validator: AuthenticationValidation.validateName,
+                                        label: l10n.lastName,
+                                        validator: (val) => AuthenticationValidation.validateName(val, l10n),
                                       ),
                                     ),
                                   ],
@@ -180,22 +207,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 const SizedBox(height: 14),
                                 AuthField(
                                   controller: _usernameCtrl,
-                                  label: 'Username',
-                                  validator: AuthenticationValidation.validateUsername,
+                                  label: l10n.usernameField,
+                                  validator: (val) => AuthenticationValidation.validateUsername(val, l10n),
                                 ),
                                 const SizedBox(height: 14),
                                 AuthField(
                                   controller: _emailCtrl,
-                                  label: 'Enter email',
+                                  label: l10n.enterEmail,
                                   keyboardType: TextInputType.emailAddress,
-                                  validator: AuthenticationValidation.validateEmail,
+                                  validator: (val) => AuthenticationValidation.validateEmail(val, l10n),
                                 ),
                                 const SizedBox(height: 14),
                                 AuthField(
                                   controller: _passCtrl,
-                                  label: 'Enter password',
+                                  label: l10n.enterPassword,
                                   obscure: _obscurePass,
-                                  validator: AuthenticationValidation.validatePassword,
+                                  validator: (val) => AuthenticationValidation.validatePassword(val, l10n),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePass
@@ -211,17 +238,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 const SizedBox(height: 14),
                                 AuthField(
                                   controller: _confirmPassCtrl,
-                                  label: 'Confirm password',
+                                  label: l10n.confirmPasswordField,
                                   obscure: _obscureConfirm,
-                                  validator: (val) {
-                                    if (val == null || val.isEmpty) {
-                                      return 'Please confirm your password';
-                                    }
-                                    if (val != _passCtrl.text) {
-                                      return 'Passwords do not match';
-                                    }
-                                    return null;
-                                  },
+                                  validator: AuthenticationValidation.validateConfirmPassword(
+                                      _passCtrl.text, l10n),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscureConfirm
@@ -243,7 +263,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              'Forgot password?',
+                              l10n.forgotPassword,
                               style: TextStyle(
                                 fontSize: 12.5,
                                 color: kAuthTeal.withValues(alpha: 0.85),
@@ -256,7 +276,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                           // ── Get Started button ────────────────────────────
                           AuthGradientButton(
-                            label: 'Get Started',
+                            label: l10n.getStarted,
                             isLoading: auth.isLoading,
                             onPressed: auth.isLoading ? null : _handleSignUp,
                           ),
@@ -269,7 +289,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 14),
                               child: Text(
-                                'OR',
+                                l10n.orDivider,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 12,
@@ -286,7 +306,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Already have an account? ',
+                                l10n.alreadyHaveAccount,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.white.withValues(alpha: 0.38),
@@ -294,8 +314,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               ),
                               GestureDetector(
                                 onTap: () => Navigator.pop(context),
-                                child: const Text(
-                                  'Log In',
+                                child: Text(
+                                  l10n.logIn,
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: kAuthTeal,

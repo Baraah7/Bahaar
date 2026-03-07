@@ -1213,6 +1213,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'days ago'**
   String get daysAgo;
+
+  /// No description provided for @weatherNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get weatherNow;
+
+  /// No description provided for @weatherToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get weatherToday;
+
+  /// No description provided for @weatherGusts.
+  ///
+  /// In en, this message translates to:
+  /// **'Gusts up to'**
+  String get weatherGusts;
+
+  /// No description provided for @weatherDewPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dew'**
+  String get weatherDewPoint;
+
+  /// No description provided for @weatherTodayTides.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Tides'**
+  String get weatherTodayTides;
+
+  /// No description provided for @weatherTideUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Tide data unavailable'**
+  String get weatherTideUnavailable;
+
+  /// No description provided for @weatherHighTide.
+  ///
+  /// In en, this message translates to:
+  /// **'High Tide'**
+  String get weatherHighTide;
+
+  /// No description provided for @weatherLowTide.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Tide'**
+  String get weatherLowTide;
+
+  /// No description provided for @moonrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonrise'**
+  String get moonrise;
+
+  /// No description provided for @moonset.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonset'**
+  String get moonset;
+
+  /// No description provided for @illuminated.
+  ///
+  /// In en, this message translates to:
+  /// **'% illuminated'**
+  String get illuminated;
+
+  /// No description provided for @uvLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get uvLow;
+
+  /// No description provided for @uvModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get uvModerate;
+
+  /// No description provided for @uvHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get uvHigh;
+
+  /// No description provided for @uvVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Very High'**
+  String get uvVeryHigh;
+
+  /// No description provided for @uvExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme'**
+  String get uvExtreme;
+
+  /// No description provided for @visibilityClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get visibilityClear;
+
+  /// No description provided for @visibilityGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get visibilityGood;
+
+  /// No description provided for @visibilityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get visibilityLow;
+
+  /// No description provided for @feelsLikeSimilar.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar to actual'**
+  String get feelsLikeSimilar;
+
+  /// No description provided for @feelsLikeWarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels warmer'**
+  String get feelsLikeWarmer;
+
+  /// No description provided for @feelsLikeCooler.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels cooler'**
+  String get feelsLikeCooler;
+
+  /// No description provided for @dayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get dayMon;
+
+  /// No description provided for @dayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get dayTue;
+
+  /// No description provided for @dayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get dayWed;
+
+  /// No description provided for @dayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get dayThu;
+
+  /// No description provided for @dayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get dayFri;
+
+  /// No description provided for @daySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get daySat;
+
+  /// No description provided for @daySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get daySun;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to continue your journey?\nYour path is right here.'**
+  String get loginSubtitle;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter email'**
+  String get enterEmail;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password'**
+  String get enterPassword;
+
+  /// No description provided for @passwordResetComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset coming soon'**
+  String get passwordResetComingSoon;
+
+  /// No description provided for @logIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Log In'**
+  String get logIn;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orDivider;
+
+  /// No description provided for @dontHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? '**
+  String get dontHaveAccount;
+
+  /// No description provided for @backButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backButton;
+
+  /// No description provided for @createYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your Account'**
+  String get createYourAccount;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re here to help you reach the peaks\nof fishing. Are you ready?'**
+  String get signupSubtitle;
+
+  /// No description provided for @firstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get firstName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get lastName;
+
+  /// No description provided for @usernameField.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get usernameField;
+
+  /// No description provided for @confirmPasswordField.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordField;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @registrationSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful!'**
+  String get registrationSuccessful;
+
+  /// No description provided for @validationEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get validationEnterName;
+
+  /// No description provided for @validationNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be at least 2 characters'**
+  String get validationNameTooShort;
+
+  /// No description provided for @validationEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email'**
+  String get validationEnterEmail;
+
+  /// No description provided for @validationInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get validationInvalidEmail;
+
+  /// No description provided for @validationEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a password'**
+  String get validationEnterPassword;
+
+  /// No description provided for @validationPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get validationPasswordTooShort;
+
+  /// No description provided for @validationEnterUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a username'**
+  String get validationEnterUsername;
+
+  /// No description provided for @validationUsernameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be at least 3 characters'**
+  String get validationUsernameTooShort;
+
+  /// No description provided for @validationUsernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be less than 20 characters'**
+  String get validationUsernameTooLong;
+
+  /// No description provided for @validationUsernameInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Username can only contain letters, numbers, and underscores'**
+  String get validationUsernameInvalidChars;
+
+  /// No description provided for @validationConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get validationConfirmPassword;
+
+  /// No description provided for @validationPasswordsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get validationPasswordsNoMatch;
 }
 
 class _AppLocalizationsDelegate

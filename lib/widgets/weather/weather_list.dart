@@ -5,6 +5,7 @@ import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
 import '../../models/weather/tide_model.dart';
 import '../../utilities/celestial_calculator.dart';
+import '../../l10n/app_localizations.dart';
 import 'celestial_almanac_card.dart';
 
 // Reusable styles and colors
@@ -32,8 +33,20 @@ class _WeatherStyles {
 class WeatherList extends StatelessWidget {
   final weather_response_model weatherData;
   final List<TideEntry> tides;
+  final AppLocalizations l10n;
 
-  const WeatherList({super.key, required this.weatherData, this.tides = const []});
+  const WeatherList({super.key, required this.weatherData, required this.l10n, this.tides = const []});
+
+  /// Converts ASCII digits to Arabic-Indic numerals when locale is Arabic.
+  String _n(dynamic value) {
+    final str = value.toString();
+    if (l10n.localeName != 'ar') return str;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return str.replaceAllMapped(
+      RegExp(r'[0-9]'),
+      (m) => digits[int.parse(m.group(0)!)],
+    );
+  }
 
   // Reusable weather icon widget
   Widget _weatherIcon(String iconUrl, {double size = 32}) {
@@ -115,16 +128,16 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Expanded(child: _buildCompactCard(
                       icon: Icons.wb_sunny_outlined,
-                      title: 'UV Index',
-                      value: '${weatherData.currentWeather.uv.round()}',
+                      title: l10n.uvIndex,
+                      value: _n(weatherData.currentWeather.uv.round()),
                       subtitle: _getUVLevel(weatherData.currentWeather.uv),
                       accentColor: _getUVColor(weatherData.currentWeather.uv),
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildCompactCard(
                       icon: Icons.thermostat_outlined,
-                      title: 'Feels Like',
-                      value: '${weatherData.currentWeather.feelslike_c.round()}°',
+                      title: l10n.feelsLike,
+                      value: '${_n(weatherData.currentWeather.feelslike_c.round())}°',
                       subtitle: _getFeelsLikeDescription(),
                       accentColor: const Color(0xFF64B5F6),
                     )),
@@ -135,16 +148,16 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Expanded(child: _buildCompactCard(
                       icon: Icons.water_drop,
-                      title: 'Humidity',
-                      value: '${weatherData.currentWeather.humidity}%',
-                      subtitle: 'Dew ${weatherData.currentWeather.dewpoint_c.round()}°',
+                      title: l10n.humidity,
+                      value: '${_n(weatherData.currentWeather.humidity)}%',
+                      subtitle: '${l10n.weatherDewPoint} ${_n(weatherData.currentWeather.dewpoint_c.round())}°',
                       accentColor: _WeatherStyles.accent,
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildCompactCard(
                       icon: Icons.visibility_outlined,
-                      title: 'Visibility',
-                      value: '${weatherData.currentWeather.vis_km.round()} km',
+                      title: l10n.visibility,
+                      value: '${_n(weatherData.currentWeather.vis_km.round())} km',
                       subtitle: _getVisibilityDescription(),
                       accentColor: const Color(0xFF81C784),
                     )),
@@ -230,7 +243,7 @@ class WeatherList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${weatherData.currentWeather.temp_c.round()}',
+                    _n(weatherData.currentWeather.temp_c.round()),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 72,
@@ -304,7 +317,7 @@ class WeatherList extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 4),
-        Text('$temp°', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600)),
+        Text('${_n(temp)}°', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -324,7 +337,7 @@ class WeatherList extends StatelessWidget {
       decoration: _WeatherStyles.cardDecoration(),
       child: Column(
         children: [
-          _sectionHeader('Next 24 Hours', _WeatherStyles.accent),
+          _sectionHeader(l10n.hourlyForecast, _WeatherStyles.accent),
           SizedBox(
             height: 130,
             child: ListView.builder(
@@ -360,7 +373,7 @@ class WeatherList extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            isNow ? 'Now' : '${hourTime.hour}:00',
+            isNow ? l10n.weatherNow : _n('${hourTime.hour}:00'),
             style: TextStyle(
               color: isNow ? _WeatherStyles.accent : _WeatherStyles.white(0.8),
               fontSize: 14,
@@ -369,7 +382,7 @@ class WeatherList extends StatelessWidget {
           ),
           _weatherIcon(hour.condition_icon, size: 36),
           Text(
-            '${hour.temp_c.round()}°',
+            '${_n(hour.temp_c.round())}°',
             style: TextStyle(
               color: isNow ? Colors.white : _WeatherStyles.white(0.9),
               fontSize: 18,
@@ -393,7 +406,7 @@ class WeatherList extends StatelessWidget {
       decoration: _WeatherStyles.cardDecoration(),
       child: Column(
         children: [
-          _sectionHeader('${days.length}-Day Forecast', _WeatherStyles.orange),
+          _sectionHeader('${_n(days.length)}-${l10n.dailyForecast}', _WeatherStyles.orange),
           ...days.asMap().entries.map((e) => _dayRow(e.value, e.key == 0, weekMin, weekMax)),
           const SizedBox(height: 8),
         ],
@@ -403,7 +416,7 @@ class WeatherList extends StatelessWidget {
 
   Widget _dayRow(forecast_day day, bool isToday, double weekMin, double weekMax) {
     final date = DateTime.parse(day.date);
-    final dayName = isToday ? 'Today' : _getDayName(date.weekday);
+    final dayName = isToday ? l10n.weatherToday : _getDayName(date.weekday);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -431,7 +444,7 @@ class WeatherList extends StatelessWidget {
                       const Icon(Icons.water_drop, color: _WeatherStyles.accent, size: 12),
                       const SizedBox(width: 2),
                       Text(
-                        '${day.day.daily_chance_of_rain}%',
+                        '${_n(day.day.daily_chance_of_rain)}%',
                         style: const TextStyle(color: _WeatherStyles.accent, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -439,11 +452,11 @@ class WeatherList extends StatelessWidget {
                 : null,
           ),
           const Spacer(),
-          Text('${day.day.mintemp_c.round()}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.mintemp_c.round())}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(width: 8),
           SizedBox(width: 80, child: _temperatureBar(day.day.mintemp_c, day.day.maxtemp_c, weekMin, weekMax, isToday)),
           const SizedBox(width: 8),
-          Text('${day.day.maxtemp_c.round()}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.maxtemp_c.round())}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -519,14 +532,14 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.air, color: _WeatherStyles.white(0.7), size: 20),
                     const SizedBox(width: 8),
-                    const Text('Wind', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text(l10n.wind, style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${wind.wind_kph.round()}', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
+                    Text(_n(wind.wind_kph.round()), style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -551,7 +564,7 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.waves, color: _WeatherStyles.white(0.5), size: 14),
                     const SizedBox(width: 6),
-                    Text('Gusts up to ${wind.gust_kph.round()} km/h', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
+                    Text('${l10n.weatherGusts} ${_n(wind.gust_kph.round())} km/h', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
                   ],
                 ),
               ],
@@ -603,9 +616,9 @@ class WeatherList extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, 'Sunrise', astro.sunrise)),
+              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, l10n.sunrise, astro.sunrise)),
               _gradientDivider(vertical: true),
-              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, 'Sunset', astro.sunset)),
+              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, l10n.sunset, astro.sunset)),
             ],
           ),
           Padding(
@@ -621,7 +634,7 @@ class WeatherList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(astro.moon_phase, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
-                    Text('${astro.moon_illumination}% illuminated', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
+                    Text('${_n(astro.moon_illumination)}${l10n.illuminated}', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
                   ],
                 ),
               ),
@@ -691,7 +704,7 @@ class WeatherList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Today's Tides", tideBlue),
+          _sectionHeader(l10n.weatherTodayTides, tideBlue),
           const SizedBox(height: 4),
           if (tides.isEmpty)
             Padding(
@@ -701,7 +714,7 @@ class WeatherList extends StatelessWidget {
                   Icon(Icons.waves, color: _WeatherStyles.white(0.4), size: 28),
                   const SizedBox(width: 12),
                   Text(
-                    'Tide data unavailable',
+                    l10n.weatherTideUnavailable,
                     style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 15),
                   ),
                 ],
@@ -733,7 +746,7 @@ class WeatherList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isHigh ? 'High Tide' : 'Low Tide',
+                          isHigh ? l10n.weatherHighTide : l10n.weatherLowTide,
                           style: TextStyle(
                             color: color,
                             fontSize: 13,
@@ -752,7 +765,7 @@ class WeatherList extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '${entry.heightMt.toStringAsFixed(2)} m',
+                      '${_n(entry.heightMt.toStringAsFixed(2))} m',
                       style: TextStyle(
                         color: _WeatherStyles.white(0.85),
                         fontSize: 16,
@@ -769,16 +782,24 @@ class WeatherList extends StatelessWidget {
   }
 
   String _getDayName(int weekday) {
-    const days = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days[weekday];
+    return [
+      '',
+      l10n.dayMon,
+      l10n.dayTue,
+      l10n.dayWed,
+      l10n.dayThu,
+      l10n.dayFri,
+      l10n.daySat,
+      l10n.daySun,
+    ][weekday];
   }
 
   String _getUVLevel(double uv) {
-    if (uv <= 2) return 'Low';
-    if (uv <= 5) return 'Moderate';
-    if (uv <= 7) return 'High';
-    if (uv <= 10) return 'Very High';
-    return 'Extreme';
+    if (uv <= 2) return l10n.uvLow;
+    if (uv <= 5) return l10n.uvModerate;
+    if (uv <= 7) return l10n.uvHigh;
+    if (uv <= 10) return l10n.uvVeryHigh;
+    return l10n.uvExtreme;
   }
 
   Color _getUVColor(double uv) {
@@ -791,16 +812,16 @@ class WeatherList extends StatelessWidget {
 
   String _getFeelsLikeDescription() {
     final diff = weatherData.currentWeather.feelslike_c - weatherData.currentWeather.temp_c;
-    if (diff.abs() < 2) return 'Similar to actual';
-    return diff > 0 ? 'Feels warmer' : 'Feels cooler';
+    if (diff.abs() < 2) return l10n.feelsLikeSimilar;
+    return diff > 0 ? l10n.feelsLikeWarmer : l10n.feelsLikeCooler;
   }
 
   String _getVisibilityDescription() {
     final vis = weatherData.currentWeather.vis_km;
-    if (vis >= 10) return 'Clear';
-    if (vis >= 5) return 'Good';
-    if (vis >= 2) return 'Moderate';
-    return 'Low';
+    if (vis >= 10) return l10n.visibilityClear;
+    if (vis >= 5) return l10n.visibilityGood;
+    if (vis >= 2) return l10n.uvModerate;
+    return l10n.visibilityLow;
   }
 }
 

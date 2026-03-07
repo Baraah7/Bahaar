@@ -576,4 +576,184 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get daysAgo => 'days ago';
+
+  @override
+  String get weatherNow => 'Now';
+
+  @override
+  String get weatherToday => 'Today';
+
+  @override
+  String get weatherGusts => 'Gusts up to';
+
+  @override
+  String get weatherDewPoint => 'Dew';
+
+  @override
+  String get weatherTodayTides => 'Today\'s Tides';
+
+  @override
+  String get weatherTideUnavailable => 'Tide data unavailable';
+
+  @override
+  String get weatherHighTide => 'High Tide';
+
+  @override
+  String get weatherLowTide => 'Low Tide';
+
+  @override
+  String get moonrise => 'Moonrise';
+
+  @override
+  String get moonset => 'Moonset';
+
+  @override
+  String get illuminated => '% illuminated';
+
+  @override
+  String get uvLow => 'Low';
+
+  @override
+  String get uvModerate => 'Moderate';
+
+  @override
+  String get uvHigh => 'High';
+
+  @override
+  String get uvVeryHigh => 'Very High';
+
+  @override
+  String get uvExtreme => 'Extreme';
+
+  @override
+  String get visibilityClear => 'Clear';
+
+  @override
+  String get visibilityGood => 'Good';
+
+  @override
+  String get visibilityLow => 'Low';
+
+  @override
+  String get feelsLikeSimilar => 'Similar to actual';
+
+  @override
+  String get feelsLikeWarmer => 'Feels warmer';
+
+  @override
+  String get feelsLikeCooler => 'Feels cooler';
+
+  @override
+  String get dayMon => 'Mon';
+
+  @override
+  String get dayTue => 'Tue';
+
+  @override
+  String get dayWed => 'Wed';
+
+  @override
+  String get dayThu => 'Thu';
+
+  @override
+  String get dayFri => 'Fri';
+
+  @override
+  String get daySat => 'Sat';
+
+  @override
+  String get daySun => 'Sun';
+
+  @override
+  String get loginSubtitle =>
+      'Ready to continue your journey?\nYour path is right here.';
+
+  @override
+  String get enterEmail => 'Enter email';
+
+  @override
+  String get enterPassword => 'Enter password';
+
+  @override
+  String get passwordResetComingSoon => 'Password reset coming soon';
+
+  @override
+  String get logIn => 'Log In';
+
+  @override
+  String get orDivider => 'OR';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account? ';
+
+  @override
+  String get backButton => 'Back';
+
+  @override
+  String get createYourAccount => 'Create Your Account';
+
+  @override
+  String get signupSubtitle =>
+      'We\'re here to help you reach the peaks\nof fishing. Are you ready?';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
+  String get usernameField => 'Username';
+
+  @override
+  String get confirmPasswordField => 'Confirm password';
+
+  @override
+  String get getStarted => 'Get Started';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account? ';
+
+  @override
+  String get registrationSuccessful => 'Registration successful!';
+
+  @override
+  String get validationEnterName => 'Please enter your name';
+
+  @override
+  String get validationNameTooShort => 'Name must be at least 2 characters';
+
+  @override
+  String get validationEnterEmail => 'Please enter your email';
+
+  @override
+  String get validationInvalidEmail => 'Please enter a valid email address';
+
+  @override
+  String get validationEnterPassword => 'Please enter a password';
+
+  @override
+  String get validationPasswordTooShort =>
+      'Password must be at least 6 characters';
+
+  @override
+  String get validationEnterUsername => 'Please enter a username';
+
+  @override
+  String get validationUsernameTooShort =>
+      'Username must be at least 3 characters';
+
+  @override
+  String get validationUsernameTooLong =>
+      'Username must be less than 20 characters';
+
+  @override
+  String get validationUsernameInvalidChars =>
+      'Username can only contain letters, numbers, and underscores';
+
+  @override
+  String get validationConfirmPassword => 'Please confirm your password';
+
+  @override
+  String get validationPasswordsNoMatch => 'Passwords do not match';
 }

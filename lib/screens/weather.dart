@@ -132,7 +132,7 @@ class _WeatherPageState extends State<Weather> {
                         ),
                       )
                     : weatherData != null
-                        ? WeatherList(weatherData: weatherData!, tides: tides)
+                        ? WeatherList(weatherData: weatherData!, tides: tides, l10n: l10n)
                         : Center(
                             child: Text(
                               l10n.noDataAvailable,

@@ -1,59 +1,62 @@
+import '../l10n/app_localizations.dart';
+
 class AuthenticationValidation {
-  static String? validateName(String? value) {
+  static String? validateName(String? value, AppLocalizations l10n) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your name';
+      return l10n.validationEnterName;
     }
     if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
+      return l10n.validationNameTooShort;
     }
     return null;
   }
 
-  static String? validateEmail(String? value) {
+  static String? validateEmail(String? value, AppLocalizations l10n) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
+      return l10n.validationEnterEmail;
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
+      return l10n.validationInvalidEmail;
     }
     return null;
   }
 
-  static String? validatePassword(String? value) {
+  static String? validatePassword(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a password';
+      return l10n.validationEnterPassword;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return l10n.validationPasswordTooShort;
     }
     return null;
   }
 
-  static String? validateUsername(String? value) {
+  static String? validateUsername(String? value, AppLocalizations l10n) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter a username';
+      return l10n.validationEnterUsername;
     }
     if (value.trim().length < 3) {
-      return 'Username must be at least 3 characters';
+      return l10n.validationUsernameTooShort;
     }
     if (value.trim().length > 20) {
-      return 'Username must be less than 20 characters';
+      return l10n.validationUsernameTooLong;
     }
     final usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
     if (!usernameRegex.hasMatch(value.trim())) {
-      return 'Username can only contain letters, numbers, and underscores';
+      return l10n.validationUsernameInvalidChars;
     }
     return null;
   }
 
-  static String? Function(String?) validateConfirmPassword(String password) {
+  static String? Function(String?) validateConfirmPassword(
+      String password, AppLocalizations l10n) {
     return (String? value) {
       if (value == null || value.isEmpty) {
-        return 'Please confirm your password';
+        return l10n.validationConfirmPassword;
       }
       if (value != password) {
-        return 'Passwords do not match';
+        return l10n.validationPasswordsNoMatch;
       }
       return null;
     };
