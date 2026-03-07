@@ -55,7 +55,8 @@ class FishClassifierService {
       final labelsData = await rootBundle.loadString(_labelsPath);
       _labels = labelsData
           .split('\n')
-          .where((label) => label.trim().isNotEmpty)
+          .map((label) => label.trim())
+          .where((label) => label.isNotEmpty)
           .toList();
 
       _isInitialized = true;

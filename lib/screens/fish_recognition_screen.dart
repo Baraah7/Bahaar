@@ -412,8 +412,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
@@ -439,7 +440,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -451,8 +452,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                                 : Icons.info_outline_rounded,
                             size: 18,
                             color: isConfident
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFFF59E0B),
+                                ? const Color.fromARGB(255, 28, 244, 172)
+                                : const Color.fromARGB(255, 242, 159, 16),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -462,8 +463,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                             style: TextStyle(
                               fontSize: 14,
                               color: isConfident
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFF59E0B),
+                                  ? const Color.fromARGB(255, 28, 244, 172)
+                                  : const Color.fromARGB(255, 242, 159, 16),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -517,6 +518,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'season': 'Spring & Autumn',
       'diet': 'Mollusks, crustaceans, sea urchins',
       'flavor': 'Mild, delicate white flesh',
+      'popular_in': 'Arabian Gulf, Mediterranean Sea, Atlantic Coast',
+      'nutrition': 'High in protein, omega-3, vitamins B12 & D',
+      'fact': 'Recognisable by the gold stripe between its eyes — hence the name "gilt-head". Highly prized in Bahraini and Gulf fish markets.',
     },
     'Hourse Mackerel': {
       'scientific': 'Trachurus trachurus',
@@ -525,6 +529,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'season': 'Summer',
       'diet': 'Small fish, plankton, crustaceans',
       'flavor': 'Firm, slightly oily flesh',
+      'popular_in': 'Arabian Sea, Mediterranean Sea, Eastern Atlantic',
+      'nutrition': 'Rich in omega-3 fatty acids, selenium & vitamin B12',
+      'fact': 'Travels in large, fast-moving schools near the surface. One of the most commercially important fish species in the world.',
     },
     'Sea Bass': {
       'scientific': 'Dicentrarchus labrax',
@@ -533,14 +540,20 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'season': 'Spring & Summer',
       'diet': 'Fish, crustaceans, cephalopods',
       'flavor': 'Delicate, mild white flesh',
+      'popular_in': 'Arabian Gulf, Mediterranean Sea, European coasts',
+      'nutrition': 'Excellent source of lean protein, phosphorus & potassium',
+      'fact': 'A prized game fish known for its fighting spirit when caught. Sea bass can live up to 15 years and are highly valued in Gulf seafood cuisine.',
     },
     'Shrimp': {
       'scientific': 'Various species',
-      'habitat': 'Shallow coastal waters',
+      'habitat': 'Shallow coastal waters & seagrass beds',
       'size': '5 – 20 cm',
       'season': 'Year-round',
       'diet': 'Algae, plankton, organic matter',
       'flavor': 'Sweet, tender',
+      'popular_in': 'Arabian Gulf, especially Bahrain & Kuwait',
+      'nutrition': 'Low in calories, high in iodine, protein & antioxidants',
+      'fact': 'Bahrain has a centuries-old tradition of shrimping. Gulf shrimp (locally known as روبيان) are considered among the finest in the world and are a staple of Bahraini cuisine.',
     },
   };
 
@@ -558,6 +571,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             children: [
               const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 18),
@@ -585,6 +599,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ],
           ),
           const SizedBox(height: 14),
+
+          // Basic details grid
           _InfoGrid(items: [
             _InfoItem(Icons.place_outlined, 'Habitat', info['habitat']!),
             _InfoItem(Icons.straighten_rounded, 'Size', info['size']!),
@@ -592,6 +608,53 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             _InfoItem(Icons.restaurant_outlined, 'Diet', info['diet']!),
             _InfoItem(Icons.star_outline_rounded, 'Flavor', info['flavor']!),
           ]),
+
+          const SizedBox(height: 14),
+          Divider(color: Colors.white.withValues(alpha: 0.15), height: 1),
+          const SizedBox(height: 14),
+
+          // Popular regions
+          _InfoRow(
+            icon: Icons.public_rounded,
+            label: 'Popular In',
+            value: info['popular_in']!,
+          ),
+          const SizedBox(height: 10),
+
+          // Nutrition
+          _InfoRow(
+            icon: Icons.favorite_outline_rounded,
+            label: 'Nutrition',
+            value: info['nutrition']!,
+          ),
+          const SizedBox(height: 14),
+
+          // Fun fact banner
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFFFD54F), size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    info['fact']!,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -600,8 +663,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   Widget _buildConfidenceIndicator(double confidence, bool isConfident) {
     final percentage = (confidence * 100).toInt();
     final color = isConfident
-        ? const Color(0xFF10B981)
-        : const Color(0xFFF59E0B);
+        ? const Color.fromARGB(255, 28, 244, 172)
+        : const Color.fromARGB(255, 242, 159, 16);
 
     return SizedBox(
       width: 72,
@@ -903,6 +966,44 @@ class _InfoItem {
   final String label;
   final String value;
   const _InfoItem(this.icon, this.label, this.value);
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _InfoRow({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 15, color: Colors.white60),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.55),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _InfoGrid extends StatelessWidget {
