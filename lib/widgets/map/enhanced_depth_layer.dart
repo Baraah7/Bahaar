@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:Bahaar/utilities/map_constants.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
+import 'package:Bahaar/widgets/map/depth_soundings_layer.dart'
+    show MbTilesDb, MbTileProvider;
 
 /// Enhanced depth layer widget with multiple visualization options:
-/// 1. Bathymetric (colored depth map)
+/// 1. Bathymetric (colored depth map from local GEBCO mbtiles)
 /// 2. Nautical (OpenSeaMap navigation chart)
 /// 3. Combined (both layers)
 ///
@@ -45,31 +48,41 @@ class EnhancedDepthLayer extends StatelessWidget {
   }
 }
 
-/// Bathymetric depth visualization layer (colored depth map).
-/// Shows actual water depth using colors — lighter blue = shallow, darker = deep.
-/// Tiles come from EMODnet Bathymetry and cover the full area including outside
-/// territorial waters. The territorial mask is a separate layer.
-class _BathymetricDepthLayer extends StatelessWidget {
+/// Bathymetric depth visualization layer — reads from bundled gebco_gulf_clipped
+/// MBTiles asset (offline). Covers the Arabian/Persian Gulf region.
+class _BathymetricDepthLayer extends StatefulWidget {
   final double opacity;
 
   const _BathymetricDepthLayer({required this.opacity});
 
   @override
+  State<_BathymetricDepthLayer> createState() => _BathymetricDepthLayerState();
+}
+
+class _BathymetricDepthLayerState extends State<_BathymetricDepthLayer> {
+  Database? _db;
+
+  @override
+  void initState() {
+    super.initState();
+    MbTilesDb.get().then((db) {
+      if (mounted) setState(() => _db = db);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_db == null) return const SizedBox.shrink();
+
     return Opacity(
-      opacity: opacity,
+      opacity: widget.opacity,
       child: TileLayer(
-        // GEBCO 2024 (General Bathymetric Chart of the Oceans) via NCEI/ArcGIS.
-        // Global coverage including the Persian Gulf with actual depth colour
-        // variation: light blue (0–10 m shallow) → dark navy/purple (deep).
-        // Note: ArcGIS tile order is {z}/{y}/{x} (row before column), not {z}/{x}/{y}.
-        urlTemplate:
-            'https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI/MapServer/tile/{z}/{y}/{x}',
-        userAgentPackageName: MapConstants.userAgent,
-        maxZoom: 17,
-        minZoom: 2,
-        tileProvider: NetworkTileProvider(),
-        keepBuffer: 2,
+        urlTemplate: 'mbtiles://{z}/{x}/{y}',
+        tileProvider: MbTileProvider(_db!),
+        minZoom: 4,
+        maxZoom: 18,
+        maxNativeZoom: 12,
+        errorTileCallback: (tile, error, stackTrace) {},
       ),
     );
   }
@@ -128,12 +141,14 @@ class DepthLegend extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          _buildLegendItem(const Color(0xFFE6F3FF), '0–10 m', 'Very Shallow'),
-          _buildLegendItem(const Color(0xFF99CCFF), '10–50 m', 'Shallow'),
-          _buildLegendItem(const Color(0xFF4DA6FF), '50–200 m', 'Medium'),
-          _buildLegendItem(const Color(0xFF0066CC), '200–1000 m', 'Deep'),
-          _buildLegendItem(const Color(0xFF003D7A), '1000–3000 m', 'Very Deep'),
-          _buildLegendItem(const Color(0xFF001F3F), '3000 m+', 'Abyssal'),
+          _buildLegendItem(const Color(0xFFC8F0C8), '0 m', 'Land / Coast'),
+          _buildLegendItem(const Color(0xFFB8E8F8), '0–10 m', 'Very Shallow'),
+          _buildLegendItem(const Color(0xFF80D0F8), '10–50 m', 'Shallow'),
+          _buildLegendItem(const Color(0xFF50C0F8), '50–100 m', 'Moderate'),
+          _buildLegendItem(const Color(0xFF10B0F0), '100–300 m', 'Deep'),
+          _buildLegendItem(const Color(0xFF0090D8), '300–700 m', 'Very Deep'),
+          _buildLegendItem(const Color(0xFF0060C8), '700–2000 m', 'Abyssal'),
+          _buildLegendItem(const Color(0xFF0030A0), '2000 m+', 'Ultra Deep'),
         ],
       ),
     );

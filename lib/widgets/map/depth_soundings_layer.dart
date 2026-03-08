@@ -10,9 +10,9 @@ import 'package:path_provider/path_provider.dart';
 ///
 /// MBTiles uses TMS tile row order (y=0 at bottom), which matches
 /// what gdal2tiles produced — no flip needed here since we query by TMS y.
-class _MbTileProvider extends TileProvider {
+class MbTileProvider extends TileProvider {
   final Database _db;
-  _MbTileProvider(this._db);
+  MbTileProvider(this._db);
 
   @override
   ImageProvider getImage(TileCoordinates coordinates, TileLayer options) {
@@ -83,7 +83,8 @@ class _MbTileImage extends ImageProvider<_MbTileImage> {
 }
 
 /// Manages opening the bundled MBTiles database once and reusing it.
-class _MbTilesDb {
+/// Public so other layers (e.g. EnhancedDepthLayer) can share the same DB.
+class MbTilesDb {
   static Database? _db;
   static bool _loading = false;
 
@@ -138,7 +139,7 @@ class _DepthSoundingsLayerState extends State<DepthSoundingsLayer> {
   @override
   void initState() {
     super.initState();
-    _MbTilesDb.get().then((db) {
+    MbTilesDb.get().then((db) {
       if (mounted) setState(() => _db = db);
     });
   }
@@ -151,7 +152,7 @@ class _DepthSoundingsLayerState extends State<DepthSoundingsLayer> {
       opacity: widget.opacity,
       child: TileLayer(
         urlTemplate: 'mbtiles://{z}/{x}/{y}',
-        tileProvider: _MbTileProvider(_db!),
+        tileProvider: MbTileProvider(_db!),
         minZoom: 4,
         maxZoom: 18,
         maxNativeZoom: 12,
