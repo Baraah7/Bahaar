@@ -55,6 +55,11 @@ class AuthenticationService {
     }
   }
 
+  // Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
   Future<void> upgradeGuest({
   required String email,
   required String password,

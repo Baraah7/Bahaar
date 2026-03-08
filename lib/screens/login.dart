@@ -5,6 +5,7 @@ import '../providers/language_provider.dart';
 import '../utilities/authentication_validation.dart';
 import '../l10n/app_localizations.dart';
 import 'auth_background.dart';
+import 'auth_widgets.dart' as widgets;
 import 'signup.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
 
@@ -37,6 +38,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
     if (!mounted) return;
     if (!ok && auth.error != null) _err(auth.error!);
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final l10n = AppLocalizations.of(context)!;
+    final emailCtrl = TextEditingController();
+
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0D2B35),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Forgot Password',
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter your email to receive a password reset link',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: l10n.enterEmail,
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.08),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel, style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Send Reset Link', style: const TextStyle(color: Color(0xFF4FC3F7), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (submitted != true || !mounted) return;
+    final email = emailCtrl.text.trim();
+    if (email.isEmpty) return;
+
+    final auth = ref.read(authProviderProvider);
+    final ok = await auth.resetPassword(email);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok ? 'Reset link sent' : 'Failed to send reset link'),
+      backgroundColor: ok ? Colors.green.shade700 : Colors.red.shade700,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
   }
 
   Future<void> _handleGuest() async {
@@ -124,14 +193,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           key: _formKey,
                           child: Column(
                             children: [
-                              AuthField(
+                              widgets.AuthField(
                                 controller: _emailCtrl,
                                 label: l10n.enterEmail,
                                 keyboardType: TextInputType.emailAddress,
                                 validator: (val) => AuthenticationValidation.validateEmail(val, l10n),
                               ),
                               const SizedBox(height: 14),
-                              AuthField(
+                              widgets.AuthField(
                                 controller: _passCtrl,
                                 label: l10n.enterPassword,
                                 obscure: _obscure,
@@ -157,11 +226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: GestureDetector(
-                            onTap: () => ScaffoldMessenger.of(context)
-                                .showSnackBar(SnackBar(
-                              content: Text(l10n.passwordResetComingSoon),
-                              behavior: SnackBarBehavior.floating,
-                            )),
+                            onTap: _handleForgotPassword,
                             child: Text(
                               l10n.forgotPassword,
                               style: TextStyle(
@@ -176,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 30),
 
                         // ── Log In button ─────────────────────────────────────
-                        AuthGradientButton(
+                        widgets.AuthGradientButton(
                           label: l10n.logIn,
                           isLoading: auth.isLoading,
                           onPressed: auth.isLoading ? null : _handleLogin,
