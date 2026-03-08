@@ -81,8 +81,8 @@ class Order {
       ),
       sellerNote: data['sellerNote'] as String?,
       rejectionReason: data['rejectionReason'] as String?,
-      respondedAt: data['respondedAt'] != null
-          ? (data['respondedAt'] as Timestamp).toDate()
+      respondedAt: data['respondAt'] != null
+          ? (data['respondAt'] as Timestamp).toDate()
           : null,
     );
   }
@@ -102,7 +102,7 @@ class Order {
       'status': status.name,
       'sellerNote': sellerNote,
       'rejectionReason': rejectionReason,
-      'respondedAt': respondedAt != null ? Timestamp.fromDate(respondedAt!) : null,
+      'respondAt': respondedAt != null ? Timestamp.fromDate(respondedAt!) : null,
     };
   }
 

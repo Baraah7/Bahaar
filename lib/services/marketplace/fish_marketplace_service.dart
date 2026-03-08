@@ -14,7 +14,8 @@ class FishMarketplaceService extends ChangeNotifier {
   String? _error;
 
   StreamSubscription<QuerySnapshot>? _listingsSubscription;
-  StreamSubscription<QuerySnapshot>? _ordersSubscription;
+  StreamSubscription<QuerySnapshot>? _buyerOrdersSubscription;
+  StreamSubscription<QuerySnapshot>? _sellerOrdersSubscription;
 
   List<FishListing> get listings => List.unmodifiable(_listings);
   List<FishListing> get availableListings =>
@@ -70,25 +71,50 @@ class FishMarketplaceService extends ChangeNotifier {
   void _startListeningToOrders() {
     if (_currentUserId == null) return;
 
-    _ordersSubscription?.cancel();
+    _buyerOrdersSubscription?.cancel();
+    _sellerOrdersSubscription?.cancel();
 
-    // Listen to orders where current user is either buyer or seller
-    _ordersSubscription = _db
+    List<Order> buyerOrdersList = [];
+    List<Order> sellerOrdersList = [];
+
+    void mergeAndNotify() {
+      final seen = <String>{};
+      _orders = [...buyerOrdersList, ...sellerOrdersList]
+          .where((o) => seen.add(o.id))
+          .toList()
+        ..sort((a, b) => b.orderedAt.compareTo(a.orderedAt));
+      notifyListeners();
+    }
+
+    // Firestore rules require uid-filtered queries — split into buyer + seller streams
+    _buyerOrdersSubscription = _db
         .collection('orders')
+        .where('buyerId', isEqualTo: _currentUserId)
         .orderBy('orderedAt', descending: true)
         .snapshots()
         .listen(
       (snapshot) {
-        _orders = snapshot.docs
-            .map((doc) => Order.fromFirestore(doc))
-            .where((order) =>
-                order.buyerId == _currentUserId ||
-                order.sellerId == _currentUserId)
-            .toList();
+        buyerOrdersList = snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        mergeAndNotify();
+      },
+      onError: (e) {
+        _error = 'Failed to load orders: $e';
         notifyListeners();
       },
-      onError: (error) {
-        _error = 'Failed to load orders: $error';
+    );
+
+    _sellerOrdersSubscription = _db
+        .collection('orders')
+        .where('sellerId', isEqualTo: _currentUserId)
+        .orderBy('orderedAt', descending: true)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        sellerOrdersList = snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        mergeAndNotify();
+      },
+      onError: (e) {
+        _error = 'Failed to load orders: $e';
         notifyListeners();
       },
     );
@@ -229,7 +255,7 @@ class FishMarketplaceService extends ChangeNotifier {
       'status': OrderStatus.pending.name,
       'sellerNote': null,
       'rejectionReason': null,
-      'respondedAt': null,
+      'respondAt': null,
     };
 
     final docRef = await _db.collection('orders').add(orderData);
@@ -254,7 +280,7 @@ class FishMarketplaceService extends ChangeNotifier {
       await _db.collection('orders').doc(orderId).update({
         'status': OrderStatus.accepted.name,
         'sellerNote': note,
-        'respondedAt': Timestamp.now(),
+        'respondAt': Timestamp.now(),
       });
     } catch (e) {
       _error = 'Failed to accept order: $e';
@@ -271,7 +297,7 @@ class FishMarketplaceService extends ChangeNotifier {
         await _db.collection('orders').doc(orderId).update({
           'status': OrderStatus.rejected.name,
           'rejectionReason': reason,
-          'respondedAt': Timestamp.now(),
+          'respondAt': Timestamp.now(),
         });
 
         // Make the listing available again
@@ -291,16 +317,18 @@ class FishMarketplaceService extends ChangeNotifier {
 
         await _db.collection('orders').doc(orderId).update({
           'status': OrderStatus.completed.name,
-          'respondedAt': Timestamp.now(),
+          'respondAt': Timestamp.now(),
         });
 
         await updateListingStatus(listingId, ListingStatus.sold);
 
-        // Update seller's total sales
+        // Update seller's total sales — only allowed if current user is the seller
         final sellerId = orderDoc.data()!['sellerId'] as String;
-        await _db.collection('users').doc(sellerId).update({
-          'total_sales': FieldValue.increment(1),
-        });
+        if (_currentUserId == sellerId) {
+          await _db.collection('users').doc(sellerId).update({
+            'total_sales': FieldValue.increment(1),
+          });
+        }
       }
     } catch (e) {
       _error = 'Failed to complete order: $e';
@@ -327,7 +355,8 @@ class FishMarketplaceService extends ChangeNotifier {
   @override
   void dispose() {
     _listingsSubscription?.cancel();
-    _ordersSubscription?.cancel();
+    _buyerOrdersSubscription?.cancel();
+    _sellerOrdersSubscription?.cancel();
     super.dispose();
   }
 }
