@@ -147,6 +147,20 @@ class _IntegratedMapState extends State<IntegratedMap> {
   LatLng? _seaDestination;
   bool _showPortSelection = false;
 
+  // Navigation mode
+  _NavMode? _navMode;
+
+  // Sea-to-sea state
+  LatLng? _seaOrigin; // first tap in sea→sea mode
+
+  // Sea-to-land state
+  LatLng? _seaToLandOrigin; // sea departure point for return trip
+  LatLng? _customLandDestination; // land destination for return trip
+  PortPoint? _returnPort; // port used for the outbound trip (saved)
+
+  // Custom land origin (replaces GPS for land→port→sea)
+  LatLng? _customLandOrigin;
+
   @override
   void initState() {
     super.initState();
@@ -496,8 +510,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
     final isNavigable = _navigationMask.isPointNavigable(point);
 
-    // Determine if the point is outside the territorial mask's geographic bounds
-    // (completely outside the area) vs. inside bounds but on land.
     final isOutsideBounds = point.longitude < _navigationMask.minLon ||
         point.longitude > _navigationMask.maxLon ||
         point.latitude < _navigationMask.minLat ||
@@ -506,13 +518,95 @@ class _IntegratedMapState extends State<IntegratedMap> {
     log('Tapped (${point.latitude.toStringAsFixed(4)}, ${point.longitude.toStringAsFixed(4)}): '
         '${isNavigable ? "navigable water" : isOutsideBounds ? "outside territorial bounds" : "land"}');
 
-    // In port selection mode, land taps are used for port selection.
+    // ── Sea→Sea mode ─────────────────────────────────────────────────────────
+    if (_navMode == _NavMode.seaToSea) {
+      if (!isNavigable) {
+        final msg = isOutsideBounds
+            ? 'Outside territorial waters — tap on the sea'
+            : 'Tap on the sea, not on land';
+        setState(() {
+          _outsideMaskWarning = msg;
+          _outsideMaskWarningDismissed = false;
+        });
+        return;
+      }
+      if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
+
+      final violation = _exclusionZoneService.checkViolation(point);
+      if (violation != null) { _showExclusionDialog(violation); return; }
+      final areaName = _getProtectedAreaAt(point);
+      if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
+
+      if (_seaOrigin == null) {
+        setState(() => _seaOrigin = point);
+        _showMessage('Departure set. Now tap your sea destination.', Colors.blue);
+      } else {
+        setState(() => _seaDestination = point);
+        _calculateSeaToSeaRoute();
+      }
+      return;
+    }
+
+    // ── Sea→Land mode ─────────────────────────────────────────────────────────
+    if (_navMode == _NavMode.seaToLand) {
+      // Port taps (land) are handled via proximity detection
+      if (_showPortSelection && !isNavigable) {
+        final tapScreen = tapPosition.relative;
+        if (tapScreen != null) {
+          const tapRadius = 45.0;
+          for (final port in _availablePorts) {
+            final portScreen = _mapController.camera.getOffsetFromOrigin(port.location);
+            if ((tapScreen - portScreen).distance <= tapRadius) {
+              _handlePortSelected(port);
+              return;
+            }
+          }
+        }
+        // Land tap outside a port: could be custom land destination
+        if (_seaToLandOrigin != null && _selectedPort != null) {
+          setState(() => _customLandDestination = point);
+          _calculateSeaToLandRoute();
+        }
+        return;
+      }
+
+      if (!isNavigable) {
+        // If sea origin and port are set, land tap = land destination
+        if (_seaToLandOrigin != null && _selectedPort != null) {
+          setState(() => _customLandDestination = point);
+          _calculateSeaToLandRoute();
+          return;
+        }
+        final msg = isOutsideBounds
+            ? 'Outside territorial waters'
+            : _seaToLandOrigin == null ? 'Tap on the sea first' : 'Tap on the sea';
+        setState(() {
+          _outsideMaskWarning = msg;
+          _outsideMaskWarningDismissed = false;
+        });
+        return;
+      }
+      if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
+
+      final violation = _exclusionZoneService.checkViolation(point);
+      if (violation != null) { _showExclusionDialog(violation); return; }
+      final areaName = _getProtectedAreaAt(point);
+      if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
+
+      if (_seaToLandOrigin == null) {
+        setState(() => _seaToLandOrigin = point);
+        _showMessage('Departure set. Select a port, then tap your land destination.', Colors.blue);
+      }
+      return;
+    }
+
+    // ── Land→Sea mode (port selection) ───────────────────────────────────────
     // GestureDetector inside Marker.child is unreliable in flutter_map v8 —
-    // instead we detect a port tap here via screen-space proximity.
+    // detect a port tap here via screen-space proximity.
     if (_showPortSelection && !isNavigable) {
       final tapScreen = tapPosition.relative;
       if (tapScreen != null) {
-        const tapRadius = 45.0; // pixels — covers the 60×80 marker area
+        const tapRadius = 45.0;
         for (final port in _availablePorts) {
           final portScreen = _mapController.camera.getOffsetFromOrigin(port.location);
           if ((tapScreen - portScreen).distance <= tapRadius) {
@@ -521,11 +615,15 @@ class _IntegratedMapState extends State<IntegratedMap> {
           }
         }
       }
-      return; // land tap with no port nearby — silently ignore
+      // Land tap: allow setting a custom land origin
+      if (_navMode == _NavMode.landToSea) {
+        setState(() => _customLandOrigin = point);
+        _showMessage('Land origin updated. Now tap a port and sea destination.', Colors.blue);
+      }
+      return;
     }
 
     if (!isNavigable) {
-      // Show contextual warning — block the pin either way
       final msg = isOutsideBounds
           ? 'Outside territorial waters — cannot pin a destination here'
           : 'Cannot pin a destination on land';
@@ -534,71 +632,20 @@ class _IntegratedMapState extends State<IntegratedMap> {
         _outsideMaskWarningDismissed = false;
       });
     } else {
-      // Clear warning when a valid water point is tapped
-      if (_outsideMaskWarning != null) {
-        setState(() => _outsideMaskWarning = null);
-      }
+      if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
     }
 
-    // Block pins inside oil/gas exclusion zones (always, regardless of mode)
     final violation = _exclusionZoneService.checkViolation(point);
-    if (violation != null) {
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          icon: const Icon(Icons.oil_barrel, color: Colors.red, size: 40),
-          title: const Text('Exclusion Zone'),
-          content: Text(
-            'This location is inside the ${violation.zone.name} safety exclusion zone '
-            '(${violation.distanceMeters.round()} m from platform).\n\n'
-            'Destinations inside the 500 m UNCLOS safety buffer are not permitted.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Choose Another Location'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
+    if (violation != null) { _showExclusionDialog(violation); return; }
 
-    // If port selection is open, only accept navigable water points as destinations
     if (_showPortSelection) {
-      // Check protected/restricted areas FIRST — works for all 11 areas,
-      // including terrestrial ones where isNavigable would be false.
       final areaName = _getProtectedAreaAt(point);
-      if (areaName != null) {
-        showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            icon: const Icon(Icons.shield_outlined, color: Colors.orange, size: 40),
-            title: const Text('Protected Area'),
-            content: Text(
-              'This location is inside "$areaName".\n\nDestinations inside protected areas are not permitted. Please choose a different location.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Choose Another Location'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
+      if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
 
-      if (!isNavigable) {
-        return; // Pin blocked — warning already shown above
-      }
+      if (!isNavigable) return;
 
-      setState(() {
-        _seaDestination = point;
-      });
+      setState(() => _seaDestination = point);
 
-      // If a port is already selected, calculate the route immediately —
-      // the user only needs to pick a port once and a destination once.
       if (_selectedPort != null) {
         _calculatePortToSeaRoute();
       } else {
@@ -606,6 +653,46 @@ class _IntegratedMapState extends State<IntegratedMap> {
       }
       return;
     }
+  }
+
+  void _showExclusionDialog(ExclusionZoneViolation violation) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.oil_barrel, color: Colors.red, size: 40),
+        title: const Text('Exclusion Zone'),
+        content: Text(
+          'This location is inside the ${violation.zone.name} safety exclusion zone '
+          '(${violation.distanceMeters.round()} m from platform).\n\n'
+          'Destinations inside the 500 m UNCLOS safety buffer are not permitted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Choose Another Location'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProtectedAreaDialog(String areaName) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.shield_outlined, color: Colors.orange, size: 40),
+        title: const Text('Protected Area'),
+        content: Text(
+          'This location is inside "$areaName".\n\nDestinations inside protected areas are not permitted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Choose Another Location'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleAdminPaint(LatLng point) {
@@ -953,7 +1040,16 @@ class _IntegratedMapState extends State<IntegratedMap> {
       return;
     }
 
-    if (_locationData == null) {
+    // Use custom land origin if set, otherwise fall back to GPS
+    final LatLng? gpsLocation = _locationData == null
+        ? null
+        : LatLng(
+            _locationData!.latitude ?? MapConstants.defaultLatitude,
+            _locationData!.longitude ?? MapConstants.defaultLongitude,
+          );
+    final landOrigin = _customLandOrigin ?? gpsLocation;
+
+    if (landOrigin == null) {
       _showMessage('Current location not available', Colors.orange);
       return;
     }
@@ -964,13 +1060,10 @@ class _IntegratedMapState extends State<IntegratedMap> {
     });
 
     try {
-      final currentLocation = LatLng(
-        _locationData!.latitude ?? MapConstants.defaultLatitude,
-        _locationData!.longitude ?? MapConstants.defaultLongitude,
-      );
+      final currentLocation = landOrigin;
 
       log('Calculating land-to-port-to-sea route');
-      log('  Current location: $currentLocation');
+      log('  Origin: $currentLocation${_customLandOrigin != null ? " (custom)" : " (GPS)"}');
       log('  Selected port: ${_selectedPort!.name} at ${_selectedPort!.location}');
       log('  Sea destination: $_seaDestination');
 
@@ -1078,27 +1171,287 @@ class _IntegratedMapState extends State<IntegratedMap> {
       _selectedPort = null;
       _seaDestination = null;
       _showPortSelection = false;
+      _navMode = null;
+      _seaOrigin = null;
+      _seaToLandOrigin = null;
+      _customLandDestination = null;
+      _returnPort = null;
+      _customLandOrigin = null;
     });
   }
 
-  void _openPortSelection() {
+  /// Show bottom sheet to let user choose which navigation mode to start.
+  void _openNavModeSelection() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Choose Navigation Type',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _NavModeOption(
+                icon: Icons.directions_boat,
+                title: 'Land → Port → Sea',
+                subtitle: 'Drive to a port, then navigate to a sea destination',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _startLandToSeaMode();
+                },
+              ),
+              const SizedBox(height: 8),
+              _NavModeOption(
+                icon: Icons.waves,
+                title: 'Sea → Sea',
+                subtitle: 'Navigate directly between two sea points',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _startSeaToSeaMode();
+                },
+              ),
+              const SizedBox(height: 8),
+              _NavModeOption(
+                icon: Icons.home,
+                title: 'Return: Sea → Port → Land',
+                subtitle: 'Return from sea, dock at a port, navigate home',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _startSeaToLandMode();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startLandToSeaMode() {
     setState(() {
+      _navMode = _NavMode.landToSea;
       _showPortSelection = true;
       _currentRoute = null;
       _selectedPort = null;
       _seaDestination = null;
+      _customLandOrigin = null;
+    });
+  }
+
+  void _startSeaToSeaMode() {
+    setState(() {
+      _navMode = _NavMode.seaToSea;
+      _showPortSelection = false;
+      _currentRoute = null;
+      _seaOrigin = null;
+      _seaDestination = null;
+    });
+    _showMessage('Tap your departure point on the sea', Colors.blue);
+  }
+
+  void _startSeaToLandMode() {
+    setState(() {
+      _navMode = _NavMode.seaToLand;
+      _showPortSelection = true;
+      _currentRoute = null;
+      _selectedPort = _returnPort; // pre-select saved port if available
+      _seaToLandOrigin = null;
+      _customLandDestination = null;
     });
   }
 
   void _handlePortSelected(PortPoint port) {
     setState(() {
       _selectedPort = port;
+      if (_navMode == _NavMode.landToSea) {
+        _returnPort = port; // save for possible return trip
+      }
     });
     _showMessage('Port selected: ${port.name}', Colors.blue);
 
-    // If both port and destination are selected, calculate route
-    if (_seaDestination != null) {
+    // Trigger route calculation when all inputs are ready
+    if (_navMode == _NavMode.landToSea && _seaDestination != null) {
       _calculatePortToSeaRoute();
+    } else if (_navMode == _NavMode.seaToLand &&
+        _seaToLandOrigin != null &&
+        _customLandDestination != null) {
+      _calculateSeaToLandRoute();
+    }
+  }
+
+  // ============================================================
+  // Sea-to-Sea Route Calculation
+  // ============================================================
+
+  Future<void> _calculateSeaToSeaRoute() async {
+    if (_seaOrigin == null || _seaDestination == null) return;
+
+    setState(() {
+      _isCalculatingRoute = true;
+      _currentRoute = null;
+    });
+
+    try {
+      final marineSegment = await _marineService.findMarineRoute(
+        origin: _seaOrigin!,
+        destination: _seaDestination!,
+        restrictedAreas: [
+          if (_geoJsonBuilder != null) ...[
+            ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
+            ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
+          ],
+          ..._exclusionZoneService.buildExclusionPolygons(),
+        ],
+      );
+
+      if (marineSegment == null) {
+        setState(() => _isCalculatingRoute = false);
+        _showMessage('Could not find sea route', Colors.red);
+        return;
+      }
+
+      final route = NavigationRoute(
+        id: 'route_${DateTime.now().millisecondsSinceEpoch}',
+        origin: _seaOrigin!,
+        destination: _seaDestination!,
+        geometry: marineSegment.geometry,
+        segments: [marineSegment],
+        waypoints: [],
+        totalDistance: marineSegment.distance,
+        estimatedDuration: marineSegment.duration,
+        validation: RouteValidation(
+          isValid: true,
+          totalPoints: marineSegment.geometry.length,
+          waterPoints: marineSegment.geometry.length,
+          landPoints: 0,
+          landPointIndices: [],
+        ),
+        createdAt: DateTime.now(),
+        metrics: RouteMetrics(
+          landDistance: 0,
+          marineDistance: marineSegment.distance,
+          landDuration: 0,
+          marineDuration: marineSegment.duration,
+        ),
+      );
+
+      _updateWeatherWarnings();
+
+      setState(() {
+        _currentRoute = route;
+        _isCalculatingRoute = false;
+        _navMode = null;
+      });
+
+      _showMessage('Route calculated: ${_formatDistance(route.totalDistance)}', Colors.green);
+      _fitRouteBounds(route);
+    } catch (e) {
+      log('Error calculating sea-to-sea route: $e');
+      setState(() => _isCalculatingRoute = false);
+      _showMessage('Error calculating route: $e', Colors.red);
+    }
+  }
+
+  // ============================================================
+  // Sea-to-Land Route Calculation
+  // ============================================================
+
+  Future<void> _calculateSeaToLandRoute() async {
+    if (_seaToLandOrigin == null || _selectedPort == null || _customLandDestination == null) {
+      _showMessage('Please select sea origin, port, and land destination', Colors.orange);
+      return;
+    }
+
+    setState(() {
+      _isCalculatingRoute = true;
+      _currentRoute = null;
+    });
+
+    try {
+      // Marine segment: sea origin → port
+      final marineSegment = await _marineService.findMarineRoute(
+        origin: _seaToLandOrigin!,
+        destination: _selectedPort!.location,
+        restrictedAreas: [
+          if (_geoJsonBuilder != null) ...[
+            ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
+            ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
+          ],
+          ..._exclusionZoneService.buildExclusionPolygons(),
+        ],
+      );
+
+      if (marineSegment == null) {
+        setState(() => _isCalculatingRoute = false);
+        _showMessage('Could not find marine route to port', Colors.red);
+        return;
+      }
+
+      // Land segment: port → land destination
+      final landSegment = await _osrmService.getRoute(
+        origin: _selectedPort!.location,
+        destination: _customLandDestination!,
+      );
+
+      if (landSegment == null) {
+        setState(() => _isCalculatingRoute = false);
+        _showMessage('Could not find land route from port', Colors.red);
+        return;
+      }
+
+      final combinedGeometry = [...marineSegment.geometry, ...landSegment.geometry];
+      final segments = [marineSegment, landSegment];
+      final totalDistance = marineSegment.distance + landSegment.distance;
+      final totalDuration = marineSegment.duration + landSegment.duration;
+
+      final route = NavigationRoute(
+        id: 'route_${DateTime.now().millisecondsSinceEpoch}',
+        origin: _seaToLandOrigin!,
+        destination: _customLandDestination!,
+        geometry: combinedGeometry,
+        segments: segments,
+        waypoints: [],
+        totalDistance: totalDistance,
+        estimatedDuration: totalDuration,
+        validation: RouteValidation(
+          isValid: true,
+          totalPoints: combinedGeometry.length,
+          waterPoints: marineSegment.geometry.length,
+          landPoints: landSegment.geometry.length,
+          landPointIndices: [],
+        ),
+        createdAt: DateTime.now(),
+        metrics: RouteMetrics(
+          landDistance: landSegment.distance,
+          marineDistance: marineSegment.distance,
+          landDuration: landSegment.duration,
+          marineDuration: marineSegment.duration,
+        ),
+      );
+
+      _updateWeatherWarnings();
+
+      setState(() {
+        _currentRoute = route;
+        _isCalculatingRoute = false;
+        _showPortSelection = false;
+        _navMode = null;
+      });
+
+      _showMessage('Route calculated: ${_formatDistance(totalDistance)}', Colors.green);
+      _fitRouteBounds(route);
+    } catch (e) {
+      log('Error calculating sea-to-land route: $e');
+      setState(() => _isCalculatingRoute = false);
+      _showMessage('Error calculating route: $e', Colors.red);
     }
   }
 
@@ -1584,8 +1937,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
             ],
           ),
 
-        // Port markers (always visible when port selection is active)
-        if (_showPortSelection || _selectedPort != null)
+        // Port markers (visible when port selection is active or a port is selected)
+        if (_showPortSelection || _selectedPort != null || _navMode == _NavMode.seaToLand)
           MarkerLayer(
             markers: _availablePorts.map((port) {
               final isSelected = _selectedPort?.id == port.id;
@@ -1661,11 +2014,87 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 3),
                   ),
-                  child: const Icon(
-                    Icons.place,
-                    color: Colors.white,
-                    size: 24,
+                  child: const Icon(Icons.place, color: Colors.white, size: 24),
+                ),
+              ),
+            ],
+          ),
+
+        // Sea origin marker (sea→sea departure point)
+        if (_seaOrigin != null && _currentRoute == null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _seaOrigin!,
+                width: 40,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
                   ),
+                  child: const Icon(Icons.radio_button_checked, color: Colors.white, size: 24),
+                ),
+              ),
+            ],
+          ),
+
+        // Sea→land departure marker
+        if (_seaToLandOrigin != null && _currentRoute == null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _seaToLandOrigin!,
+                width: 40,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(Icons.directions_boat, color: Colors.white, size: 22),
+                ),
+              ),
+            ],
+          ),
+
+        // Custom land origin marker (land→sea with overridden start)
+        if (_customLandOrigin != null && _currentRoute == null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _customLandOrigin!,
+                width: 40,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(Icons.home, color: Colors.white, size: 22),
+                ),
+              ),
+            ],
+          ),
+
+        // Custom land destination marker (sea→land)
+        if (_customLandDestination != null && _currentRoute == null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _customLandDestination!,
+                width: 40,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.deepOrange,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(Icons.home, color: Colors.white, size: 22),
                 ),
               ),
             ],
@@ -1870,6 +2299,24 @@ class _IntegratedMapState extends State<IntegratedMap> {
           mainAxisSize: MainAxisSize.min,
           children: children,
         ),
+      ),
+    );
+  }
+
+  Widget _buildStepChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: Colors.green),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.green)),
+        ],
       ),
     );
   }
@@ -2131,26 +2578,24 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     const SizedBox(height: 8),
                     _buildButtonGroup([
                       _buildMapIconButton(
-                        icon: _currentRoute != null || _showPortSelection
+                        icon: _currentRoute != null || _navMode != null
                             ? Icons.close
                             : Icons.directions_boat_outlined,
                         tooltip: _currentRoute != null
                             ? 'Clear route'
-                            : _showPortSelection
-                                ? 'Cancel'
-                                : 'Navigate to port',
+                            : _navMode != null
+                                ? 'Cancel navigation'
+                                : 'Navigate',
                         onPressed: _maskInitialized
                             ? () {
-                                if (_currentRoute != null) {
+                                if (_currentRoute != null || _navMode != null) {
                                   _clearRoute();
-                                } else if (_showPortSelection) {
-                                  setState(() => _showPortSelection = false);
                                 } else {
-                                  _openPortSelection();
+                                  _openNavModeSelection();
                                 }
                               }
                             : null,
-                        isActive: _currentRoute != null || _showPortSelection,
+                        isActive: _currentRoute != null || _navMode != null,
                         activeColor: Colors.orange,
                       ),
                     ]),
@@ -2205,8 +2650,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
               isRecalculating: _navigationManager!.isRecalculating,
             ),
 
-          // Port selection instructions (when active)
-          if (_showPortSelection && _currentRoute == null)
+          // Navigation instructions panel (shown during any active nav mode)
+          if (_navMode != null && _currentRoute == null)
             Positioned(
               top: 90,
               left: 68,
@@ -2232,7 +2677,11 @@ class _IntegratedMapState extends State<IntegratedMap> {
                         const Icon(Icons.info_outline, size: 16, color: Colors.blue),
                         const SizedBox(width: 6),
                         Text(
-                          l10n.portNavigation,
+                          _navMode == _NavMode.seaToSea
+                              ? 'Sea → Sea'
+                              : _navMode == _NavMode.seaToLand
+                                  ? 'Return: Sea → Port → Land'
+                                  : 'Land → Port → Sea',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -2241,34 +2690,54 @@ class _IntegratedMapState extends State<IntegratedMap> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    // Dynamic step instruction
                     Text(
-                      _selectedPort == null
-                          ? l10n.selectPortInstruction
-                          : _seaDestination == null
-                              ? l10n.tapSeaDestination
-                              : l10n.calculatingRoute,
+                      _navMode == _NavMode.seaToSea
+                          ? _seaOrigin == null
+                              ? '1. Tap your departure point on the sea'
+                              : _seaDestination == null
+                                  ? '2. Tap your sea destination'
+                                  : l10n.calculatingRoute
+                          : _navMode == _NavMode.seaToLand
+                              ? _seaToLandOrigin == null
+                                  ? '1. Tap your sea departure point'
+                                  : _selectedPort == null
+                                      ? '2. Tap a port (anchor icon) to dock at'
+                                      : _customLandDestination == null
+                                          ? '3. Tap your land destination'
+                                          : l10n.calculatingRoute
+                              // landToSea
+                              : _selectedPort == null
+                                  ? '1. Tap a port (anchor icon)\n2. Tap sea destination\n(Tap land to change your start location)'
+                                  : _seaDestination == null
+                                      ? '2. Tap your sea destination'
+                                      : l10n.calculatingRoute,
                       style: const TextStyle(fontSize: 12),
                     ),
+                    // Confirmed steps summary
+                    if (_navMode == _NavMode.landToSea && _customLandOrigin != null) ...[
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.location_on, 'Custom origin set'),
+                    ],
+                    if (_seaOrigin != null && _navMode == _NavMode.seaToSea) ...[
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.radio_button_checked, 'Departure set'),
+                    ],
+                    if (_seaToLandOrigin != null && _navMode == _NavMode.seaToLand) ...[
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.radio_button_checked, 'Sea departure set'),
+                    ],
                     if (_selectedPort != null) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.check_circle, size: 14, color: Colors.green),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${l10n.portSelected}: ${_selectedPort!.name}',
-                              style: const TextStyle(fontSize: 11, color: Colors.green),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.anchor, 'Port: ${_selectedPort!.name}'),
+                    ],
+                    if (_returnPort != null && _navMode == _NavMode.seaToLand && _selectedPort == null) ...[
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.history, 'Last port: ${_returnPort!.name} (tap to reuse)'),
+                    ],
+                    if (_customLandDestination != null) ...[
+                      const SizedBox(height: 6),
+                      _buildStepChip(Icons.home, 'Land destination set'),
                     ],
                   ],
                 ),
@@ -2385,6 +2854,67 @@ class _IntegratedMapState extends State<IntegratedMap> {
             child: _buildZoomControls(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Navigation mode
+enum _NavMode { landToSea, seaToSea, seaToLand }
+
+/// Option tile used in the nav-mode bottom sheet
+class _NavModeOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _NavModeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.blue.shade700, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey.shade600)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ],
+        ),
       ),
     );
   }
