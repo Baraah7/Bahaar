@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 class FishClassification {
   final String className;
@@ -39,6 +40,7 @@ class FishClassification {
 
 /// TensorFlow Lite model service for fish classification
 class FishClassifierService {
+  Interpreter? _interpreter;
   List<String>? _labels;
   bool _isInitialized = false;
 
@@ -59,6 +61,9 @@ class FishClassifierService {
           .where((label) => label.isNotEmpty)
           .toList();
 
+      // Load TFLite model
+      _interpreter = await Interpreter.fromAsset(_modelPath);
+
       _isInitialized = true;
     } catch (e) {
       throw Exception('Error initializing FishClassifierService: $e');
@@ -75,12 +80,8 @@ class FishClassifierService {
     }
 
     try {
-      // Mock classification for now
-      return FishClassification(
-        className: _labels!.first,
-        confidence: 0.85,
-        timestamp: DateTime.now(),
-      );
+      final bytes = await imageFile.readAsBytes();
+      return classifyImageBytes(bytes);
     } catch (e) {
       throw Exception('Error classifying image: $e');
     }
@@ -93,10 +94,26 @@ class FishClassifierService {
     }
 
     try {
-      // Mock classification for now
+      final decoded = img.decodeImage(imageBytes);
+      if (decoded == null) throw Exception('Failed to decode image.');
+
+      final input = _preprocessImage(decoded);
+
+      // Output shape: [1, numClasses]
+      final numClasses = _labels!.length;
+      final output = List.generate(1, (_) => List.filled(numClasses, 0.0));
+
+      _interpreter!.run(input, output);
+
+      final scores = output[0];
+      int bestIndex = 0;
+      for (int i = 1; i < scores.length; i++) {
+        if (scores[i] > scores[bestIndex]) bestIndex = i;
+      }
+
       return FishClassification(
-        className: _labels!.first,
-        confidence: 0.85,
+        className: _labels![bestIndex],
+        confidence: scores[bestIndex],
         timestamp: DateTime.now(),
       );
     } catch (e) {
@@ -104,9 +121,10 @@ class FishClassifierService {
     }
   }
 
-  /// Preprocess image to model input format
+  /// Preprocess image to model input format.
+  /// Normalization: (pixel / 127.5) - 1.0  →  range [-1, 1]
+  /// Must match the training preprocessing used in the notebook.
   List<List<List<List<double>>>> _preprocessImage(img.Image image) {
-    // Resize to 224x224
     final resized = img.copyResize(
       image,
       width: _inputSize,
@@ -114,7 +132,7 @@ class FishClassifierService {
       interpolation: img.Interpolation.cubic,
     );
 
-    // Convert to normalized float array [1, 224, 224, 3]
+    // Shape: [1, 224, 224, 3]
     final input = List.generate(
       1,
       (_) => List.generate(
@@ -124,9 +142,9 @@ class FishClassifierService {
           (x) {
             final pixel = resized.getPixel(x, y);
             return [
-              pixel.r / 255.0, // Normalize to [0, 1]
-              pixel.g / 255.0,
-              pixel.b / 255.0,
+              (pixel.r / 127.5) - 1.0,
+              (pixel.g / 127.5) - 1.0,
+              (pixel.b / 127.5) - 1.0,
             ];
           },
         ),
@@ -144,6 +162,8 @@ class FishClassifierService {
 
   /// Dispose resources
   void dispose() {
+    _interpreter?.close();
+    _interpreter = null;
     _isInitialized = false;
   }
 }
