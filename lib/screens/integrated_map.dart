@@ -48,6 +48,7 @@ import 'package:Bahaar/services/offline/connectivity_service.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:Bahaar/screens/prediction_screen.dart';
+import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -182,6 +183,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
     _aisService.addListener(_onAisUpdate);
     _aisService.initialize();
+
+    TripService.instance.initialize();
 
     // Sync pending offline data when connectivity is restored
     ConnectivityService.instance.onConnectivityChanged.listen((online) {
@@ -2111,6 +2114,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
               : const SizedBox.shrink(),
         ),
 
+        // Catch markers — visible during an active trip
+        if (TripService.instance.hasActiveTrip)
+          CatchMarkerLayer(
+            catches: TripService.instance.activeTrip!.catches,
+          ),
+
         // User location marker
         if (_locationData != null)
           MarkerLayer(
@@ -2130,6 +2139,59 @@ class _IntegratedMapState extends State<IntegratedMap> {
         ),
       ),
     );
+  }
+
+  Future<void> _logCatchFromMap() async {
+    final result = await CatchForm.show(context);
+    if (result == null || !mounted) return;
+
+    // Resolve catch location: prefer form location, fall back to current GPS
+    LatLng? loc = result.location;
+    if (loc == null && _locationData?.latitude != null && _locationData?.longitude != null) {
+      loc = LatLng(_locationData!.latitude!, _locationData!.longitude!);
+    }
+    if (loc == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذّر تحديد الموقع — يرجى تفعيل GPS أو تحديد الموقع يدوياً'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_maskInitialized && !_navigationMask.isNavigable(loc.longitude, loc.latitude)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('يجب تسجيل الصيدة في البحر'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final trip = TripService.instance.activeTrip;
+    if (trip == null) return;
+
+    await TripService.instance.logCatch(
+      tripId: trip.id,
+      species: result.species,
+      location: loc,
+      weightKg: result.weightKg,
+      notes: result.notes,
+    );
+
+    if (mounted) {
+      setState(() {}); // refresh catch markers on map
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم تسجيل الصيدة بنجاح'),
+          backgroundColor: Colors.teal,
+        ),
+      );
+    }
   }
 
 
@@ -2844,6 +2906,21 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     ],
                   ),
                 ),
+              ),
+            ),
+
+          // Log Catch FAB — only visible during an active trip
+          if (TripService.instance.hasActiveTrip)
+            Positioned(
+              bottom: 90,
+              right: 16,
+              child: FloatingActionButton.extended(
+                heroTag: 'logCatch',
+                onPressed: _logCatchFromMap,
+                backgroundColor: const Color(0xFF0D4F54),
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('تسجيل صيدة'),
               ),
             ),
 

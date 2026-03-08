@@ -5,12 +5,12 @@
 //   3. Spot markers   – colour-coded by confidence/MPA; tap → bottom sheet
 //                       with a "Get Prediction" button.
 
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/core/constants/zone_data.dart';
 import 'package:Bahaar/core/constants/species_data.dart';
+import 'package:Bahaar/models/fishing/trip_model.dart';
 
 // ---------------------------------------------------------------------------
 // Public widget — drop it inside FlutterMap's children list.
@@ -338,88 +338,93 @@ class _MpaCircleLayer extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Spot marker layer
+// Catch marker layer — orange dots shown during an active trip
 // ---------------------------------------------------------------------------
+
+/// Renders logged catches from the current trip as orange markers.
+/// Styled distinctly from the blue fishing-prediction spot markers.
+class CatchMarkerLayer extends StatelessWidget {
+  final List<CatchEntry> catches;
+  const CatchMarkerLayer({super.key, required this.catches});
+
+  @override
+  Widget build(BuildContext context) {
+    if (catches.isEmpty) return const SizedBox.shrink();
+    final markers = catches
+        .map((c) => Marker(
+              point: c.location,
+              width: 20,
+              height: 20,
+              child: const _CatchDot(),
+            ))
+        .toList();
+    return MarkerLayer(markers: markers);
+  }
+}
+
+class _CatchDot extends StatelessWidget {
+  const _CatchDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF8F00), // amber 800
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.0),
+      ),
+      child: const Icon(Icons.phishing, color: Colors.white, size: 9),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Spot marker layer — small blue dots (fishing prediction spots)
+// ---------------------------------------------------------------------------
+
+// Shared painter instance: no instance state, so all markers reuse one object.
+class _SpotDotPainter extends CustomPainter {
+  const _SpotDotPainter();
+
+  static final _fill = Paint()..color = const Color(0xFF1976D2); // blue 700
+  static final _border = Paint()
+    ..color = Colors.white
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.5;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 0.75;
+    canvas.drawCircle(c, r, _fill);
+    canvas.drawCircle(c, r, _border);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter _) => false;
+}
 
 class _SpotMarkerLayer extends StatelessWidget {
   final void Function(Map<String, dynamic> spot) onSpotTapped;
   const _SpotMarkerLayer({required this.onSpotTapped});
 
-  Color _markerColor(Map<String, dynamic> spot) {
-    if (spot['mpa'] == true) return Colors.red;
-    if (spot['confidence'] == 'high') return Colors.green.shade600;
-    return Colors.orange;
-  }
-
   @override
   Widget build(BuildContext context) {
     final markers = kConfirmedSpots.map((spot) {
-      final color = _markerColor(spot);
       return Marker(
         point: LatLng(
           spot['lat'] as double,
           spot['lng'] as double,
         ),
-        width: 44,
-        height: 56,
+        width: 12,
+        height: 12,
         child: GestureDetector(
           onTap: () => onSpotTapped(spot),
-          child: Column(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.set_meal,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-              // Small triangle pointer
-              CustomPaint(
-                size: const Size(10, 8),
-                painter: _TrianglePainter(color),
-              ),
-            ],
-          ),
+          child: const CustomPaint(painter: _SpotDotPainter()),
         ),
       );
     }).toList();
 
     return MarkerLayer(markers: markers);
   }
-}
-
-// ---------------------------------------------------------------------------
-// Triangle painter for marker pin
-// ---------------------------------------------------------------------------
-
-class _TrianglePainter extends CustomPainter {
-  final Color color;
-  const _TrianglePainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = ui.Paint()..color = color;
-    final path = ui.Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_TrianglePainter old) => old.color != color;
 }
