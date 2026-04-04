@@ -48,6 +48,11 @@ class TripService {
   // ─── Trip CRUD ───────────────────────────────────────────────
 
   Future<Trip> startTrip({LatLng? location, String? notes}) async {
+    // Block starting a second session while one is active
+    if (_activeTrip != null) {
+      log('TripService: startTrip blocked — trip ${_activeTrip!.id} already active');
+      return _activeTrip!;
+    }
     final trip = Trip(
       id: const Uuid().v4(),
       startTime: DateTime.now(),
@@ -61,12 +66,24 @@ class TripService {
     return trip;
   }
 
-  /// Re-open a finished trip (clears its end_time and makes it active again).
+  /// Re-open a finished trip. Records the break duration so it is excluded
+  /// from the active fishing time shown to the user.
   Future<Trip> resumeTrip(Trip trip) async {
+    // Block resuming if another trip is already active
+    if (_activeTrip != null && _activeTrip!.id != trip.id) {
+      log('TripService: resumeTrip blocked — trip ${_activeTrip!.id} already active');
+      return _activeTrip!;
+    }
+    // Calculate how long the trip was paused and add to existing pausedSeconds
+    final breakSeconds = trip.endTime != null
+        ? DateTime.now().difference(trip.endTime!).inSeconds
+        : 0;
+    final newPaused = trip.pausedSeconds + breakSeconds;
     await _db.clearTripEndTime(trip.id);
-    final resumed = trip.copyWith(endTime: null);
+    await _db.updateTrip(trip.id, {'paused_seconds': newPaused});
+    final resumed = trip.copyWith(endTime: null, pausedSeconds: newPaused);
     _activeTrip = resumed;
-    log('TripService: resumed trip ${trip.id}');
+    log('TripService: resumed trip ${trip.id}, paused so far: ${newPaused}s');
     return resumed;
   }
 
@@ -99,6 +116,13 @@ class TripService {
     final catchRows = await _db.getCatchesForTrip(id);
     final catches = catchRows.map(CatchEntry.fromRow).toList();
     return Trip.fromRow(row, catches);
+  }
+
+  Future<void> updateTripTitle(String id, String title) async {
+    await _db.updateTrip(id, {'title': title.trim().isEmpty ? null : title.trim()});
+    if (_activeTrip?.id == id) {
+      _activeTrip = _activeTrip!.copyWith(title: title.trim().isEmpty ? null : title.trim());
+    }
   }
 
   Future<void> deleteTrip(String id) async {
@@ -216,5 +240,27 @@ class TripService {
         .collection('catches')
         .doc(row['id'] as String)
         .set(row);
+  }
+
+  /// Loads all catches for the current user from Firestore.
+  /// Returns an empty list if not authenticated or on error.
+  Future<List<CatchEntry>> fetchCatchesFromFirestore() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('catches')
+          .orderBy('timestamp', descending: true)
+          .limit(50)
+          .get();
+      return snapshot.docs
+          .map((doc) => CatchEntry.fromRow(doc.data()))
+          .toList();
+    } catch (e) {
+      log('TripService: fetchCatchesFromFirestore failed — $e');
+      return [];
+    }
   }
 }

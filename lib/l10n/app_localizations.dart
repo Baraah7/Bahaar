@@ -62,8 +62,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -193,6 +190,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 
   /// No description provided for @welcomeToBahaar.
   ///
@@ -619,6 +622,206 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current location not available'**
   String get currentLocationNotAvailable;
+
+  String get chooseNavType;
+  String get landToSea;
+  String get landToSeaSubtitle;
+  String get seaToSea;
+  String get seaToSeaSubtitle;
+  String get returnSeaToLand;
+  String get returnSeaToLandSubtitle;
+  String get tapSeaDeparture;
+  String get stepTapSeaDeparture;
+  String get stepTapSeaDestination;
+  String get stepTapPort;
+  String get stepTapPortDock;
+  String get stepTapLandDestination;
+  String get customOriginSet;
+  String get departureSet;
+  String get seaDepartureSet;
+  String get portLabel;
+  String get lastPort;
+  String get landDestinationSet;
+  String get offlineMapCached;
+  String get outsideTerritorialWaters;
+  String get tapOnSea;
+  String get currentLocationOnLandRequired;
+  String get tripDetailTitle;
+  String get tripStart;
+  String get tripEnd;
+  String get totalWeight;
+  String get noCatchesLogged;
+  String get deleteCatch;
+  String removeCatchConfirm(String species);
+  String get addCatchLabel;
+  String get editCatch;
+  String get saveChanges;
+  String get speciesName;
+  String get notesOptional;
+  String get pinOnMap;
+  String get latitude;
+  String get longitude;
+  String get locationPinned;
+  String get ongoing;
+  String get pickCatchTime;
+  String get quickSpeciesHamour;
+  String get quickSpeciesSafi;
+  String get quickSpeciesSobaity;
+  String get quickSpeciesChanad;
+  String get quickSpeciesZubaidi;
+  String get quickSpeciesShrimp;
+  String get quickSpeciesCrab;
+
+  /// No description provided for @fishingLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fishing Log'**
+  String get fishingLog;
+
+  String get tripAlreadyActive;
+  String get endActiveTripFirst;
+  String get endButtonLabel;
+  String get tripNameHint;
+  String get editTitleTooltip;
+  String get deleteTripTooltip;
+  String get signInToTrack;
+  String get forgotPasswordHint;
+  String get sendResetLink;
+  String get resetLinkSent;
+  String get resetLinkFailed;
+  String get signInToSell;
+
+  /// No description provided for @tripInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip in progress'**
+  String get tripInProgress;
+
+  /// No description provided for @tripResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip resumed.'**
+  String get tripResumed;
+
+  /// No description provided for @tripEndedAndSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip ended and saved.'**
+  String get tripEndedAndSaved;
+
+  /// No description provided for @catchWord.
+  ///
+  /// In en, this message translates to:
+  /// **'catch'**
+  String get catchWord;
+
+  /// No description provided for @catches.
+  ///
+  /// In en, this message translates to:
+  /// **'catches'**
+  String get catches;
+
+  /// No description provided for @noTripsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No trips yet'**
+  String get noTripsYet;
+
+  /// No description provided for @tapStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Start Trip\" to begin logging your catches.'**
+  String get tapStartTrip;
+
+  /// No description provided for @endTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'End Trip'**
+  String get endTrip;
+
+  /// No description provided for @endCurrentTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'End your current fishing trip?'**
+  String get endCurrentTrip;
+
+  /// No description provided for @deleteActiveTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Active Trip?'**
+  String get deleteActiveTrip;
+
+  /// No description provided for @deleteTripConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the current trip and all catches logged so far. This cannot be undone.'**
+  String get deleteTripConfirm;
+
+  /// No description provided for @tripDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip deleted.'**
+  String get tripDeleted;
+
+  /// No description provided for @logCatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Catch'**
+  String get logCatch;
+
+  /// No description provided for @deleteTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Trip?'**
+  String get deleteTrip;
+
+  /// No description provided for @deleteTripConfirmFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete \"{tripTitle}\" and all catches logged. This cannot be undone.'**
+  String deleteTripConfirmFinished(Object tripTitle);
+
+  /// No description provided for @cannotStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot start trip: {error}'**
+  String cannotStartTrip(Object error);
+
+  /// No description provided for @enterTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter trip title (optional)'**
+  String get enterTripTitle;
+
+  /// No description provided for @startTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Trip'**
+  String get startTrip;
+
+  /// No description provided for @resumeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Trip'**
+  String get resumeTrip;
+
+  /// No description provided for @editTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Trip Title'**
+  String get editTripTitle;
+
+  /// No description provided for @enterTripTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter trip title'**
+  String get enterTripTitleHint;
+
+  /// No description provided for @addCatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Catch'**
+  String get addCatch;
 
   /// No description provided for @marketplace.
   ///
@@ -1561,10 +1764,459 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passwords do not match'**
   String get validationPasswordsNoMatch;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest User'**
+  String get guestUser;
+
+  /// No description provided for @guestAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest Account'**
+  String get guestAccount;
+
+  /// No description provided for @contactInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get contactInformation;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @accountStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Status'**
+  String get accountStatus;
+
+  /// No description provided for @guestBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your full profile and seller features.'**
+  String get guestBannerMessage;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
+
+  /// No description provided for @policyDataCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Collection'**
+  String get policyDataCollection;
+
+  /// No description provided for @policyDataCollectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bahaar collects location data, catch logs, and account information solely to provide fishing assistance services. We do not sell your data to third parties.'**
+  String get policyDataCollectionBody;
+
+  /// No description provided for @policyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Usage'**
+  String get policyLocation;
+
+  /// No description provided for @policyLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Location data is used for weather forecasts, fishing maps, and navigation features. Location is never stored beyond your active session unless you explicitly save a log.'**
+  String get policyLocationBody;
+
+  /// No description provided for @policyFishRecognition.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish Recognition'**
+  String get policyFishRecognition;
+
+  /// No description provided for @policyFishRecognitionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Images submitted for fish identification are processed locally on-device using TensorFlow Lite. Images are not uploaded to any server.'**
+  String get policyFishRecognitionBody;
+
+  /// No description provided for @policyAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Authentication'**
+  String get policyAuthentication;
+
+  /// No description provided for @policyAuthenticationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication is handled securely through Firebase. Passwords are never stored in plain text. Guest sessions are anonymous and contain no personally identifiable information.'**
+  String get policyAuthenticationBody;
+
+  /// No description provided for @policyRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Retention'**
+  String get policyRetention;
+
+  /// No description provided for @policyRetentionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fishing logs and account data are stored in your personal Firebase account. You may delete your data at any time by contacting support or deleting your account.'**
+  String get policyRetentionBody;
+
+  /// No description provided for @policyContactSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get policyContactSection;
+
+  /// No description provided for @policyContactSectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For privacy-related inquiries, please contact the Bahaar development team through the app support channel.'**
+  String get policyContactSectionBody;
+
+  /// No description provided for @loginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Required'**
+  String get loginRequired;
+
+  /// No description provided for @guestAccountLoginMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to sign in to place an order.\nGuest accounts cannot buy or sell fish.'**
+  String get guestAccountLoginMessage;
+
+  /// No description provided for @guestAccountSellMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to sign in to post a listing.\nGuest accounts cannot sell fish.'**
+  String get guestAccountSellMessage;
+
+  /// No description provided for @phoneNumberCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number copied'**
+  String get phoneNumberCopied;
+
+  /// No description provided for @sellingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling ({count})'**
+  String sellingTab(int count);
+
+  /// No description provided for @purchasesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases ({count})'**
+  String purchasesTab(int count);
+
+  /// No description provided for @pleaseLoginToViewOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Please login to view orders'**
+  String get pleaseLoginToViewOrders;
+
+  /// No description provided for @noOrdersForListings.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders for your listings yet'**
+  String get noOrdersForListings;
+
+  /// No description provided for @noPurchasesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases yet'**
+  String get noPurchasesYet;
+
+  /// No description provided for @whenSomeoneOrdersYourFish.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone orders your fish, it will appear here'**
+  String get whenSomeoneOrdersYourFish;
+
+  /// No description provided for @yourPurchasesWillAppear.
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchases will appear here'**
+  String get yourPurchasesWillAppear;
+
+  /// No description provided for @fromYourFishingLog.
+  ///
+  /// In en, this message translates to:
+  /// **'From Your Fishing Log'**
+  String get fromYourFishingLog;
+
+  /// No description provided for @tapRecentCatchToFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a recent catch to pre-fill the form'**
+  String get tapRecentCatchToFill;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @cleaned.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned'**
+  String get cleaned;
+
+  /// No description provided for @filleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Filleted'**
+  String get filleted;
+
+  /// No description provided for @kgUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get kgUnit;
+
+  /// No description provided for @bdUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'BD'**
+  String get bdUnit;
+
+  /// No description provided for @bdPerKg.
+  ///
+  /// In en, this message translates to:
+  /// **'BD/kg'**
+  String get bdPerKg;
+
+  /// No description provided for @sellerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Seller'**
+  String get sellerLabel;
+
+  /// No description provided for @rejectionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get rejectionReason;
+
+  /// No description provided for @waitingForSellerToAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for seller to accept your order'**
+  String get waitingForSellerToAccept;
+
+  /// No description provided for @orderAcceptedContactSeller.
+  ///
+  /// In en, this message translates to:
+  /// **'Order accepted! Contact seller to arrange pickup.'**
+  String get orderAcceptedContactSeller;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @cancelOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Order'**
+  String get cancelOrder;
+
+  /// No description provided for @confirmCancelOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this order?'**
+  String get confirmCancelOrder;
+
+  /// No description provided for @orderCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Order cancelled'**
+  String get orderCancelled;
+
+  /// No description provided for @benefitPayIban.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefit Pay IBAN'**
+  String get benefitPayIban;
+
+  /// No description provided for @enterIban.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter IBAN number'**
+  String get enterIban;
+
+  /// No description provided for @ibanOrQrRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please upload QR code or enter IBAN number'**
+  String get ibanOrQrRequired;
+
+  /// No description provided for @deleteListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Listing'**
+  String get deleteListing;
+
+  /// No description provided for @confirmDeleteListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this listing from the marketplace?'**
+  String get confirmDeleteListing;
+
+  /// No description provided for @listingDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Listing deleted'**
+  String get listingDeleted;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get or;
+
+  /// No description provided for @priceRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Range'**
+  String get priceRange;
+
+  /// No description provided for @priceRangeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Price: {min}–{max} BD/kg'**
+  String priceRangeFilter(String min, String max);
+
+  /// No description provided for @allPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'All Prices'**
+  String get allPrices;
+
+  /// No description provided for @orderPlacedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Placed!'**
+  String get orderPlacedTitle;
+
+  /// No description provided for @youHaveOrderedFish.
+  ///
+  /// In en, this message translates to:
+  /// **'You have ordered {fish}'**
+  String youHaveOrderedFish(String fish);
+
+  /// No description provided for @pleaseLoginToOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Please login to place an order'**
+  String get pleaseLoginToOrder;
+
+  /// No description provided for @ibanOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'IBAN (optional)'**
+  String get ibanOptional;
+
+  /// No description provided for @sellerBenefitNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer will see your Benefit Pay details to complete payment'**
+  String get sellerBenefitNote;
+
+  String get phoneEightDigits;
+
+  // Map layer panel
+  String get mapLayers;
+  String get depthVisualization;
+  String get protectedExclusionZones;
+  String get fishingSpotSuggestions;
+  String get showDepthLayer;
+  String get visualizationType;
+  String get opacityLabel;
+  String get protectedZones;
+  String get marineReservesReefs;
+  String get mpaRestrictedArea;
+  String get oilGasExclusion;
+  String get safetyBuffersVisible;
+  String get safetyRulesApplyWhenHidden;
+  String get showFishingSpots;
+  String get zonesMpasLocations;
+  String get highConfidenceSpot;
+  String get mediumConfidenceSpot;
+  String get fishingZone;
+  String get fishingPrediction;
+  String get aiCatchProbability;
+  String featuresLoaded(int count);
+
+  // Main appbar popup
+  String get emergency;
+  String get emergencyComingSoon;
+
+  // Trip card labels
+  String get tripStartedLabel;
+  String get tripDurationLabel;
+  String get tripCatchesLabel;
+  String get tripActiveLabel;
+
+  // Prediction screen
+  String get predictionTitle;
+  String get selectLocationFirst;
+  String get hideMap;
+  String get selectFromMap;
+  String get tapMapToSelect;
+  String get chooseSpecies;
+  String get getPrediction;
+  String get retry;
+  String get insideProtectedZone;
+  String get nearbyFishingSpots;
+  String get factorSeason;
+  String get factorWeather;
+  String get factorReports;
+  String get factorProximity;
+  String get probExcellent;
+  String get probVeryGood;
+  String get probModerate;
+  String get probWeak;
+  String get probNotSuitable;
+  String get noInternetConnection;
+  String get serverError;
+  String get unexpectedError;
+  String get kmUnit;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1573,25 +2225,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'en':
-      return AppLocalizationsEn();
+    case 'ar': return AppLocalizationsAr();
+    case 'en': return AppLocalizationsEn();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

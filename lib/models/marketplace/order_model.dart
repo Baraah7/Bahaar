@@ -23,6 +23,24 @@ enum OrderStatus {
         return 'Cancelled';
     }
   }
+
+  String get arabicName {
+    switch (this) {
+      case OrderStatus.pending:
+        return 'قيد الانتظار';
+      case OrderStatus.accepted:
+        return 'مقبول';
+      case OrderStatus.rejected:
+        return 'مرفوض';
+      case OrderStatus.completed:
+        return 'مكتمل';
+      case OrderStatus.cancelled:
+        return 'ملغى';
+    }
+  }
+
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
 }
 
 class Order {

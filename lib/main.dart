@@ -8,8 +8,8 @@ import 'package:Bahaar/screens/integrated_map.dart';
 import 'package:Bahaar/screens/mariner_harvest.dart';
 import 'package:Bahaar/screens/settings_screen.dart';
 import 'package:Bahaar/screens/profile_screen.dart';
+import 'package:Bahaar/providers/authentication_provider.dart';
 import 'package:Bahaar/screens/fishing_log_screen.dart';
-import 'package:Bahaar/widgets/language_switcher.dart';
 import 'package:Bahaar/screens/fish_recognition_screen.dart';
 import 'package:Bahaar/providers/language_provider.dart';
 import 'package:Bahaar/services/offline/connectivity_service.dart';
@@ -72,39 +72,123 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   late final PageController _controller = PageController(initialPage: _index);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authProviderProvider).initializeAuthState();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    final pageTitles = [
+      l10n.marketplace,
+      l10n.fishingMap,
+      l10n.weather,
+      l10n.fishRecognition,
+      l10n.fishingLog,
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
-        title: Text(
-          l10n.appName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        leading: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Image.asset(
+            'assets/logo/appIcon.png',
+            width: 28,
+            height: 28,
+            fit: BoxFit.contain,
+          ),
         ),
+        title: Text(
+          pageTitles[_index],
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+        ),
+        centerTitle: true,
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.cream,
-        centerTitle: true,
         elevation: 0,
         actions: [
-          const LanguageSwitcher(),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.cream),
+            color: AppColors.cream.withValues(alpha: 0.95),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.accent.withValues(alpha: 0.4)),
             ),
-            tooltip: 'Profile',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
+            elevation: 8,
+            onSelected: (value) {
+              if (value == 'emergency') {
+                showDialog(
+                  context: context,
+                  builder: (ctx) {
+                    final dl10n = AppLocalizations.of(ctx)!;
+                    return AlertDialog(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      title: Text(dl10n.emergency,
+                          style: const TextStyle(color: AppColors.cream)),
+                      content: Text(
+                          dl10n.emergencyComingSoon,
+                          style: const TextStyle(color: AppColors.cream)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(dl10n.ok,
+                              style: const TextStyle(color: AppColors.accent)),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } else if (value == 'settings') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()));
+              } else if (value == 'profile') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              }
             },
-            tooltip: l10n.settings,
+            itemBuilder: (ctx) {
+              final ml10n = AppLocalizations.of(ctx)!;
+              return [
+                PopupMenuItem(
+                  value: 'emergency',
+                  child: Row(children: [
+                    const Icon(Icons.sos_rounded, color: AppColors.red, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.emergency,
+                        style: const TextStyle(
+                            color: AppColors.red,
+                            fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: Row(children: [
+                    const Icon(Icons.settings_outlined,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.settings,
+                        style: const TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'profile',
+                  child: Row(children: [
+                    const Icon(Icons.person_outline,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.profile,
+                        style: const TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+              ];
+            },
           ),
         ],
       ),

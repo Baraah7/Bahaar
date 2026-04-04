@@ -1,6 +1,5 @@
-﻿import 'dart:developer';
-import 'package:Bahaar/app_start.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +12,7 @@ import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 import 'package:Bahaar/screens/trip_detail_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:Bahaar/providers/authentication_provider.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 class FishingLogScreen extends ConsumerStatefulWidget {
   const FishingLogScreen({super.key});
@@ -25,6 +25,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   final _service = TripService.instance;
   List<Trip> _trips = [];
   bool _loading = true;
+  Timer? _ticker;
 
   @override
   void initState() {
@@ -32,9 +33,24 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     _init();
   }
 
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
   Future<void> _init() async {
     await _service.initialize();
     await _loadTrips();
+    _startTicker();
+  }
+
+  /// Ticks every second to refresh the live duration on the banner.
+  void _startTicker() {
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_service.activeTrip != null && mounted) setState(() {});
+    });
   }
 
   Future<void> _loadTrips() async {
@@ -60,20 +76,27 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Future<void> _startTrip() async {
+    if (_service.hasActiveTrip) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.tripAlreadyActive),
+        ));
+      }
+      return;
+    }
     final loc = await _currentLocation();
     await _service.startTrip(location: loc);
     await _loadTrips();
+    _startTicker();
   }
 
-  /// Returns the most recent trip that ended today, if any.
   Trip? get _todayEndedTrip {
     final today = DateTime.now();
     for (final t in _trips) {
       if (!t.isActive && t.endTime != null) {
         final end = t.endTime!.toLocal();
-        if (end.year == today.year &&
-            end.month == today.month &&
-            end.day == today.day) {
+        if (end.year == today.year && end.month == today.month && end.day == today.day) {
           return t;
         }
       }
@@ -82,58 +105,50 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Future<void> _resumeTrip(Trip trip) async {
+    if (_service.hasActiveTrip) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.endActiveTripFirst),
+        ));
+      }
+      return;
+    }
     await _service.resumeTrip(trip);
     await _loadTrips();
+    _startTicker();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trip resumed.')),
-      );
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.tripResumed),
+      ));
     }
   }
 
   Future<void> _endTrip() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D2E31),
-        title: const Text('End Trip',
-            style: TextStyle(color: Colors.white)),
-        content: const Text('End your current fishing trip?',
-            style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent),
-            child:
-                const Text('End Trip', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await _confirmDialog(
+      title: l10n.endTrip,
+      content: l10n.endCurrentTrip,
+      confirmLabel: l10n.endButtonLabel,
+      confirmColor: const Color(0xFF4597a8),
     );
     if (confirm != true) return;
-
     await _service.endTrip();
+    _ticker?.cancel();
     await _loadTrips();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trip ended and saved.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.tripEndedAndSaved),
+      ));
     }
   }
 
   Future<void> _logCatch() async {
     final activeTrip = _service.activeTrip;
     if (activeTrip == null) return;
-
     final result = await CatchForm.show(context);
     if (result == null) return;
-
     final loc = result.location ?? await _currentLocation();
     await _service.logCatch(
       tripId: activeTrip.id,
@@ -143,116 +158,201 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       notes: result.notes,
     );
     await _loadTrips();
-
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.species} logged!')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${result.species} ${AppLocalizations.of(context)!.logCatch.toLowerCase()}!'),
+      ));
     }
   }
 
-  Future<void> _deleteTrip(String tripId) async {
-    await _service.deleteTrip(tripId);
+  Future<void> _deleteTrip(Trip trip) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await _confirmDialog(
+      title: l10n.deleteTrip,
+      content: l10n.deleteTripConfirmFinished(trip.title ?? ''),
+      confirmLabel: l10n.delete,
+      confirmColor: const Color(0xFF6b0911),
+    );
+    if (confirm != true) return;
+    await _service.deleteTrip(trip.id);
     await _loadTrips();
   }
 
   Future<void> _deleteActiveTrip() async {
     final activeTrip = _service.activeTrip;
     if (activeTrip == null) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D2E31),
-        title: const Text('Delete Active Trip?',
-            style: TextStyle(color: Colors.white)),
-        content: Text(
-          'This will permanently delete the current trip and all '
-          '${activeTrip.catches.length} catch${activeTrip.catches.length == 1 ? '' : 'es'} logged so far. '
-          'This cannot be undone.',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent),
-            child: const Text('Delete',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await _confirmDialog(
+      title: l10n.deleteActiveTrip,
+      content: l10n.deleteTripConfirm,
+      confirmLabel: l10n.delete,
+      confirmColor: const Color(0xFF6b0911),
     );
     if (confirm != true || !mounted) return;
-
     await _service.deleteTrip(activeTrip.id);
+    _ticker?.cancel();
     await _loadTrips();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trip deleted.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.tripDeleted),
+      ));
     }
+  }
+
+  Future<void> _editTitle(Trip trip) async {
+    final ctrl = TextEditingController(text: trip.title ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final dl10n = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          backgroundColor: AppColors.cream,
+          title: Text(dl10n.editTripTitle,
+              style: const TextStyle(color: AppColors.primary, fontSize: 15)),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            style: const TextStyle(color: AppColors.primary),
+            decoration: InputDecoration(
+              hintText: dl10n.tripNameHint,
+              hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.4)),
+              enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF4597a8))),
+              focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.primary)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(dl10n.cancel,
+                  style: const TextStyle(color: Color(0xFFfaf7e8))),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4597a8)),
+              child: Text(dl10n.save,
+                  style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == null) return;
+    await _service.updateTripTitle(trip.id, result);
+    await _loadTrips();
+  }
+
+  Future<bool?> _confirmDialog({
+    required String title,
+    required String content,
+    required String confirmLabel,
+    required Color confirmColor,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final dl10n = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          backgroundColor: AppColors.cream,
+          title: Text(title,
+              style: const TextStyle(color: AppColors.primary, fontSize: 15)),
+          content: Text(content,
+              style: const TextStyle(color: AppColors.primary, fontSize: 13)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(dl10n.cancel,
+                  style: const TextStyle(color: AppColors.cream)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: confirmColor),
+              child: Text(confirmLabel,
+                  style: const TextStyle(color: AppColors.primary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60);
+    if (h > 0) return '${h}س ${m}د';
+    if (m > 0) return '${m}د ${s}ث';
+    return '${s}ث';
   }
 
   @override
   Widget build(BuildContext context) {
     final isGuest = ref.watch(authProviderProvider).isGuest;
+    final l10n = AppLocalizations.of(context)!;
 
     if (isGuest) {
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: Scaffold(
-          backgroundColor: AppColors.primary,
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(36),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.lock_outline,
-                      size: 72, color: Colors.white.withValues(alpha: 0.7)),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Sign In Required',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.primary, AppColors.accent, AppColors.primary],
+              ),
+            ),
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.lock_outline_rounded,
+                            size: 48, color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        l10n.signInToSell,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.white70,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              ref.read(authProviderProvider).logout(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(
+                            l10n.logIn,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'The fishing log is only available to registered users. Sign in to track your trips and catches.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.75),
-                      height: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D4F54),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () async {
-                      final nav = Navigator.of(context);
-                      await FirebaseAuth.instance.signOut();
-                      nav.pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const AppStart()),
-                        (_) => false,
-                      );
-                    },
-                    child: const Text('Sign In'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -265,27 +365,6 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text(
-            'Fishing Log',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              onPressed: _loadTrips,
-              tooltip: 'Refresh',
-            ),
-          ],
-        ),
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -300,7 +379,28 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                     child: CircularProgressIndicator(color: Colors.white))
                 : Column(
                     children: [
+                      // ── Header ──────────────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              l10n.fishingLog,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Spacer(),
+                          ],
+                        ),
+                      ),
+
+                      // ── Active banner ────────────────────────────────────
                       if (activeTrip != null) _buildActiveBanner(activeTrip),
+
+                      // ── Trip list ────────────────────────────────────────
                       Expanded(
                         child: _trips.isEmpty
                             ? _buildEmpty()
@@ -317,7 +417,8 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                                       onTap: () => _showTripDetail(trip),
                                       onDelete: trip.isActive
                                           ? null
-                                          : () => _deleteTrip(trip.id),
+                                          : () => _deleteTrip(trip),
+                                      onEditTitle: () => _editTitle(trip),
                                     );
                                   },
                                 ),
@@ -327,81 +428,90 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                   ),
           ),
         ),
-      floatingActionButton: activeTrip != null
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton.small(
-                  heroTag: 'end_trip',
-                  backgroundColor: Colors.redAccent,
-                  onPressed: _endTrip,
-                  tooltip: 'End Trip',
-                  child: const Icon(Icons.stop, color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton.extended(
-                  heroTag: 'log_catch',
-                  backgroundColor: AppColors.accent,
-                  onPressed: _logCatch,
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text('Log Catch',
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_todayEndedTrip != null) ...[
-                  FloatingActionButton.extended(
-                    heroTag: 'resume_trip',
-                    backgroundColor: AppColors.primary,
-                    onPressed: () => _resumeTrip(_todayEndedTrip!),
-                    icon: const Icon(Icons.play_arrow, color: Colors.white),
-                    label: const Text('Resume Trip',
-                        style: TextStyle(color: Colors.white)),
+        floatingActionButton: activeTrip != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: 'end_trip',
+                    backgroundColor: const Color(0xFF6b0911),
+                    onPressed: _endTrip,
+                    tooltip: l10n.endTrip,
+                    child: const Icon(Icons.stop, color: Colors.white),
                   ),
                   const SizedBox(height: 8),
+                  FloatingActionButton.extended(
+                    heroTag: 'log_catch',
+                    backgroundColor: const Color(0xFF4597a8),
+                    onPressed: _logCatch,
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: Text(l10n.logCatch,
+                        style: const TextStyle(color: Colors.white)),
+                  ),
                 ],
-                FloatingActionButton.extended(
-                  heroTag: 'start_trip',
-                  backgroundColor: AppColors.primary,
-                  onPressed: _startTrip,
-                  icon: const Icon(Icons.anchor, color: Colors.white),
-                  label: const Text('Start Trip',
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_todayEndedTrip != null) ...[
+                    FloatingActionButton.extended(
+                      heroTag: 'resume_trip',
+                      backgroundColor: const Color(0xFF8e7355),
+                      onPressed: () => _resumeTrip(_todayEndedTrip!),
+                      icon: const Icon(Icons.play_arrow, color: Colors.white),
+                      label: Text(l10n.resumeTrip,
+                          style: const TextStyle(color: Colors.white)),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  FloatingActionButton.extended(
+                    heroTag: 'start_trip',
+                    backgroundColor: AppColors.primary,
+                    onPressed: _startTrip,
+                    icon: const Icon(Icons.anchor, color: Colors.white),
+                    label: Text(l10n.startTrip,
+                        style: const TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
       ),
     );
   }
 
   Widget _buildActiveBanner(Trip trip) {
-    final duration = trip.duration;
-    final h = duration.inHours;
-    final m = duration.inMinutes.remainder(60);
-    final dStr = h > 0 ? '${h}h ${m}m' : '${m}m';
+    final l10n = AppLocalizations.of(context)!;
+    final dur = trip.duration;
+    final dStr = _formatDuration(dur);
+    final catchCount = trip.catches.length;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: AppColors.primary,
+      color: Colors.black.withValues(alpha: 0.25),
       child: Row(
         children: [
           const Icon(Icons.circle, color: Colors.greenAccent, size: 10),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Trip in progress — $dStr  ·  ${trip.catches.length} catch${trip.catches.length == 1 ? '' : 'es'}',
+              '${l10n.tripInProgress} — $dStr  ·  $catchCount ${catchCount == 1 ? l10n.catchWord : l10n.catches}',
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
           ),
           IconButton(
+            icon: const Icon(Icons.edit_outlined,
+                color: Colors.white60, size: 18),
+            onPressed: () => _editTitle(trip),
+            tooltip: l10n.editTitleTooltip,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
             icon: const Icon(Icons.delete_outline,
-                color: Colors.white54, size: 20),
+                color: Colors.white38, size: 18),
             onPressed: _deleteActiveTrip,
-            tooltip: 'Delete trip',
+            tooltip: l10n.deleteTripTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -411,14 +521,16 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Widget _buildEmpty() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.anchor, size: 64, color: Colors.white.withValues(alpha: 0.5)),
+          Icon(Icons.anchor,
+              size: 64, color: Colors.white.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
-            'No trips yet',
+            l10n.noTripsYet,
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -426,9 +538,10 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap "Start Trip" to begin logging your catches.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+            l10n.tapStartTrip,
             textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
           ),
         ],
       ),

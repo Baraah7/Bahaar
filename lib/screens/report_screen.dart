@@ -8,6 +8,7 @@ import 'package:location/location.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:Bahaar/core/constants/species_data.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:Bahaar/services/bahaar_ai_service.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -169,7 +170,7 @@ class _ReportScreenState extends State<ReportScreen> {
             'تقرير صيد',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: const Color(0xFF0D4F54),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           centerTitle: true,
           elevation: 0,

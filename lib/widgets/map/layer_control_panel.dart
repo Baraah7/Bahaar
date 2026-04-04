@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/geojson_layers.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 /// Control panel widget for managing all map layers
 class LayerControlPanel extends StatefulWidget {
@@ -47,6 +48,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
 
   void _onLayerChange() => setState(() {});
 
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   MapLayerManager get lm => widget.layerManager;
 
   bool _isExpanded(String key) => _expanded.contains(key);
@@ -88,7 +91,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                 children: [
                   _buildSection(
                     key: 'depth',
-                    title: 'Depth Visualization',
+                    title: _l10n.depthVisualization,
                     icon: Icons.water_drop_outlined,
                     color: AppColors.red,
                     isActive: lm.showDepthLayer,
@@ -96,42 +99,20 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                   ),
                   _buildSection(
                     key: 'protected',
-                    title: 'Protected Zones',
+                    title: _l10n.protectedExclusionZones,
                     icon: Icons.shield_outlined,
                     color: AppColors.red,
-                    isActive: lm.showProtectedZones,
-                    content: _buildProtectedZonesContent(),
-                  ),
-                  _buildSection(
-                    key: 'exclusion',
-                    title: 'Oil & Gas Exclusion',
-                    icon: Icons.oil_barrel,
-                    color: AppColors.red,
-                    isActive: lm.showExclusionZones,
-                    content: _buildExclusionContent(),
+                    isActive: lm.showProtectedZones || lm.showExclusionZones,
+                    content: _buildProtectedAndExclusionContent(),
                   ),
                   _buildSection(
                     key: 'spots',
-                    title: 'Fishing Spot Suggestions',
+                    title: _l10n.fishingSpotSuggestions,
                     icon: Icons.place,
                     color: AppColors.red,
                     isActive: lm.showFishingSpots,
                     content: _buildFishingSpotsContent(),
                   ),
-                  _buildSection(
-                    key: 'mask',
-                    title: 'Navigation & Admin',
-                    icon: Icons.admin_panel_settings_outlined,
-                    color: AppColors.red,
-                    isActive: lm.showMaskOverlay,
-                    content: _buildNavigationMaskContent(),
-                  ),
-                  if (widget.onOpenPrediction != null) ...[
-                    const SizedBox(height: 6),
-                    Divider(color: Colors.grey.shade100, height: 1),
-                    const SizedBox(height: 10),
-                    _buildPredictionButton(),
-                  ],
                 ],
               ),
             ),
@@ -160,11 +141,11 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               color: AppColors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.layers, size: 17, color: Colors.blue),
+            child: const Icon(Icons.layers, size: 17, color: AppColors.red),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'Map Layers',
+          Text(
+            _l10n.mapLayers,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -343,71 +324,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     );
   }
 
-  Widget _buildAdminAction({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required String subtitle,
-    required VoidCallback? onTap,
-  }) {
-    final enabled = onTap != null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: enabled
-                  ? color.withValues(alpha: 0.35)
-                  : Colors.grey.shade200,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 17,
-                color: enabled ? color : Colors.grey.shade400,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: enabled ? Colors.black87 : Colors.grey,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 12,
-                color: Colors.grey.shade400,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ────────────────────────────────────────────
   // Section content builders
   // ────────────────────────────────────────────
@@ -419,14 +335,14 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         _buildToggleRow(
           icon: Icons.water_drop_outlined,
           iconColor: AppColors.red,
-          label: 'Show Depth Layer',
+          label: _l10n.showDepthLayer,
           value: lm.showDepthLayer,
           onChanged: (val) => lm.showDepthLayer = val,
         ),
         if (lm.showDepthLayer) ...[
           const SizedBox(height: 8),
           Text(
-            'Visualization Type',
+            _l10n.visualizationType,
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade500,
@@ -456,7 +372,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
           Row(
             children: [
               Text(
-                'Opacity',
+                _l10n.opacityLabel,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade500,
@@ -495,7 +411,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     );
   }
 
-  Widget _buildProtectedZonesContent() {
+  Widget _buildProtectedAndExclusionContent() {
     final featureCount = widget.geoJsonBuilder != null
         ? widget.geoJsonBuilder!.getFeatureCount('protected_zone') +
             widget.geoJsonBuilder!.getFeatureCount('reef')
@@ -506,15 +422,15 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         _buildToggleRow(
           icon: Icons.shield_outlined,
           iconColor: AppColors.red,
-          label: 'Protected Zones',
+          label: _l10n.protectedZones,
           subtitle: featureCount > 0
-              ? '$featureCount features loaded'
-              : 'Marine reserves & reefs',
+              ? _l10n.featuresLoaded(featureCount)
+              : _l10n.marineReservesReefs,
           value: lm.showProtectedZones,
           onChanged: (val) => lm.showProtectedZones = val,
         ),
         if (lm.showProtectedZones) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Container(
@@ -527,26 +443,24 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _legendRow(AppColors.red.withValues(alpha: 0.5), 'MPA — restricted area'),
+                  _legendRow(AppColors.red.withValues(alpha: 0.5), _l10n.mpaRestrictedArea),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 8),
         ],
+        _buildToggleRow(
+          icon: Icons.oil_barrel,
+          iconColor: AppColors.red,
+          label: _l10n.oilGasExclusion,
+          subtitle: lm.showExclusionZones
+              ? _l10n.safetyBuffersVisible
+              : _l10n.safetyRulesApplyWhenHidden,
+          value: lm.showExclusionZones,
+          onChanged: (val) => lm.showExclusionZones = val,
+        ),
       ],
-    );
-  }
-
-  Widget _buildExclusionContent() {
-    return _buildToggleRow(
-      icon: Icons.oil_barrel,
-      iconColor: AppColors.red,
-      label: 'Show Exclusion Zones',
-      subtitle: lm.showExclusionZones
-          ? '500 m UNCLOS safety buffers visible'
-          : 'Safety rules still apply when hidden',
-      value: lm.showExclusionZones,
-      onChanged: (val) => lm.showExclusionZones = val,
     );
   }
 
@@ -557,8 +471,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
         _buildToggleRow(
           icon: Icons.place,
           iconColor: AppColors.red,
-          label: 'Show Fishing Spots',
-          subtitle: 'Zones, MPAs & confirmed locations',
+          label: _l10n.showFishingSpots,
+          subtitle: _l10n.zonesMpasLocations,
           value: lm.showFishingSpots,
           onChanged: (val) => lm.showFishingSpots = val,
         ),
@@ -574,9 +488,16 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _legendRow(Colors.green.withValues(alpha: 0.6), 'High confidence spot'),
-                _legendRow(Colors.orange.withValues(alpha: 0.6), 'Medium confidence spot'),
-                _legendRow(Colors.blue.withValues(alpha: 0.25), 'Fishing zone'),
+                _legendRow(Colors.green.withValues(alpha: 0.6), _l10n.highConfidenceSpot),
+                _legendRow(Colors.orange.withValues(alpha: 0.6), _l10n.mediumConfidenceSpot),
+                _legendRow(Colors.blue.withValues(alpha: 0.25), _l10n.fishingZone),
+
+                if (widget.onOpenPrediction != null) ...[
+                    const SizedBox(height: 6),
+                    Divider(color: Colors.grey.shade100, height: 1),
+                    const SizedBox(height: 10),
+                    _buildPredictionButton(),
+                  ],
               ],
             ),
           ),
@@ -605,86 +526,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     );
   }
 
-  Widget _buildNavigationMaskContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildToggleRow(
-          icon: Icons.map_outlined,
-          iconColor: AppColors.red,
-          label: 'Show Mask Boundary',
-          subtitle: widget.maskInitialized
-              ? 'Coverage area outline'
-              : 'Loading...',
-          value: lm.showMaskOverlay,
-          onChanged: widget.maskInitialized
-              ? (val) => lm.showMaskOverlay = val
-              : null,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Icon(
-              Icons.admin_panel_settings_outlined,
-              size: 13,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              'Admin Tools',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _buildAdminAction(
-          icon: Icons.edit_outlined,
-          color: AppColors.red,
-          label: 'Edit Navigation Mask',
-          subtitle: widget.maskInitialized
-              ? 'Paint water / land cells'
-              : 'Loading...',
-          onTap: widget.maskInitialized && widget.onEnterAdminEdit != null
-              ? () {
-                  widget.onEnterAdminEdit!();
-                  widget.onClose();
-                }
-              : null,
-        ),
-        _buildAdminAction(
-          icon: Icons.border_style,
-          color: AppColors.red,
-          label: 'Edit Boundary Outline',
-          subtitle: widget.maskInitialized
-              ? 'Erase / restore boundary'
-              : 'Loading...',
-          onTap: widget.maskInitialized && widget.onEnterOutlineEdit != null
-              ? () {
-                  widget.onEnterOutlineEdit!();
-                  widget.onClose();
-                }
-              : null,
-        ),
-        _buildAdminAction(
-          icon: Icons.map_outlined,
-          color: AppColors.red,
-          label: 'Edit Map Features',
-          subtitle: 'Add / move / delete features',
-          onTap: widget.onEnterFeatureEdit != null
-              ? () {
-                  widget.onEnterFeatureEdit!();
-                  widget.onClose();
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-
   Widget _buildPredictionButton() {
     return InkWell(
       onTap: () {
@@ -710,30 +551,30 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.auto_awesome, size: 18, color: Colors.white),
-            SizedBox(width: 10),
+            const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Fishing Prediction',
-                    style: TextStyle(
+                    _l10n.fishingPrediction,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    'AI-powered catch probability',
-                    style: TextStyle(color: Colors.white70, fontSize: 10),
+                    _l10n.aiCatchProbability,
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white70),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white70),
           ],
         ),
       ),

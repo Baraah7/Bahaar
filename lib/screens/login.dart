@@ -42,6 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleForgotPassword() async {
     final l10n = AppLocalizations.of(context)!;
+    final lang = l10n.localeName;
     final emailCtrl = TextEditingController();
 
     final submitted = await showDialog<bool>(
@@ -50,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         backgroundColor: const Color(0xFF0D2B35),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Forgot Password',
+          l10n.forgotPassword,
           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -58,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Enter your email to receive a password reset link',
+              l10n.forgotPasswordHint,
               style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: 16),
@@ -87,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Send Reset Link', style: const TextStyle(color: Color(0xFF4FC3F7), fontWeight: FontWeight.bold)),
+            child: Text(l10n.sendResetLink, style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -98,10 +99,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (email.isEmpty) return;
 
     final auth = ref.read(authProviderProvider);
-    final ok = await auth.resetPassword(email);
+    final ok = await auth.resetPassword(email, languageCode: lang);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Reset link sent' : 'Failed to send reset link'),
+      content: Text(ok ? l10n.resetLinkSent : l10n.resetLinkFailed),
       backgroundColor: ok ? Colors.green.shade700 : Colors.red.shade700,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -155,7 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
 
                         // ── Hero ─────────────────────────────────────────────
-                        const SizedBox(height: 52),
+                        const SizedBox(height: 65),
                         Center(
                           child: Image.asset(
                             'assets/logo/appIcon.png',
@@ -169,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.cream,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -306,7 +307,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 l10n.signUp,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.accent,
+                                  color: AppColors.tan.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

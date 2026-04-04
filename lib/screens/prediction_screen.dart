@@ -1,17 +1,14 @@
-﻿// lib/screens/prediction_screen.dart
-// Fish-probability prediction screen.
-// Can be opened from the map (with pre-filled lat/lng + species) or
-// standalone from the bottom navigation bar.
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:Bahaar/core/constants/species_data.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:Bahaar/services/bahaar_ai_service.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 class PredictionScreen extends StatefulWidget {
-  /// Pre-filled from map tap or spot card.
   final LatLng? initialLatLng;
   final String? initialSpeciesId;
 
@@ -28,16 +25,27 @@ class PredictionScreen extends StatefulWidget {
 class _PredictionScreenState extends State<PredictionScreen> {
   final _service = BahaarAIService();
   final _location = Location();
+  final MapController _miniMapController = MapController();
 
   LatLng? _selectedLatLng;
   String _selectedSpeciesId = 'hamour';
   bool _isLoading = false;
   String? _errorMessage;
   PredictionResult? _result;
-
-  // Mini-map controller for location picker
-  final MapController _miniMapController = MapController();
   bool _showMiniMap = false;
+
+  static const _teal = Color(0xFF0D4F54);
+  static const _tealLight = Color(0xFF0E7490);
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  bool get _isAr => _l10n.localeName == 'ar';
+
+  String _n(String value) {
+    if (!_isAr) return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
+  }
 
   @override
   void initState() {
@@ -53,34 +61,29 @@ class _PredictionScreenState extends State<PredictionScreen> {
     super.dispose();
   }
 
-  // ── Location ────────────────────────────────────────────────────────────────
-
   Future<void> _fetchCurrentLocation() async {
     try {
       bool svc = await _location.serviceEnabled();
       if (!svc) svc = await _location.requestService();
       if (!svc) return;
-
       var perm = await _location.hasPermission();
       if (perm == PermissionStatus.denied) {
         perm = await _location.requestPermission();
       }
       if (perm != PermissionStatus.granted) return;
-
       final data = await _location.getLocation();
       if (mounted && data.latitude != null && data.longitude != null) {
-        setState(() {
-          _selectedLatLng = LatLng(data.latitude!, data.longitude!);
-        });
+        setState(() =>
+            _selectedLatLng = LatLng(data.latitude!, data.longitude!));
       }
     } catch (_) {}
   }
 
-  // ── Prediction call ─────────────────────────────────────────────────────────
-
   Future<void> _runPrediction() async {
     if (_selectedLatLng == null) {
-      _showSnack('يرجى اختيار موقع أولاً');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_l10n.selectLocationFirst)),
+      );
       return;
     }
     setState(() {
@@ -88,7 +91,6 @@ class _PredictionScreenState extends State<PredictionScreen> {
       _errorMessage = null;
       _result = null;
     });
-
     try {
       final r = await _service.predict(
         lat: _selectedLatLng!.latitude,
@@ -98,91 +100,128 @@ class _PredictionScreenState extends State<PredictionScreen> {
       );
       setState(() => _result = r);
     } on BahaarOfflineException catch (e) {
-      setState(() => _errorMessage = e.messageAr);
-    } catch (e) {
-      setState(() => _errorMessage = 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً');
+      setState(() => _errorMessage = _isAr ? e.messageAr : e.messageEn);
+    } catch (_) {
+      setState(() => _errorMessage = _l10n.unexpectedError);
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   String _probabilityLabel(double p) {
-    if (p >= 75) return 'ممتاز 🎣';
-    if (p >= 55) return 'جيد جداً';
-    if (p >= 40) return 'متوسط';
-    if (p >= 25) return 'ضعيف';
-    return 'غير مناسب';
+    if (p >= 75) return _l10n.probExcellent;
+    if (p >= 55) return _l10n.probVeryGood;
+    if (p >= 40) return _l10n.probModerate;
+    if (p >= 25) return _l10n.probWeak;
+    return _l10n.probNotSuitable;
   }
 
   Color _probabilityColor(double p) {
-    if (p >= 60) return Colors.green.shade600;
-    if (p >= 30) return Colors.orange;
-    return Colors.red;
+    if (p >= 60) return const Color(0xFF059669);
+    if (p >= 30) return const Color(0xFFD97706);
+    return Colors.red.shade600;
   }
-
-  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7FA),
-        appBar: AppBar(
-          title: const Text(
-            'تنبؤات الصيد',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: const Color(0xFF0D4F54),
-          foregroundColor: Colors.white,
-          centerTitle: true,
-          elevation: 0,
+        body: Column(
+          children: [
+            _buildGradientHeader(context),
+            Expanded(
+              child: _isLoading
+                  ? _buildLoading()
+                  : SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildLocationCard(),
+                          const SizedBox(height: 12),
+                          _buildSpeciesSelector(),
+                          const SizedBox(height: 16),
+                          _buildPredictButton(),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            _buildError(),
+                          ],
+                          if (_result != null) ...[
+                            const SizedBox(height: 20),
+                            _buildResults(_result!),
+                          ],
+                        ],
+                      ),
+                    ),
+            ),
+          ],
         ),
-        body: _isLoading
-            ? _buildLoadingView()
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildLocationCard(),
-                    const SizedBox(height: 12),
-                    _buildSpeciesSelector(),
-                    const SizedBox(height: 16),
-                    _buildPredictButton(),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      _buildErrorView(),
-                    ],
-                    if (_result != null) ...[
-                      const SizedBox(height: 20),
-                      _buildResultsView(_result!),
-                    ],
-                  ],
-                ),
-              ),
       ),
     );
   }
 
-  Widget _buildLoadingView() {
-    return const Center(
+  // ── Gradient header ──────────────────────────────────────────────────────────
+
+  Widget _buildGradientHeader(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.primary, AppColors.accent],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  if (Navigator.canPop(context)) ...[
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    _l10n.predictionTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────────────────
+
+  Widget _buildLoading() {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(color: Color(0xFF0D4F54)),
-          SizedBox(height: 16),
-          Text(
-            'جاري التحليل...',
-            style: TextStyle(fontSize: 16, color: Color(0xFF0D4F54)),
-          ),
+          const CircularProgressIndicator(color: _teal),
+          const SizedBox(height: 16),
+          Text(_l10n.analyzing,
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
         ],
       ),
     );
@@ -191,97 +230,123 @@ class _PredictionScreenState extends State<PredictionScreen> {
   // ── Location card ────────────────────────────────────────────────────────────
 
   Widget _buildLocationCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Color(0xFF0D4F54)),
-                const SizedBox(width: 8),
-                const Text(
-                  'الموقع',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => setState(() => _showMiniMap = !_showMiniMap),
-                  icon: Icon(
-                    _showMiniMap ? Icons.map : Icons.map_outlined,
-                    size: 16,
-                  ),
-                  label: Text(_showMiniMap ? 'إخفاء' : 'اختيار من الخريطة'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF0D4F54),
-                  ),
-                ),
-              ],
-            ),
-            if (_selectedLatLng != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '${_selectedLatLng!.latitude.toStringAsFixed(4)}°N  '
-                  '${_selectedLatLng!.longitude.toStringAsFixed(4)}°E',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  'اضغط على الخريطة لاختيار موقع',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-                ),
-              ),
-            if (_showMiniMap) ...[
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  height: 200,
-                  child: FlutterMap(
-                    mapController: _miniMapController,
-                    options: MapOptions(
-                      initialCenter: _selectedLatLng ??
-                          const LatLng(26.2235, 50.5876),
-                      initialZoom: 10,
-                      onTap: (_, latLng) {
-                        setState(() => _selectedLatLng = latLng);
-                      },
+    return _WhiteCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on_rounded, color: _teal, size: 20),
+              const SizedBox(width: 8),
+              Text(_l10n.location,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Color(0xFF1E293B))),
+              const Spacer(),
+              GestureDetector(
+                onTap: () =>
+                    setState(() => _showMiniMap = !_showMiniMap),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _showMiniMap
+                        ? _teal
+                        : _teal.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _showMiniMap
+                          ? _teal
+                          : Colors.grey.shade200,
                     ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.bahaar.app',
+                      Icon(
+                        _showMiniMap
+                            ? Icons.map
+                            : Icons.map_outlined,
+                        size: 14,
+                        color: _showMiniMap
+                            ? Colors.white
+                            : _teal,
                       ),
-                      if (_selectedLatLng != null)
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: _selectedLatLng!,
-                              width: 40,
-                              height: 40,
-                              child: const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 36,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(width: 5),
+                      Text(
+                        _showMiniMap ? _l10n.hideMap : _l10n.selectFromMap,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _showMiniMap ? Colors.white : _teal,
                         ),
+                      ),
                     ],
                   ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          if (_selectedLatLng != null)
+            Row(
+              children: [
+                Icon(Icons.gps_fixed,
+                    color: Colors.green.shade600, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  '${_n(_selectedLatLng!.latitude.toStringAsFixed(4))}°N  '
+                  '${_n(_selectedLatLng!.longitude.toStringAsFixed(4))}°E',
+                  style: TextStyle(
+                      color: Colors.grey.shade600, fontSize: 13),
+                ),
+              ],
+            )
+          else
+            Text(
+              _l10n.tapMapToSelect,
+              style:
+                  TextStyle(color: Colors.grey.shade400, fontSize: 13),
+            ),
+          if (_showMiniMap) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 200,
+                child: FlutterMap(
+                  mapController: _miniMapController,
+                  options: MapOptions(
+                    initialCenter: _selectedLatLng ??
+                        const LatLng(26.2235, 50.5876),
+                    initialZoom: 10,
+                    onTap: (_, latLng) =>
+                        setState(() => _selectedLatLng = latLng),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.bahaar.app',
+                    ),
+                    if (_selectedLatLng != null)
+                      MarkerLayer(markers: [
+                        Marker(
+                          point: _selectedLatLng!,
+                          width: 40,
+                          height: 40,
+                          child: const Icon(Icons.location_pin,
+                              color: Colors.red, size: 36),
+                        ),
+                      ]),
+                  ],
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -292,38 +357,61 @@ class _PredictionScreenState extends State<PredictionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8, right: 4),
-          child: Text(
-            'اختر النوع',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10, right: 4),
+          child: Text(_l10n.chooseSpecies,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: Color(0xFF1E293B))),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          reverse: true, // RTL
+          physics: const BouncingScrollPhysics(),
           child: Row(
             children: kAllSpecies.map((species) {
               final isSelected = species['id'] == _selectedSpeciesId;
+              final name = _isAr
+                  ? species['nameAr'] as String
+                  : species['nameEn'] as String;
               return Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: ChoiceChip(
-                  label: Text(species['nameAr'] as String),
-                  selected: isSelected,
-                  onSelected: (_) =>
-                      setState(() => _selectedSpeciesId = species['id'] as String),
-                  selectedColor: const Color(0xFF0D4F54),
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: isSelected
-                          ? const Color(0xFF0D4F54)
-                          : Colors.grey.shade300,
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () => setState(
+                      () => _selectedSpeciesId = species['id'] as String),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? _teal : Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isSelected
+                            ? _teal
+                            : Colors.grey.shade200,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isSelected
+                              ? _teal.withValues(alpha: 0.2)
+                              : Colors.black.withValues(alpha: 0.04),
+                          blurRadius: isSelected ? 8 : 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      name,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : Colors.grey.shade700,
+                        fontSize: 12,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -338,26 +426,29 @@ class _PredictionScreenState extends State<PredictionScreen> {
   // ── Predict button ───────────────────────────────────────────────────────────
 
   Widget _buildPredictButton() {
-    return ElevatedButton.icon(
-      onPressed: _runPrediction,
-      icon: const Icon(Icons.analytics_outlined),
-      label: const Text(
-        'احصل على التنبؤ',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF0D4F54),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 2,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _runPrediction,
+        icon: const Icon(Icons.analytics_outlined, size: 20),
+        label: Text(_l10n.getPrediction,
+            style:
+                const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _teal,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+          elevation: 2,
+        ),
       ),
     );
   }
 
-  // ── Error view ───────────────────────────────────────────────────────────────
+  // ── Error ────────────────────────────────────────────────────────────────────
 
-  Widget _buildErrorView() {
+  Widget _buildError() {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -367,17 +458,16 @@ class _PredictionScreenState extends State<PredictionScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red),
+          Icon(Icons.error_outline, color: Colors.red.shade600),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              _errorMessage!,
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(_errorMessage!,
+                style: TextStyle(color: Colors.red.shade700)),
           ),
           TextButton(
             onPressed: _runPrediction,
-            child: const Text('إعادة المحاولة'),
+            child: Text(_l10n.retry,
+                style: const TextStyle(color: _tealLight)),
           ),
         ],
       ),
@@ -386,58 +476,60 @@ class _PredictionScreenState extends State<PredictionScreen> {
 
   // ── Results ──────────────────────────────────────────────────────────────────
 
-  Widget _buildResultsView(PredictionResult result) {
-    // Pull local species advice as an offline-safe fallback.
+  Widget _buildResults(PredictionResult result) {
     final speciesData = kAllSpecies.firstWhere(
       (s) => s['id'] == _selectedSpeciesId,
       orElse: () => <String, dynamic>{},
     );
-    final localAdvice = speciesData['advice'] as String? ?? '';
+    final localAdvice = (_isAr
+            ? speciesData['advice']
+            : speciesData['adviceEn'] ?? speciesData['advice'])
+        as String? ??
+        '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // MPA warning banner
-        if (result.restrictions.isNotEmpty) _buildMpaBanner(result.restrictions),
-
-        // Probability gauge
+        if (result.restrictions.isNotEmpty)
+          _buildMpaBanner(result.restrictions),
         _buildProbabilityGauge(result.probability),
-        const SizedBox(height: 16),
-
-        // Factor cards
+        const SizedBox(height: 12),
         _buildFactorCards(result),
-        const SizedBox(height: 16),
-
-        // Seasonal advice (local species data)
-        if (localAdvice.isNotEmpty) _buildSeasonalAdvice(localAdvice),
-        const SizedBox(height: 16),
-
-        // Nearby spots
-        if (result.nearbySpots.isNotEmpty) _buildNearbySpots(result.nearbySpots),
+        if (localAdvice.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _buildSeasonalAdvice(localAdvice),
+        ],
+        if (result.nearbySpots.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _buildNearbySpots(result.nearbySpots),
+        ],
       ],
     );
   }
 
   Widget _buildMpaBanner(List<MpaRestriction> restrictions) {
+    final zoneName = restrictions.isNotEmpty
+        ? (_isAr
+            ? restrictions.first.nameAr
+            : restrictions.first.nameAr) // use nameAr as fallback (server only returns Arabic)
+        : '';
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.red.shade700,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+          const Icon(Icons.warning_amber_rounded,
+              color: Colors.white, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '⚠️ أنت داخل منطقة محمية'
-              '${restrictions.isNotEmpty ? " - ${restrictions.first.nameAr}" : ""}',
+              '${_l10n.insideProtectedZone}${zoneName.isNotEmpty ? " - $zoneName" : ""}',
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+                  color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -449,57 +541,44 @@ class _PredictionScreenState extends State<PredictionScreen> {
     final color = _probabilityColor(probability);
     final label = _probabilityLabel(probability);
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            SizedBox(
-              width: 160,
-              height: 160,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 160,
-                    height: 160,
-                    child: CircularProgressIndicator(
-                      value: probability / 100,
-                      strokeWidth: 14,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      strokeCap: StrokeCap.round,
-                    ),
+    return _WhiteCard(
+      child: Column(
+        children: [
+          SizedBox(
+            width: 160,
+            height: 160,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: CircularProgressIndicator(
+                    value: probability / 100,
+                    strokeWidth: 14,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                    strokeCap: StrokeCap.round,
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${probability.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                      ),
-                    ],
+                ),
+                Text(
+                  '${_n(probability.toStringAsFixed(0))}%',
+                  style: TextStyle(
+                    fontSize: 38,
+                    fontWeight: FontWeight.bold,
+                    color: color,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              label,
+          ),
+          const SizedBox(height: 12),
+          Text(label,
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color)),
+        ],
       ),
     );
   }
@@ -507,64 +586,70 @@ class _PredictionScreenState extends State<PredictionScreen> {
   Widget _buildFactorCards(PredictionResult result) {
     final f = result.factors;
     final factors = [
-      {'label': 'الموسم', 'value': f.seasonal, 'icon': Icons.calendar_today},
-      {'label': 'الطقس', 'value': f.weather, 'icon': Icons.wb_sunny},
-      {'label': 'التقارير', 'value': f.human, 'icon': Icons.people},
+      {'label': _l10n.factorSeason, 'value': f.seasonal, 'icon': Icons.calendar_today},
+      {'label': _l10n.factorWeather, 'value': f.weather, 'icon': Icons.wb_sunny_outlined},
+      {'label': _l10n.factorReports, 'value': f.human, 'icon': Icons.people_outline},
       {
-        'label': 'القرب',
-        'value': (result.nearbySpots.isNotEmpty
-            ? result.nearbySpots.first.distanceKm > 5 ? 0.8 : 1.2
-            : 1.0),
+        'label': _l10n.factorProximity,
+        'value': result.nearbySpots.isNotEmpty
+            ? (result.nearbySpots.first.distanceKm > 5 ? 0.8 : 1.2)
+            : 1.0,
         'icon': Icons.location_searching,
       },
     ];
 
     return Row(
-      children: factors.map((f) {
-        final value = f['value'] as double;
+      children: factors.map((item) {
+        final value = item['value'] as double;
         final color = value >= 1.1
-            ? Colors.green.shade600
+            ? const Color(0xFF059669)
             : value >= 0.9
-                ? Colors.orange
-                : Colors.red;
+                ? const Color(0xFFD97706)
+                : Colors.red.shade600;
 
         return Expanded(
-          child: Card(
+          child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 3),
-            shape: RoundedRectangleBorder(
+            padding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-              child: Column(
-                children: [
-                  Icon(f['icon'] as IconData, color: color, size: 22),
-                  const SizedBox(height: 4),
-                  Text(
-                    f['label'] as String,
-                    style: const TextStyle(fontSize: 11),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value.toStringAsFixed(2),
+            child: Column(
+              children: [
+                Icon(item['icon'] as IconData, color: color, size: 20),
+                const SizedBox(height: 4),
+                Text(item['label'] as String,
                     style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 10),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 4),
+                Text(
+                  _n(value.toStringAsFixed(2)),
+                  style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: color,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
+                      fontSize: 13),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
                     value: (value / 2).clamp(0.0, 1.0),
                     backgroundColor: Colors.grey.shade200,
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                     minHeight: 4,
-                    borderRadius: BorderRadius.circular(2),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -572,26 +657,27 @@ class _PredictionScreenState extends State<PredictionScreen> {
     );
   }
 
-  Widget _buildSeasonalAdvice(String adviceAr) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: const Color(0xFF0D4F54).withValues(alpha: 0.07),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.info_outline, color: Color(0xFF0D4F54)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                adviceAr,
-                style: const TextStyle(fontSize: 14, height: 1.5),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildSeasonalAdvice(String advice) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _teal.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _teal.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: _teal, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(advice,
+                style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Color(0xFF1E293B))),
+          ),
+        ],
       ),
     );
   }
@@ -601,18 +687,28 @@ class _PredictionScreenState extends State<PredictionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'مواقع الصيد القريبة',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        const SizedBox(height: 8),
-        ...shown.map((spot) => Card(
+        Text(_l10n.nearbyFishingSpots,
+            style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Color(0xFF1E293B))),
+        const SizedBox(height: 10),
+        ...shown.map((spot) => Container(
               margin: const EdgeInsets.only(bottom: 8),
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              elevation: 1,
               child: ListTile(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 leading: CircleAvatar(
                   backgroundColor: spot.isMpa
                       ? Colors.red.shade100
@@ -624,32 +720,27 @@ class _PredictionScreenState extends State<PredictionScreen> {
                         : Colors.green.shade700,
                   ),
                 ),
-                title: Text(
-                  spot.nameAr,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                title: Text(spot.nameAr,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B))),
                 subtitle: Text(
-                  '${spot.distanceKm.toStringAsFixed(1)} كم',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  '${_n(spot.distanceKm.toStringAsFixed(1))} ${_l10n.kmUnit}',
+                  style: TextStyle(color: Colors.grey.shade500),
                 ),
-                trailing: Icon(
-                  Icons.arrow_back_ios,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PredictionScreen(
-                        initialLatLng: LatLng(spot.lat, spot.lng),
-                        initialSpeciesId: spot.species.isNotEmpty
-                            ? spot.species.first
-                            : _selectedSpeciesId,
-                      ),
+                trailing: Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: Colors.grey.shade400),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PredictionScreen(
+                      initialLatLng: LatLng(spot.lat, spot.lng),
+                      initialSpeciesId: spot.species.isNotEmpty
+                          ? spot.species.first
+                          : _selectedSpeciesId,
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
             )),
       ],
@@ -657,3 +748,29 @@ class _PredictionScreenState extends State<PredictionScreen> {
   }
 }
 
+// ── Reusable white card ───────────────────────────────────────────────────────
+
+class _WhiteCard extends StatelessWidget {
+  final Widget child;
+  const _WhiteCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}

@@ -20,13 +20,15 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE trips (
             id TEXT PRIMARY KEY,
+            title TEXT,
             start_time TEXT NOT NULL,
             end_time TEXT,
+            paused_seconds INTEGER DEFAULT 0,
             start_lat REAL,
             start_lon REAL,
             notes TEXT,
@@ -50,6 +52,13 @@ class DatabaseService {
           )
         ''');
         log('DatabaseService: tables created');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE trips ADD COLUMN title TEXT');
+          await db.execute('ALTER TABLE trips ADD COLUMN paused_seconds INTEGER DEFAULT 0');
+          log('DatabaseService: migrated to v2');
+        }
       },
     );
   }

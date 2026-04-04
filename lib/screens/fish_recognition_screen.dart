@@ -121,23 +121,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       _animationController.reset();
     }
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            l10n.fishRecognition,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
-          centerTitle: true,
-        ),
+    return Scaffold(
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -158,8 +142,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     : _buildMainContent(context, classificationState, l10n),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildLoadingView(AppLocalizations l10n) {
@@ -808,11 +791,15 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
+  static const _speciesImages = {
+    'Gilt-Head Bream': 'assets/images/Gilt-Head Bream.jpg',
+    'Horse Mackerel': 'assets/images/Horse Mackerel.jpg',
+    'Sea Bass': 'assets/images/Seabass.jpg',
+    'Shrimp': 'assets/images/Shrimp.jpeg',
+  };
+
   Widget _buildSupportedSpecies(AppLocalizations l10n) {
     final isArabic = ref.watch(languageProvider).languageCode == 'ar';
-    final species = FishSpecies.values
-        .map((s) => isArabic ? s.arabicName : s.englishName)
-        .toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -828,7 +815,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
         children: [
           Row(
             children: [
-  
               const SizedBox(width: 10),
               Text(
                 l10n.supportedSpecies,
@@ -841,32 +827,66 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ],
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: species.map((item) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.3,
+            children: FishSpecies.values.map((s) {
+              final englishName = s.englishName;
+              final displayName = isArabic ? s.arabicName : englishName;
+              final imagePath = _speciesImages[englishName];
+              return ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    const SizedBox(width: 8),
-                    Text(
-                      item,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                    if (imagePath != null)
+                      Image.asset(
+                                imagePath,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          child: const Icon(Icons.set_meal_rounded,
+                              color: Colors.white54, size: 40),
+                                ),
+                              )
+                    else
+                      Container(
+                        color: Colors.white.withValues(alpha: 0.1),
+                                child: const Icon(Icons.set_meal_rounded,
+                            color: Colors.white54, size: 40),
+                              ),
+                    // Dark gradient overlay
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.65),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Label at bottom
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Text(
+                        displayName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

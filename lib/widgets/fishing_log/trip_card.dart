@@ -1,25 +1,53 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:Bahaar/models/fishing/trip_model.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class TripCard extends StatelessWidget {
   final Trip trip;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onEditTitle;
 
   const TripCard({
     super.key,
     required this.trip,
     this.onTap,
     this.onDelete,
+    this.onEditTitle,
   });
+
+  String _n(String value, String lang) {
+    if (lang != 'ar') return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
+  }
+
+  String _formatDurationLocale(Duration d, String lang) {
+    final isAr = lang == 'ar';
+    if (d.inHours > 0) {
+      final h = d.inHours;
+      final m = d.inMinutes.remainder(60);
+      final hStr = _n('$h', lang);
+      final mStr = _n('$m', lang);
+      if (isAr) return m == 0 ? '${hStr}س' : '${hStr}س ${mStr}د';
+      return m == 0 ? '${hStr}h' : '${hStr}h ${mStr}m';
+    }
+    final m = d.inMinutes;
+    final mStr = _n('$m', lang);
+    return isAr ? '${mStr}د' : '${mStr}m';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('EEE d MMM yyyy').format(trip.startTime.toLocal());
+    final l10n = AppLocalizations.of(context)!;
+    final lang = l10n.localeName;
+    final locale = lang == 'ar' ? 'ar' : 'en';
+    final dateStr = DateFormat('EEE d MMM yyyy', locale).format(trip.startTime.toLocal());
     final timeStr = DateFormat('HH:mm').format(trip.startTime.toLocal());
     final duration = trip.duration;
-    final durationStr = _formatDuration(duration);
+    final durationStr = _formatDurationLocale(duration, lang);
     final totalWeight = trip.totalWeightKg;
 
     return Container(
@@ -52,13 +80,31 @@ class TripCard extends StatelessWidget {
                   const Icon(Icons.anchor, color: Colors.white70, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      dateStr,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (trip.title != null && trip.title!.isNotEmpty)
+                          Text(
+                            trip.title!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        Text(
+                          dateStr,
+                          style: TextStyle(
+                            color: trip.title != null
+                                ? Colors.white70
+                                : Colors.white,
+                            fontSize: trip.title != null ? 12 : 15,
+                            fontWeight: trip.title != null
+                                ? FontWeight.w400
+                                : FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (trip.isActive)
@@ -71,14 +117,23 @@ class TripCard extends StatelessWidget {
                         border: Border.all(
                             color: Colors.green.withValues(alpha: 0.6)),
                       ),
-                      child: const Text(
-                        'Active',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.tripActiveLabel,
+                        style: const TextStyle(
                           color: Colors.greenAccent,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ),
+                  if (onEditTitle != null)
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined,
+                          color: Colors.white38, size: 16),
+                      onPressed: onEditTitle,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: l10n.editTitleTooltip,
                     ),
                   if (onDelete != null && !trip.isActive)
                     IconButton(
@@ -95,27 +150,27 @@ class TripCard extends StatelessWidget {
                 children: [
                   _Stat(
                     icon: Icons.access_time,
-                    label: 'Started',
+                    label: l10n.tripStartedLabel,
                     value: timeStr,
                   ),
                   const SizedBox(width: 20),
                   _Stat(
                     icon: Icons.timer_outlined,
-                    label: 'Duration',
+                    label: l10n.tripDurationLabel,
                     value: durationStr,
                   ),
                   const SizedBox(width: 20),
                   _Stat(
                     icon: Icons.set_meal,
-                    label: 'Catches',
-                    value: '${trip.catches.length}',
+                    label: l10n.tripCatchesLabel,
+                    value: _n('${trip.catches.length}', lang),
                   ),
                   if (totalWeight > 0) ...[
                     const SizedBox(width: 20),
                     _Stat(
                       icon: Icons.scale,
-                      label: 'Weight',
-                      value: '${totalWeight.toStringAsFixed(1)} kg',
+                      label: l10n.weight,
+                      value: '${_n(totalWeight.toStringAsFixed(1), lang)} ${l10n.kgUnit}',
                     ),
                   ],
                 ],
@@ -140,12 +195,6 @@ class TripCard extends StatelessWidget {
   );
   }
 
-  String _formatDuration(Duration d) {
-    if (d.inMinutes < 60) return '${d.inMinutes}m';
-    final h = d.inHours;
-    final m = d.inMinutes.remainder(60);
-    return m == 0 ? '${h}h' : '${h}h ${m}m';
-  }
 }
 
 class _Stat extends StatelessWidget {

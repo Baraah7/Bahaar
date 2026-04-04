@@ -229,7 +229,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
                                       size: 18,
-                                      color: const Color(0xFF4A7A80),
+                                      color: const Color.fromARGB(255, 136, 162, 165),
                                     ),
                                     onPressed: () => setState(
                                         () => _obscurePass = !_obscurePass),
@@ -248,7 +248,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
                                       size: 18,
-                                      color: const Color(0xFF4A7A80),
+                                      color: const Color.fromARGB(255, 136, 162, 165),
                                     ),
                                     onPressed: () => setState(
                                         () => _obscureConfirm = !_obscureConfirm),
@@ -258,21 +258,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             ),
                           ),
 
-                          // ── Forgot password link ───────────────────────────
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              l10n.forgotPassword,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: kAuthTeal.withValues(alpha: 0.85),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 22),
 
                           // ── Get Started button ────────────────────────────
                           AuthGradientButton(

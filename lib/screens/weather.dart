@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import '../utilities/weather_api_service.dart';
 import '../services/world_tides_service.dart';
 import '../models/weather/weather_response_model.dart';
@@ -36,8 +36,18 @@ class _WeatherPageState extends State<Weather> {
     });
 
     try {
+      String weatherQuery = "Manama";
+      try {
+        final loc = Location();
+        final data = await loc.getLocation();
+        if (data.latitude != null && data.longitude != null) {
+          weatherQuery =
+              "${data.latitude!.toStringAsFixed(4)},${data.longitude!.toStringAsFixed(4)}";
+        }
+      } catch (_) {}
+
       final results = await Future.wait([
-        weatherService.getWeather("Manama", true, 7, false),
+        weatherService.getWeather(weatherQuery, true, 7, false),
         tidesService.getTides(),
       ]);
 
@@ -54,93 +64,72 @@ class _WeatherPageState extends State<Weather> {
     }
   }
 
-  Future<void> _loadWeatherData() => _loadAll();
-
-  // Get gradient colors based on time of day and weather condition
-  List<Color> _getGradientColors() {
-    return [AppColors.primary, AppColors.accent, AppColors.primary];
-  }
- 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              onPressed: _loadWeatherData,
-            ),
-          ],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.primary, AppColors.accent, AppColors.primary],
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: _getGradientColors(),
-            ),
-          ),
-          child: SafeArea(
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
+      ),
+      child: SafeArea(
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.cloud_off,
+                            color: Colors.white70, size: 64),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.unableToLoadWeather,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          errorMessage!,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _loadAll,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(l10n.tryAgain),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                : errorMessage != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.cloud_off,
-                                color: Colors.white70, size: 64),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.unableToLoadWeather,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              errorMessage!,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: _loadWeatherData,
-                              icon: const Icon(Icons.refresh),
-                              label: Text(l10n.tryAgain),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white24,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
+                : weatherData != null
+                    ? RefreshIndicator(
+                        onRefresh: _loadAll,
+                        child: WeatherList(
+                            weatherData: weatherData!, tides: tides, l10n: l10n),
                       )
-                    : weatherData != null
-                        ? WeatherList(weatherData: weatherData!, tides: tides, l10n: l10n)
-                        : Center(
-                            child: Text(
-                              l10n.noDataAvailable,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ),
-          ),
-        ),
+                    : Center(
+                        child: Text(
+                          l10n.noDataAvailable,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ),
       ),
     );
   }

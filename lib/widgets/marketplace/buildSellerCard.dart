@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/app_localizations.dart';
 
 Widget buildSellerCard(BuildContext context, dynamic listing) {
   return GestureDetector(
@@ -171,7 +172,7 @@ void _showSellerDetails(BuildContext context, dynamic listing) {
                   Clipboard.setData(ClipboardData(text: listing.sellerPhone!));
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Phone number copied')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.phoneNumberCopied)),
                   );
                 },
               ),

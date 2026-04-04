@@ -21,6 +21,8 @@ class MarketplaceTab extends StatefulWidget {
 class _MarketplaceTabState extends State<MarketplaceTab> {
   FishType? _selectedTypeFilter;
   FishCondition? _selectedConditionFilter;
+  double? _minPrice;
+  double? _maxPrice;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -41,6 +43,12 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     }
     if (_selectedConditionFilter != null) {
       listings = listings.where((l) => l.condition == _selectedConditionFilter).toList();
+    }
+    if (_minPrice != null) {
+      listings = listings.where((l) => l.pricePerKg >= _minPrice!).toList();
+    }
+    if (_maxPrice != null) {
+      listings = listings.where((l) => l.pricePerKg <= _maxPrice!).toList();
     }
 
     return listings;
@@ -139,65 +147,119 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
   }
 
   Widget _buildFilterRow(AppLocalizations l10n) {
-    final hasFilters = _selectedTypeFilter != null || _selectedConditionFilter != null;
+    final lang = Localizations.localeOf(context).languageCode;
+    final hasFilters = _selectedTypeFilter != null ||
+        _selectedConditionFilter != null ||
+        _minPrice != null ||
+        _maxPrice != null;
+
+    String? priceChipValue;
+    if (_minPrice != null || _maxPrice != null) {
+      final min = (_minPrice ?? 0).toStringAsFixed(0);
+      final max = (_maxPrice ?? 50).toStringAsFixed(0);
+      priceChipValue = l10n.priceRangeFilter(min, max);
+    }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            _buildFilterChip(
-              label: l10n.type,
-              value: _selectedTypeFilter?.displayName,
-              icon: Icons.phishing_rounded,
-              onTap: () => _showTypeFilterSheet(l10n),
-            ),
-            const SizedBox(width: 8),
-            _buildFilterChip(
-              label: l10n.condition,
-              value: _selectedConditionFilter?.displayName,
-              icon: Icons.verified_rounded,
-              onTap: () => _showConditionFilterSheet(l10n),
-            ),
-            if (hasFilters) ...[
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedTypeFilter = null;
-                    _selectedConditionFilter = null;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.close_rounded, size: 16, color: Colors.red.shade600),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.clearFilters,
-                        style: TextStyle(
-                          color: Colors.red.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+      color: const Color(0xFFF5F7FA),
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasFilters)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.filter_list_rounded, size: 13, color: const Color(0xFF0D4F54)),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.clearFilters,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0D4F54),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedTypeFilter = null;
+                        _selectedConditionFilter = null;
+                        _minPrice = null;
+                        _maxPrice = null;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.close_rounded, size: 13, color: Colors.red.shade600),
+                          const SizedBox(width: 3),
+                          Text(
+                            l10n.clearFilters,
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ],
-        ),
+            ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _buildFilterChip(
+                  label: l10n.type,
+                  value: _selectedTypeFilter?.localizedName(lang),
+                  icon: Icons.phishing_rounded,
+                  onTap: () => _showTypeFilterSheet(l10n),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  label: l10n.condition,
+                  value: _selectedConditionFilter?.localizedName(lang),
+                  icon: Icons.verified_rounded,
+                  onTap: () => _showConditionFilterSheet(l10n),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  label: l10n.priceRange,
+                  value: priceChipValue,
+                  icon: Icons.attach_money_rounded,
+                  onTap: () => _showPriceFilterSheet(l10n),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -318,8 +380,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                                   : Icons.phishing_rounded,
                           color: const Color(0xFF0E7490),
                         ),
-                        title: Text(type.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
-                        subtitle: Text(type.arabicName, style: TextStyle(color: Colors.grey.shade500)),
+                        title: Text(type.localizedName(Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.w500)),
                         selected: _selectedTypeFilter == type,
                         selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -390,7 +451,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                     ),
                     child: Icon(Icons.check_rounded, size: 18, color: _getConditionColor(condition)),
                   ),
-                  title: Text(condition.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
+                  title: Text(condition.localizedName(Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.w500)),
                   selected: _selectedConditionFilter == condition,
                   selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -400,6 +461,99 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                   },
                 )),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showPriceFilterSheet(AppLocalizations l10n) {
+    double tempMin = _minPrice ?? 0;
+    double tempMax = _maxPrice ?? 50;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.priceRange,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() { _minPrice = null; _maxPrice = null; });
+                      Navigator.pop(context);
+                    },
+                    child: Text(l10n.allPrices, style: const TextStyle(color: Color(0xFF0E7490))),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${tempMin.toStringAsFixed(0)} ${l10n.bdPerKg}',
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0D4F54), fontSize: 15),
+                  ),
+                  Text(
+                    '${tempMax.toStringAsFixed(0)} ${l10n.bdPerKg}',
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0D4F54), fontSize: 15),
+                  ),
+                ],
+              ),
+              RangeSlider(
+                values: RangeValues(tempMin, tempMax),
+                min: 0,
+                max: 50,
+                divisions: 50,
+                activeColor: const Color(0xFF0D4F54),
+                inactiveColor: const Color(0xFF0D4F54).withValues(alpha: 0.15),
+                onChanged: (values) => setSheetState(() {
+                  tempMin = values.start;
+                  tempMax = values.end;
+                }),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _minPrice = tempMin > 0 ? tempMin : null;
+                      _maxPrice = tempMax < 50 ? tempMax : null;
+                    });
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D4F54),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text(l10n.confirm, style: const TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

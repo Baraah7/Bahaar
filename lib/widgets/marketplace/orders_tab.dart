@@ -20,7 +20,7 @@ class OrdersTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     if (currentUserId == null) {
-      return _buildLoginPrompt();
+      return _buildLoginPrompt(context, l10n);
     }
 
     final sellerOrders = marketplaceService.orders
@@ -34,7 +34,7 @@ class OrdersTab extends StatelessWidget {
       length: 2,
       child: Column(
         children: [
-          _buildOrdersTabBar(sellerOrders.length, buyerOrders.length),
+          _buildOrdersTabBar(sellerOrders.length, buyerOrders.length, l10n),
           Expanded(
             child: TabBarView(
               children: [
@@ -58,7 +58,7 @@ class OrdersTab extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginPrompt() {
+  Widget _buildLoginPrompt(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -73,7 +73,7 @@ class OrdersTab extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Please login to view orders',
+            l10n.pleaseLoginToViewOrders,
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey.shade700,
@@ -85,7 +85,7 @@ class OrdersTab extends StatelessWidget {
     );
   }
 
-  Widget _buildOrdersTabBar(int sellerCount, int buyerCount) {
+  Widget _buildOrdersTabBar(int sellerCount, int buyerCount, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
@@ -109,7 +109,7 @@ class OrdersTab extends StatelessWidget {
               children: [
                 const Icon(Icons.sell_outlined, size: 18),
                 const SizedBox(width: 6),
-                Text('Selling ($sellerCount)'),
+                Text(l10n.sellingTab(sellerCount)),
               ],
             ),
           ),
@@ -119,7 +119,7 @@ class OrdersTab extends StatelessWidget {
               children: [
                 const Icon(Icons.shopping_bag_outlined, size: 18),
                 const SizedBox(width: 6),
-                Text('Purchases ($buyerCount)'),
+                Text(l10n.purchasesTab(buyerCount)),
               ],
             ),
           ),
@@ -168,6 +168,9 @@ class _OrdersList extends StatelessWidget {
           onComplete: isSeller && order.status == OrderStatus.accepted
               ? () => _completeOrder(context, order)
               : null,
+          onCancel: !isSeller && order.status == OrderStatus.pending
+              ? () => _showCancelDialog(context, order)
+              : null,
           onViewPaymentProof: (imagePath) =>
               _showPaymentProofFullScreen(context, imagePath),
         );
@@ -194,7 +197,7 @@ class _OrdersList extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            isSeller ? 'No orders for your listings yet' : 'No purchases yet',
+            isSeller ? l10n.noOrdersForListings : l10n.noPurchasesYet,
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey.shade700,
@@ -204,8 +207,8 @@ class _OrdersList extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isSeller
-                ? 'When someone orders your fish, it will appear here'
-                : 'Your purchases will appear here',
+                ? l10n.whenSomeoneOrdersYourFish
+                : l10n.yourPurchasesWillAppear,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -291,6 +294,47 @@ class _OrdersList extends StatelessWidget {
     );
   }
 
+  void _showCancelDialog(BuildContext context, Order order) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.cancelOrder),
+        content: Text(l10n.confirmCancelOrder),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await marketplaceService.cancelOrder(order.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.orderCancelled),
+                    backgroundColor: Colors.grey.shade700,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(l10n.cancelOrder,
+                style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _completeOrder(BuildContext context, Order order) async {
     await marketplaceService.completeOrder(order.id);
     if (context.mounted) {
@@ -329,9 +373,9 @@ class _OrdersList extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Payment Proof',
-                          style: TextStyle(
+                        Text(
+                          l10n.paymentProof,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                         IconButton(
