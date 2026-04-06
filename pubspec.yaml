@@ -36,6 +36,10 @@ dependencies:
   connectivity_plus: ^6.1.1
   uuid: ^4.5.2
   path_provider: ^2.1.5
+  # DS-1 Vision Engine dependencies
+  camera: ^0.11.0+2          # Camera stream for star capture
+  sensors_plus: ^6.1.1       # Gyroscope / accelerometer for IMU sync
+  ffi: ^2.1.3                # Dart FFI support types (Pointer, calloc, etc.)
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +74,7 @@ flutter:
     - assets/depth_gebco.mbtiles
     - assets/models/fish_classifier.tflite
     - assets/models/labels.txt
+    - assets/data/stars_2500.json
 
   #   - images/a_dot_ham.jpeg
 
