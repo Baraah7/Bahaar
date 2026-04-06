@@ -11,6 +11,7 @@ import 'package:Bahaar/screens/profile_screen.dart';
 import 'package:Bahaar/screens/fishing_log_screen.dart';
 import 'package:Bahaar/widgets/language_switcher.dart';
 import 'package:Bahaar/screens/fish_recognition_screen.dart';
+import 'package:Bahaar/screens/celestial_navigation_screen.dart';
 import 'package:Bahaar/providers/language_provider.dart';
 import 'package:Bahaar/services/offline/connectivity_service.dart';
 import 'package:Bahaar/services/offline/database_service.dart';
@@ -122,6 +123,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           Weather(),
           FishRecognitionScreen(),
           FishingLogScreen(),
+          CelestialNavigationScreen(),
         ]
       ),
       
@@ -162,6 +164,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.anchor),
             label: 'Fishing Log',
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore),
+            label: 'Sextant',
             backgroundColor: AppColors.primary,
           ),
         ],

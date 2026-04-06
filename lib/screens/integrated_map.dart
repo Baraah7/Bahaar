@@ -48,6 +48,9 @@ import 'package:Bahaar/services/offline/connectivity_service.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:Bahaar/screens/prediction_screen.dart';
+import 'package:Bahaar/screens/celestial_navigation_screen.dart';
+import 'package:Bahaar/widgets/map/celestial_fix_overlay.dart';
+import 'package:Bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
@@ -2125,6 +2128,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
           MarkerLayer(
             markers: [_buildUserLocationMarker()],
           ),
+
+        // DS-1 celestial fix uncertainty circle + marker
+        const CelestialFixLayer(),
       ],
     );
   }
@@ -2640,6 +2646,21 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     const SizedBox(height: 8),
                     _buildButtonGroup([
                       _buildMapIconButton(
+                        icon: Icons.explore,
+                        tooltip: 'Celestial Navigation (DS-1)',
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CelestialNavigationScreen(),
+                          ),
+                        ),
+                        isActive: CelestialFixNotifier.instance.fix != null,
+                        activeColor: const Color(0xFF0D47A1),
+                      ),
+                    ]),
+                    const SizedBox(height: 8),
+                    _buildButtonGroup([
+                      _buildMapIconButton(
                         icon: _currentRoute != null || _navMode != null
                             ? Icons.close
                             : Icons.directions_boat_outlined,
@@ -2856,6 +2877,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 });
               },
             ),
+
+          // DS-1 GPS spoofing alert (shown when celestial fix diverges > 2 NM)
+          const CelestialSpoofingAlert(),
 
           // Route calculation loading indicator
           if (_isCalculatingRoute)

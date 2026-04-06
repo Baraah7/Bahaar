@@ -7,7 +7,8 @@
       "Bash(xargs cat)",
       "Bash(flutter pub get)",
       "Bash(flutter analyze --no-pub)",
-      "Bash(flutter analyze --no-pub lib/widgets/map/bahaar_overlay_layer.dart lib/screens/integrated_map.dart)"
+      "Bash(flutter analyze --no-pub lib/widgets/map/bahaar_overlay_layer.dart lib/screens/integrated_map.dart)",
+      "Bash(flutter analyze:*)"
     ]
   }
 }
