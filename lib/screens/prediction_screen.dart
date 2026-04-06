@@ -127,86 +127,80 @@ class _PredictionScreenState extends State<PredictionScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        body: Column(
-          children: [
-            _buildGradientHeader(context),
-            Expanded(
-              child: _isLoading
-                  ? _buildLoading()
-                  : SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildLocationCard(),
-                          const SizedBox(height: 12),
-                          _buildSpeciesSelector(),
-                          const SizedBox(height: 16),
-                          _buildPredictButton(),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 16),
-                            _buildError(),
-                          ],
-                          if (_result != null) ...[
-                            const SizedBox(height: 20),
-                            _buildResults(_result!),
-                          ],
-                        ],
-                      ),
-                    ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primary, AppColors.accent, AppColors.primary],
             ),
-          ],
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _buildHeader(context),
+                Expanded(
+                  child: _isLoading
+                      ? _buildLoading()
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding:
+                              const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildLocationCard(),
+                              const SizedBox(height: 12),
+                              _buildSpeciesSelector(),
+                              const SizedBox(height: 16),
+                              _buildPredictButton(),
+                              if (_errorMessage != null) ...[
+                                const SizedBox(height: 16),
+                                _buildError(),
+                              ],
+                              if (_result != null) ...[
+                                const SizedBox(height: 20),
+                                _buildResults(_result!),
+                              ],
+                            ],
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // ── Gradient header ──────────────────────────────────────────────────────────
+  // ── Header ───────────────────────────────────────────────────────────────────
 
-  Widget _buildGradientHeader(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.primary, AppColors.accent],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  if (Navigator.canPop(context)) ...[
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(
-                    _l10n.predictionTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          if (Navigator.canPop(context)) ...[
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(width: 8),
           ],
-        ),
+          Text(
+            _l10n.predictionTitle,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -218,10 +212,10 @@ class _PredictionScreenState extends State<PredictionScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: _teal),
+          const CircularProgressIndicator(color: Colors.white),
           const SizedBox(height: 16),
           Text(_l10n.analyzing,
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
+              style: const TextStyle(fontSize: 16, color: Colors.white70)),
         ],
       ),
     );
@@ -363,7 +357,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
               style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
-                  color: Color(0xFF1E293B))),
+                  color: Colors.white)),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -691,7 +685,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
             style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
-                color: Color(0xFF1E293B))),
+                color: Colors.white)),
         const SizedBox(height: 10),
         ...shown.map((spot) => Container(
               margin: const EdgeInsets.only(bottom: 8),

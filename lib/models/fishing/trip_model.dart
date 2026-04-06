@@ -2,6 +2,7 @@ import 'package:latlong2/latlong.dart';
 
 class Trip {
   final String id;
+  final String? userId;
   final String? title;
   final DateTime startTime;
   final DateTime? endTime;
@@ -14,6 +15,7 @@ class Trip {
 
   const Trip({
     required this.id,
+    this.userId,
     this.title,
     required this.startTime,
     this.endTime,
@@ -43,6 +45,7 @@ class Trip {
 
   Trip copyWith({
     String? id,
+    String? userId,
     String? title,
     DateTime? startTime,
     DateTime? endTime,
@@ -55,6 +58,7 @@ class Trip {
   }) {
     return Trip(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
@@ -69,6 +73,7 @@ class Trip {
 
   Map<String, dynamic> toRow() => {
         'id': id,
+        'user_id': userId,
         'title': title,
         'start_time': startTime.toIso8601String(),
         'end_time': endTime?.toIso8601String(),
@@ -82,6 +87,7 @@ class Trip {
   factory Trip.fromRow(Map<String, dynamic> row, List<CatchEntry> catches) {
     return Trip(
       id: row['id'] as String,
+      userId: row['user_id'] as String?,
       title: row['title'] as String?,
       startTime: DateTime.parse(row['start_time'] as String),
       endTime: row['end_time'] != null

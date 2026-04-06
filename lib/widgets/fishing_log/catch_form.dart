@@ -4,6 +4,7 @@ import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/screens/location_picker_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 class CatchForm extends StatefulWidget {
   const CatchForm({super.key});
@@ -34,6 +35,7 @@ class _CatchFormState extends State<CatchForm> {
   static const _teal = Color(0xFF0D4F54);
   static const _tealLight = Color(0xFF0E7490);
 
+  // (Arabic name, English name) pairs
   static const _quickSpecies = [
     ('هامور', 'Hamour'),
     ('صافي', 'Safi'),
@@ -43,6 +45,9 @@ class _CatchFormState extends State<CatchForm> {
     ('ربيان', 'Shrimp'),
     ('قبقب', 'Crab'),
   ];
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  bool get _isAr => _l10n.localeName == 'ar';
 
   @override
   void initState() {
@@ -74,7 +79,8 @@ class _CatchFormState extends State<CatchForm> {
   }
 
   Future<void> _pickOnMap() async {
-    final picked = await LocationPickerScreen.open(context, initial: _location);
+    final picked =
+        await LocationPickerScreen.open(context, initial: _location);
     if (picked != null && mounted) {
       setState(() {
         _location = picked;
@@ -89,7 +95,8 @@ class _CatchFormState extends State<CatchForm> {
     Navigator.of(context).pop(CatchFormResult(
       species: _speciesCtrl.text.trim(),
       weightKg: weight,
-      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      notes:
+          _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       location: _location,
     ));
   }
@@ -150,18 +157,12 @@ class _CatchFormState extends State<CatchForm> {
                               color: Colors.white, size: 22),
                         ),
                         const SizedBox(width: 14),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('تسجيل صيدة',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800)),
-                            Text('Log Catch',
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 12)),
-                          ],
+                        Text(
+                          _l10n.logCatchTitle,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800),
                         ),
                       ],
                     ),
@@ -176,27 +177,30 @@ class _CatchFormState extends State<CatchForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Quick-pick chips
-                    _sectionLabel('اختر النوع', 'Quick Pick'),
+                    _sectionLabel(_l10n.chooseSpecies),
                     const SizedBox(height: 10),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       child: Row(
                         children: _quickSpecies.map((s) {
-                          final label = '${s.$1} / ${s.$2}';
-                          final isSelected = _speciesCtrl.text == label;
+                          final name = _isAr ? s.$1 : s.$2;
+                          final isSelected = _speciesCtrl.text == name;
                           return Padding(
-                            padding: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.only(right: 8),
                             child: GestureDetector(
                               onTap: () =>
-                                  setState(() => _speciesCtrl.text = label),
+                                  setState(() => _speciesCtrl.text = name),
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
+                                duration:
+                                    const Duration(milliseconds: 150),
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? _teal : Colors.white,
-                                  borderRadius: BorderRadius.circular(24),
+                                  color:
+                                      isSelected ? _teal : Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(24),
                                   border: Border.all(
                                     color: isSelected
                                         ? _teal
@@ -214,7 +218,7 @@ class _CatchFormState extends State<CatchForm> {
                                   ],
                                 ),
                                 child: Text(
-                                  '${s.$1}  ${s.$2}',
+                                  name,
                                   style: TextStyle(
                                     color: isSelected
                                         ? Colors.white
@@ -234,7 +238,7 @@ class _CatchFormState extends State<CatchForm> {
                     const SizedBox(height: 20),
 
                     // Species + Weight in a white card
-                    _sectionLabel('تفاصيل الصيدة', 'Catch Details'),
+                    _sectionLabel(_l10n.catchDetails),
                     const SizedBox(height: 10),
                     _WhiteCard(
                       child: Column(
@@ -243,10 +247,10 @@ class _CatchFormState extends State<CatchForm> {
                             controller: _speciesCtrl,
                             icon: Icons.set_meal_outlined,
                             iconColor: _tealLight,
-                            label: 'نوع السمك / Species',
+                            label: _l10n.speciesNameLabel,
                             validator: (v) =>
                                 (v == null || v.trim().isEmpty)
-                                    ? 'أدخل نوع السمك'
+                                    ? _l10n.speciesRequired
                                     : null,
                           ),
                           const _CardDivider(),
@@ -254,7 +258,7 @@ class _CatchFormState extends State<CatchForm> {
                             controller: _weightCtrl,
                             icon: Icons.scale_outlined,
                             iconColor: AppColors.brown,
-                            label: 'الوزن (كغ) / Weight (kg)',
+                            label: _l10n.weightKg,
                             keyboardType:
                                 const TextInputType.numberWithOptions(
                                     decimal: true),
@@ -268,7 +272,7 @@ class _CatchFormState extends State<CatchForm> {
                             controller: _notesCtrl,
                             icon: Icons.notes_outlined,
                             iconColor: Colors.grey,
-                            label: 'ملاحظات / Notes (optional)',
+                            label: _l10n.notesOptionalLabel,
                             maxLines: 2,
                           ),
                         ],
@@ -277,7 +281,7 @@ class _CatchFormState extends State<CatchForm> {
                     const SizedBox(height: 20),
 
                     // Location card
-                    _sectionLabel('موقع الصيد', 'Catch Location'),
+                    _sectionLabel(_l10n.catchLocationLabel),
                     const SizedBox(height: 10),
                     _WhiteCard(
                       child: Column(
@@ -290,10 +294,13 @@ class _CatchFormState extends State<CatchForm> {
                                 height: 38,
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(10),
                                 ),
-                                child: Icon(Icons.location_on_outlined,
-                                    color: Colors.red.shade400, size: 20),
+                                child: Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.red.shade400,
+                                    size: 20),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -306,22 +313,27 @@ class _CatchFormState extends State<CatchForm> {
                                             children: [
                                               Icon(
                                                 _mapPinned
-                                                    ? Icons.push_pin_rounded
-                                                    : Icons.gps_fixed_rounded,
+                                                    ? Icons
+                                                        .push_pin_rounded
+                                                    : Icons
+                                                        .gps_fixed_rounded,
                                                 size: 13,
-                                                color: Colors.green.shade600,
+                                                color: Colors
+                                                    .green.shade600,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 _mapPinned
-                                                    ? 'Pinned on map'
-                                                    : 'GPS location',
+                                                    ? _l10n.pinnedOnMap
+                                                    : _l10n
+                                                        .gpsLocationLabel,
                                                 style: TextStyle(
                                                     fontSize: 11,
-                                                    color:
-                                                        Colors.green.shade600,
+                                                    color: Colors
+                                                        .green.shade600,
                                                     fontWeight:
-                                                        FontWeight.w600),
+                                                        FontWeight
+                                                            .w600),
                                               ),
                                             ],
                                           ),
@@ -331,19 +343,21 @@ class _CatchFormState extends State<CatchForm> {
                                             '${_location!.longitude.toStringAsFixed(5)}',
                                             style: TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey.shade600),
+                                                color: Colors
+                                                    .grey.shade600),
                                           ),
                                         ],
                                       )
                                     : Text(
-                                        'لم يتم تحديد الموقع\nLocation not set',
+                                        _l10n.locationNotSet,
                                         style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade400),
+                                            color:
+                                                Colors.grey.shade400),
                                       ),
                               ),
                               if (_locating)
-                                SizedBox(
+                                const SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
@@ -367,7 +381,7 @@ class _CatchFormState extends State<CatchForm> {
                               Expanded(
                                 child: _LocationButton(
                                   icon: Icons.map_outlined,
-                                  label: 'خريطة / Map',
+                                  label: _l10n.mapLabel,
                                   onTap: _pickOnMap,
                                   color: _tealLight,
                                 ),
@@ -385,9 +399,10 @@ class _CatchFormState extends State<CatchForm> {
                       child: ElevatedButton.icon(
                         onPressed: _submit,
                         icon: const Icon(Icons.check_rounded, size: 20),
-                        label: const Text('تسجيل الصيدة / Log Catch',
-                            style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w700)),
+                        label: Text(_l10n.logCatch,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _teal,
                           foregroundColor: Colors.white,
@@ -409,22 +424,12 @@ class _CatchFormState extends State<CatchForm> {
     );
   }
 
-  Widget _sectionLabel(String ar, String en) {
-    return Row(
-      children: [
-        Text(ar,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Color(0xFF1E293B))),
-        const SizedBox(width: 6),
-        Text('/ $en',
-            style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w400)),
-      ],
-    );
+  Widget _sectionLabel(String label) {
+    return Text(label,
+        style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: Color(0xFF1E293B)));
   }
 }
 

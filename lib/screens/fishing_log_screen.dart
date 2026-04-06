@@ -11,6 +11,7 @@ import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 import 'package:Bahaar/screens/trip_detail_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:Bahaar/providers/authentication_provider.dart';
 import 'package:Bahaar/l10n/app_localizations.dart';
 
@@ -40,7 +41,8 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Future<void> _init() async {
-    await _service.initialize();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    await _service.initialize(uid: uid);
     await _loadTrips();
     _startTicker();
   }
@@ -278,13 +280,23 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     );
   }
 
+  String _n(String value, bool isAr) {
+    if (!isAr) return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
+  }
+
   String _formatDuration(Duration d) {
+    final l10n = AppLocalizations.of(context)!;
+    final isAr = l10n.localeName == 'ar';
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
     final s = d.inSeconds.remainder(60);
-    if (h > 0) return '${h}س ${m}د';
-    if (m > 0) return '${m}د ${s}ث';
-    return '${s}ث';
+    String num(int n) => _n('$n', isAr);
+    if (h > 0) return isAr ? '${num(h)}س ${num(m)}د' : '${h}h ${m}m';
+    if (m > 0) return isAr ? '${num(m)}د ${num(s)}ث' : '${m}m ${s}s';
+    return isAr ? '${num(s)}ث' : '${s}s';
   }
 
   @override
@@ -480,9 +492,11 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
 
   Widget _buildActiveBanner(Trip trip) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = l10n.localeName == 'ar';
     final dur = trip.duration;
     final dStr = _formatDuration(dur);
     final catchCount = trip.catches.length;
+    final catchCountStr = _n('$catchCount', isAr);
 
     return Container(
       width: double.infinity,
@@ -494,7 +508,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '${l10n.tripInProgress} — $dStr  ·  $catchCount ${catchCount == 1 ? l10n.catchWord : l10n.catches}',
+              '${l10n.tripInProgress} — $dStr  ·  $catchCountStr ${catchCount == 1 ? l10n.catchWord : l10n.catches}',
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
           ),

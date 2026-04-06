@@ -2214,6 +2214,22 @@ abstract class AppLocalizations {
   String get serverError;
   String get unexpectedError;
   String get kmUnit;
+
+  // Celestial almanac
+  String get celestialAlmanac;
+  String get solarNoon;
+
+  // Catch form
+  String get logCatchTitle;
+  String get catchDetails;
+  String get speciesNameLabel;
+  String get speciesRequired;
+  String get notesOptionalLabel;
+  String get pinnedOnMap;
+  String get gpsLocationLabel;
+  String get locationNotSet;
+  String get catchLocationLabel;
+  String get mapLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

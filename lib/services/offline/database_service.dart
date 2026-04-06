@@ -20,11 +20,12 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE trips (
             id TEXT PRIMARY KEY,
+            user_id TEXT,
             title TEXT,
             start_time TEXT NOT NULL,
             end_time TEXT,
@@ -39,6 +40,7 @@ class DatabaseService {
         await db.execute('''
           CREATE TABLE catches (
             id TEXT PRIMARY KEY,
+            user_id TEXT,
             trip_id TEXT NOT NULL,
             timestamp TEXT NOT NULL,
             species TEXT NOT NULL,
@@ -51,13 +53,19 @@ class DatabaseService {
             FOREIGN KEY (trip_id) REFERENCES trips(id)
           )
         ''');
-        log('DatabaseService: tables created');
+        log('DatabaseService: tables created (v3)');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await db.execute('ALTER TABLE trips ADD COLUMN title TEXT');
-          await db.execute('ALTER TABLE trips ADD COLUMN paused_seconds INTEGER DEFAULT 0');
+          await db.execute(
+              'ALTER TABLE trips ADD COLUMN paused_seconds INTEGER DEFAULT 0');
           log('DatabaseService: migrated to v2');
+        }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE trips ADD COLUMN user_id TEXT');
+          await db.execute('ALTER TABLE catches ADD COLUMN user_id TEXT');
+          log('DatabaseService: migrated to v3 (user_id)');
         }
       },
     );
@@ -67,7 +75,8 @@ class DatabaseService {
 
   Future<void> insertTrip(Map<String, dynamic> row) async {
     final db = await database;
-    await db.insert('trips', row, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('trips', row,
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> updateTrip(String id, Map<String, dynamic> values) async {
@@ -75,14 +84,28 @@ class DatabaseService {
     await db.update('trips', values, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<List<Map<String, dynamic>>> getAllTrips() async {
+  Future<List<Map<String, dynamic>>> getAllTrips({String? userId}) async {
     final db = await database;
+    if (userId != null) {
+      return db.query('trips',
+          where: 'user_id = ?',
+          whereArgs: [userId],
+          orderBy: 'start_time DESC');
+    }
     return db.query('trips', orderBy: 'start_time DESC');
   }
 
   /// Returns all trips that have no end_time, ordered oldest-first.
-  Future<List<Map<String, dynamic>>> getOpenTrips() async {
+  Future<List<Map<String, dynamic>>> getOpenTrips({String? userId}) async {
     final db = await database;
+    if (userId != null) {
+      return db.query(
+        'trips',
+        where: 'user_id = ? AND end_time IS NULL',
+        whereArgs: [userId],
+        orderBy: 'start_time ASC',
+      );
+    }
     return db.query(
       'trips',
       where: 'end_time IS NULL',
@@ -92,7 +115,8 @@ class DatabaseService {
 
   Future<Map<String, dynamic>?> getTrip(String id) async {
     final db = await database;
-    final rows = await db.query('trips', where: 'id = ?', whereArgs: [id]);
+    final rows =
+        await db.query('trips', where: 'id = ?', whereArgs: [id]);
     return rows.isEmpty ? null : rows.first;
   }
 
@@ -120,7 +144,8 @@ class DatabaseService {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<Map<String, dynamic>>> getCatchesForTrip(String tripId) async {
+  Future<List<Map<String, dynamic>>> getCatchesForTrip(
+      String tripId) async {
     final db = await database;
     return db.query(
       'catches',
@@ -132,7 +157,8 @@ class DatabaseService {
 
   Future<void> updateCatch(String id, Map<String, dynamic> values) async {
     final db = await database;
-    await db.update('catches', values, where: 'id = ?', whereArgs: [id]);
+    await db.update('catches', values,
+        where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> deleteCatch(String id) async {
@@ -142,26 +168,44 @@ class DatabaseService {
 
   // ─── Unsynced rows for Firestore sync ────────────────────────
 
-  Future<List<Map<String, dynamic>>> getUnsyncedTrips() async {
+  Future<List<Map<String, dynamic>>> getUnsyncedTrips(
+      {String? userId}) async {
     final db = await database;
+    if (userId != null) {
+      return db.query('trips',
+          where: 'synced = 0 AND user_id = ?', whereArgs: [userId]);
+    }
     return db.query('trips', where: 'synced = 0');
   }
 
-  Future<List<Map<String, dynamic>>> getUnsyncedCatches() async {
+  Future<List<Map<String, dynamic>>> getUnsyncedCatches(
+      {String? userId}) async {
     final db = await database;
+    if (userId != null) {
+      return db.query('catches',
+          where: 'synced = 0 AND user_id = ?', whereArgs: [userId]);
+    }
     return db.query('catches', where: 'synced = 0');
   }
 
   Future<void> markTripSynced(String id) async {
     final db = await database;
-    await db.update('trips', {'synced': 1},
-        where: 'id = ?', whereArgs: [id]);
+    await db
+        .update('trips', {'synced': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> markCatchSynced(String id) async {
     final db = await database;
     await db.update('catches', {'synced': 1},
         where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Returns the count of trips for a given user (for Firestore seed check).
+  Future<int> tripCountForUser(String userId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) as cnt FROM trips WHERE user_id = ?', [userId]);
+    return result.first['cnt'] as int? ?? 0;
   }
 
   Future<void> close() async {

@@ -1264,4 +1264,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unexpectedError => 'An unexpected error occurred, please try again later';
   @override
   String get kmUnit => 'km';
+
+  // Celestial almanac
+  @override
+  String get celestialAlmanac => 'Celestial Almanac';
+  @override
+  String get solarNoon => 'Solar Noon';
+
+  // Catch form
+  @override
+  String get logCatchTitle => 'Log Catch';
+  @override
+  String get catchDetails => 'Catch Details';
+  @override
+  String get speciesNameLabel => 'Species';
+  @override
+  String get speciesRequired => 'Enter species name';
+  @override
+  String get notesOptionalLabel => 'Notes (optional)';
+  @override
+  String get pinnedOnMap => 'Pinned on map';
+  @override
+  String get gpsLocationLabel => 'GPS location';
+  @override
+  String get locationNotSet => 'Location not set';
+  @override
+  String get catchLocationLabel => 'Catch Location';
+  @override
+  String get mapLabel => 'Map';
 }

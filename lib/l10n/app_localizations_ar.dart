@@ -1264,4 +1264,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unexpectedError => 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً';
   @override
   String get kmUnit => 'كم';
+
+  // Celestial almanac
+  @override
+  String get celestialAlmanac => 'الروزنامة السماوية';
+  @override
+  String get solarNoon => 'ذروة الشمس';
+
+  // Catch form
+  @override
+  String get logCatchTitle => 'تسجيل صيدة';
+  @override
+  String get catchDetails => 'تفاصيل الصيدة';
+  @override
+  String get speciesNameLabel => 'نوع السمك';
+  @override
+  String get speciesRequired => 'أدخل نوع السمك';
+  @override
+  String get notesOptionalLabel => 'ملاحظات';
+  @override
+  String get pinnedOnMap => 'موقع محدد على الخريطة';
+  @override
+  String get gpsLocationLabel => 'موقع GPS';
+  @override
+  String get locationNotSet => 'لم يتم تحديد الموقع';
+  @override
+  String get catchLocationLabel => 'موقع الصيد';
+  @override
+  String get mapLabel => 'خريطة';
 }
