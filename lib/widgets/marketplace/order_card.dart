@@ -12,6 +12,7 @@ class OrderCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
+  final VoidCallback? onCancel;
   final void Function(String imagePath)? onViewPaymentProof;
 
   const OrderCard({
@@ -23,12 +24,24 @@ class OrderCard extends StatelessWidget {
     this.onAccept,
     this.onReject,
     this.onComplete,
+    this.onCancel,
     this.onViewPaymentProof,
   });
 
+  String _n(String value, String lang) {
+    if (lang != 'ar') return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final listingName = listing?.displayName ?? 'Unknown Fish';
+    final lang = Localizations.localeOf(context).languageCode;
+    final isAr = lang == 'ar';
+    final listingName = listing == null
+        ? ''
+        : (isAr ? listing!.fishType.arabicName : listing!.displayName);
     final totalPrice = listing?.totalPrice ?? 0.0;
 
     return Container(
@@ -46,7 +59,7 @@ class OrderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildHeader(listingName, totalPrice),
+          _buildHeader(listingName, totalPrice, lang),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
@@ -54,7 +67,7 @@ class OrderCard extends StatelessWidget {
               children: [
                 _buildContactInfo(),
                 const SizedBox(height: 10),
-                _buildPaymentInfo(),
+                _buildPaymentInfo(lang),
                 if (isSeller &&
                     order.paymentMethod == PaymentMethod.benefitPay &&
                     order.paymentProofImageUrl != null)
@@ -71,6 +84,8 @@ class OrderCard extends StatelessWidget {
                   _buildSellerActions(),
                 if (isSeller && order.status == OrderStatus.accepted)
                   _buildCompleteButton(),
+                if (!isSeller && order.status == OrderStatus.pending)
+                  _buildCancelButton(),
               ],
             ),
           ),
@@ -79,7 +94,7 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String listingName, double totalPrice) {
+  Widget _buildHeader(String listingName, double totalPrice, String lang) {
     final statusData = _getStatusData();
 
     return Container(
@@ -112,7 +127,7 @@ class OrderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${totalPrice.toStringAsFixed(2)} BD',
+                  '${_n(totalPrice.toStringAsFixed(2), lang)} ${l10n.bdUnit}',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -129,7 +144,7 @@ class OrderCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              order.status.displayName,
+              order.status.localizedName(lang),
               style: TextStyle(
                 color: statusData.color,
                 fontWeight: FontWeight.w600,
@@ -160,7 +175,7 @@ class OrderCard extends StatelessWidget {
         children: [
           _buildInfoRow(
             Icons.store_outlined,
-            'Seller: ${listing?.sellerName ?? 'Unknown'}',
+            '${l10n.sellerLabel}: ${listing?.sellerName ?? ''}',
           ),
           const SizedBox(height: 6),
           _buildInfoRow(Icons.phone_outlined, listing?.sellerPhone ?? 'N/A'),
@@ -169,10 +184,10 @@ class OrderCard extends StatelessWidget {
     }
   }
 
-  Widget _buildPaymentInfo() {
+  Widget _buildPaymentInfo(String lang) {
     return _buildInfoRow(
       Icons.payments_outlined,
-      '${l10n.payment}: ${order.paymentMethod.displayName}',
+      '${l10n.payment}: ${order.paymentMethod.localizedName(lang)}',
     );
   }
 
@@ -258,7 +273,7 @@ class OrderCard extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Reason: ${order.rejectionReason}',
+                '${l10n.rejectionReason}: ${order.rejectionReason}',
                 style: TextStyle(color: Colors.red.shade700, fontSize: 13),
               ),
             ),
@@ -272,7 +287,7 @@ class OrderCard extends StatelessWidget {
     return _buildStatusMessage(
       icon: Icons.hourglass_empty,
       color: Colors.orange,
-      message: 'Waiting for seller to accept your order',
+      message: l10n.waitingForSellerToAccept,
     );
   }
 
@@ -280,7 +295,7 @@ class OrderCard extends StatelessWidget {
     return _buildStatusMessage(
       icon: Icons.check_circle_outline,
       color: Colors.green,
-      message: 'Order accepted! Contact seller to arrange pickup.',
+      message: l10n.orderAcceptedContactSeller,
     );
   }
 
@@ -350,6 +365,26 @@ class OrderCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCancelButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onCancel,
+          icon: const Icon(Icons.cancel_outlined, size: 18),
+          label: Text(l10n.cancelOrder),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red.shade600,
+            side: BorderSide(color: Colors.red.shade300),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
       ),
     );
   }

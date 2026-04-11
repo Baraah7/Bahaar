@@ -1,6 +1,12 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
+import '../../l10n/app_localizations.dart';
+
+ImageProvider _resolveImage(String path) {
+  if (path.startsWith('http')) return NetworkImage(path);
+  return FileImage(File(path));
+}
 
 class FishCard extends StatelessWidget {
   final FishListing listing;
@@ -31,15 +37,18 @@ class FishCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildImageSection(),
-            Expanded(child: _buildInfoSection()),
+            _buildImageSection(context),
+            Expanded(child: _buildInfoSection(context)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageSection() {
+  Widget _buildImageSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+
     return Stack(
       children: [
         Container(
@@ -55,7 +64,7 @@ class FishCard extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             image: listing.primaryImageUrl != null
                 ? DecorationImage(
-                    image: FileImage(File(listing.primaryImageUrl!)),
+                    image: _resolveImage(listing.primaryImageUrl!),
                     fit: BoxFit.cover,
                   )
                 : null,
@@ -70,7 +79,6 @@ class FishCard extends StatelessWidget {
                 )
               : null,
         ),
-        // Gradient scrim for readability on images
         if (listing.primaryImageUrl != null)
           Positioned(
             bottom: 0,
@@ -90,7 +98,7 @@ class FishCard extends StatelessWidget {
               ),
             ),
           ),
-        // Condition badge
+        // Condition badge — Arabic-aware
         Positioned(
           top: 8,
           left: 8,
@@ -108,7 +116,7 @@ class FishCard extends StatelessWidget {
               ],
             ),
             child: Text(
-              listing.condition.displayName,
+              listing.condition.localizedName(lang),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -118,7 +126,7 @@ class FishCard extends StatelessWidget {
             ),
           ),
         ),
-        // Price tag
+        // Price tag — localized currency
         Positioned(
           bottom: 8,
           right: 8,
@@ -136,7 +144,7 @@ class FishCard extends StatelessWidget {
               ],
             ),
             child: Text(
-              '${listing.totalPrice.toStringAsFixed(2)} BD',
+              '${_n(listing.totalPrice.toStringAsFixed(2), lang)} ${l10n.bdUnit}',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
@@ -149,14 +157,32 @@ class FishCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection() {
+  String _n(String value, String lang) {
+    if (lang != 'ar') return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+      RegExp(r'[0-9]'),
+      (m) => digits[int.parse(m.group(0)!)],
+    );
+  }
+
+  Widget _buildInfoSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+    final isAr = lang == 'ar';
+
+    final primaryName = isAr ? listing.fishType.arabicName : listing.displayName;
+
+    final weightStr = _n(listing.weight.toStringAsFixed(1), lang);
+    final priceStr = _n(listing.pricePerKg.toStringAsFixed(1), lang);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            listing.displayName,
+            primaryName,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
@@ -166,26 +192,17 @@ class FishCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          Text(
-            listing.fishType.arabicName,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
           const Spacer(),
           Row(
             children: [
               _buildBadge(
-                '${listing.weight.toStringAsFixed(1)} kg',
+                '$weightStr ${l10n.kgUnit}',
                 Icons.scale_rounded,
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: _buildBadge(
-                  '${listing.pricePerKg.toStringAsFixed(1)} BD/kg',
+                  '$priceStr ${l10n.bdPerKg}',
                   Icons.sell_rounded,
                 ),
               ),

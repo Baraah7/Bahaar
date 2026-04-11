@@ -1,3 +1,4 @@
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AuthField extends StatelessWidget {
@@ -62,7 +63,7 @@ class AuthGradientButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4FC3F7),
+          backgroundColor: AppColors.tan.withValues(alpha: 0.60),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         child: isLoading

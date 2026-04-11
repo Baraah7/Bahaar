@@ -1,8 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
+import '../../l10n/app_localizations.dart';
 
-Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, Function(PaymentMethod) onChanged) {
+Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, Function(PaymentMethod) onChanged, {required BuildContext context}) {
   final isSelected = selectedPayment == method;
+  final lang = Localizations.localeOf(context).languageCode;
   return GestureDetector(
     onTap: () => onChanged(method),
     child: AnimatedContainer(
@@ -56,7 +58,7 @@ Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, 
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  method.displayName,
+                  method.localizedName(lang),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -68,8 +70,8 @@ Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, 
                 const SizedBox(height: 2),
                 Text(
                   method == PaymentMethod.cash
-                      ? 'Pay with cash on delivery'
-                      : 'Pay instantly via Benefit Pay',
+                      ? AppLocalizations.of(context)!.payWithCashOnDelivery
+                      : AppLocalizations.of(context)!.payInstantlyViaBenefitPay,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade500,

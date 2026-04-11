@@ -56,7 +56,8 @@ class AuthenticationService {
   }
 
   // Send password reset email
-  Future<void> sendPasswordResetEmail(String email) async {
+  Future<void> sendPasswordResetEmail(String email, {String languageCode = 'en'}) async {
+    await _firebaseAuth.setLanguageCode(languageCode);
     await _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 

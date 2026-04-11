@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/fishing/trip_model.dart';
 import '../../app_start.dart';
+import '../../l10n/app_localizations.dart';
 
 class SellFishForm extends StatefulWidget {
   final String? currentUserId;
@@ -32,6 +33,9 @@ class SellFishForm extends StatefulWidget {
 }
 
 class _SellFishFormState extends State<SellFishForm> {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  String get _lang => Localizations.localeOf(context).languageCode;
+
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
 
@@ -46,9 +50,11 @@ class _SellFishFormState extends State<SellFishForm> {
   final _descriptionController = TextEditingController();
   final _catchLocationController = TextEditingController();
   final _customFishNameController = TextEditingController();
+  final _ibanController = TextEditingController();
   late TextEditingController _sellerNameController;
   late TextEditingController _sellerPhoneController;
   late TextEditingController _sellerLocationController;
+  String? _selectedCatchId;
 
   @override
   void initState() {
@@ -65,6 +71,7 @@ class _SellFishFormState extends State<SellFishForm> {
     _descriptionController.dispose();
     _catchLocationController.dispose();
     _customFishNameController.dispose();
+    _ibanController.dispose();
     _sellerNameController.dispose();
     _sellerPhoneController.dispose();
     _sellerLocationController.dispose();
@@ -103,6 +110,7 @@ class _SellFishFormState extends State<SellFishForm> {
     }
 
     setState(() {
+      _selectedCatchId = catch_.id;
       if (matched != null) {
         _selectedFishType = matched;
         _customFishNameController.clear();
@@ -131,7 +139,7 @@ class _SellFishFormState extends State<SellFishForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-            'From Your Fishing Log', Icons.history_rounded),
+            _l10n.fromYourFishingLog, Icons.history_rounded),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(
@@ -151,7 +159,7 @@ class _SellFishFormState extends State<SellFishForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Tap a recent catch to pre-fill the form',
+                _l10n.tapRecentCatchToFill,
                 style: TextStyle(
                     color: Colors.grey.shade500, fontSize: 12),
               ),
@@ -241,8 +249,8 @@ class _SellFishFormState extends State<SellFishForm> {
   String _fmtDate(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inDays == 0) return 'Today';
-    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays == 0) return _l10n.today;
+    if (diff.inDays == 1) return _l10n.yesterday;
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return '${dt.day}/${dt.month}';
   }
@@ -256,29 +264,29 @@ class _SellFishFormState extends State<SellFishForm> {
         children: [
           // Recent catches suggestion strip (from fishing log)
           _buildRecentCatchesSuggestions(),
-          _buildSectionHeader('Fish Photos', Icons.camera_alt_outlined),
+          _buildSectionHeader(_l10n.fishPhotos, Icons.camera_alt_outlined),
           const SizedBox(height: 10),
           _buildCard([_buildImagePicker()]),
           const SizedBox(height: 24),
-          _buildSectionHeader('Fish Details', Icons.phishing_outlined),
+          _buildSectionHeader(_l10n.fishDetails, Icons.phishing_outlined),
           const SizedBox(height: 10),
           _buildCard([
             _buildDropdown<FishType>(
-              label: 'Fish Type',
+              label: _l10n.fishType,
               initialValue: _selectedFishType,
               items: FishType.values,
               onChanged: (value) => setState(() => _selectedFishType = value!),
-              itemBuilder: (type) => '${type.displayName} (${type.arabicName})',
+              itemBuilder: (type) => type.localizedName(_lang),
             ),
             if (_selectedFishType == FishType.other) ...[
               const SizedBox(height: 16),
               TextFormField(
                 controller: _customFishNameController,
-                decoration: _inputDecoration('Custom Fish Name', Icons.edit_outlined),
+                decoration: _inputDecoration(_l10n.customFishName, Icons.edit_outlined),
                 validator: (value) {
                   if (_selectedFishType == FishType.other &&
                       (value == null || value.isEmpty)) {
-                    return 'Please enter the fish name';
+                    return _l10n.pleaseEnterFishName;
                   }
                   return null;
                 },
@@ -286,11 +294,11 @@ class _SellFishFormState extends State<SellFishForm> {
             ],
             const SizedBox(height: 16),
             _buildDropdown<FishCondition>(
-              label: 'Condition',
+              label: _l10n.condition,
               initialValue: _selectedCondition,
               items: FishCondition.values,
               onChanged: (value) => setState(() => _selectedCondition = value!),
-              itemBuilder: (condition) => condition.displayName,
+              itemBuilder: (condition) => condition.localizedName(_lang),
             ),
             const SizedBox(height: 16),
             Row(
@@ -298,11 +306,12 @@ class _SellFishFormState extends State<SellFishForm> {
                 Expanded(
                   child: TextFormField(
                     controller: _weightController,
-                    decoration: _inputDecoration('Weight (kg)', Icons.scale_outlined),
+                    decoration: _inputDecoration(_l10n.weightKg, Icons.scale_outlined),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (double.tryParse(value) == null) return 'Invalid number';
+                      if (value == null || value.isEmpty) return _l10n.required;
+                      final n = double.tryParse(value);
+                      if (n == null || n <= 0) return _l10n.invalidNumber;
                       return null;
                     },
                   ),
@@ -311,11 +320,12 @@ class _SellFishFormState extends State<SellFishForm> {
                 Expanded(
                   child: TextFormField(
                     controller: _priceController,
-                    decoration: _inputDecoration('Price/kg (BD)', Icons.payments_outlined),
+                    decoration: _inputDecoration(_l10n.pricePerKgBD, Icons.payments_outlined),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (double.tryParse(value) == null) return 'Invalid number';
+                      if (value == null || value.isEmpty) return _l10n.required;
+                      final n = double.tryParse(value);
+                      if (n == null || n <= 0) return _l10n.invalidNumber;
                       return null;
                     },
                   ),
@@ -325,21 +335,21 @@ class _SellFishFormState extends State<SellFishForm> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _catchLocationController,
-              decoration: _inputDecoration('Catch Location (optional)', Icons.location_on_outlined),
+              decoration: _inputDecoration(_l10n.catchLocationOptional, Icons.location_on_outlined),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: _inputDecoration('Description (optional)', Icons.description_outlined),
+              decoration: _inputDecoration(_l10n.descriptionOptional, Icons.description_outlined),
               maxLines: 3,
             ),
           ]),
           const SizedBox(height: 24),
-          _buildSectionHeader('Payment Methods', Icons.payments_outlined),
+          _buildSectionHeader(_l10n.paymentMethods, Icons.payments_outlined),
           const SizedBox(height: 10),
           _buildCard([
             Text(
-              'Select accepted payment methods:',
+              _l10n.selectAcceptedPaymentMethods,
               style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -397,20 +407,20 @@ class _SellFishFormState extends State<SellFishForm> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              method.displayName,
+                              method.localizedName(_lang),
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: isSelected
                                     ? const Color(0xFF0D4F54)
                                     : const Color(0xFF1E293B),
-                                fontSize: 14,
+                                fontSize: _lang == 'ar' ? 16 : 14,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               method == PaymentMethod.cash
-                                  ? 'Accept cash payment'
-                                  : 'Accept Benefit Pay',
+                                  ? _l10n.acceptCashPayment
+                                  : _l10n.acceptBenefitPay,
                               style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                             ),
                           ],
@@ -447,42 +457,66 @@ class _SellFishFormState extends State<SellFishForm> {
                 children: [
                   const Icon(Icons.qr_code_rounded, size: 18, color: Color(0xFF0E7490)),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Benefit Pay QR Code / Payment Info',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF1E293B)),
+                  Text(
+                    _l10n.benefitPayQRCode,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF1E293B)),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               _buildBenefitPayImagePicker(),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(_l10n.or, style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _ibanController,
+                decoration: _inputDecoration(_l10n.ibanOptional, Icons.account_balance_outlined),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _l10n.sellerBenefitNote,
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+              ),
             ],
           ]),
           const SizedBox(height: 24),
-          _buildSectionHeader('Seller Information', Icons.person_outline),
+          _buildSectionHeader(_l10n.sellerInformation, Icons.person_outline),
           const SizedBox(height: 10),
           _buildCard([
             TextFormField(
               controller: _sellerNameController,
-              decoration: _inputDecoration('Your Name', Icons.person_outline),
+              decoration: _inputDecoration(_l10n.yourName, Icons.person_outline),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter your name';
+                if (value == null || value.isEmpty) return _l10n.pleaseEnterYourName;
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _sellerPhoneController,
-              decoration: _inputDecoration('Phone Number', Icons.phone_outlined),
+              decoration: _inputDecoration(_l10n.phoneNumber, Icons.phone_outlined),
               keyboardType: TextInputType.phone,
+              maxLength: 8,
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter your phone number';
+                if (value == null || value.isEmpty) return _l10n.pleaseEnterPhoneNumber;
+                final digits = value.replaceAll(RegExp(r'\D'), '');
+                if (digits.length != 8) return _l10n.phoneEightDigits;
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _sellerLocationController,
-              decoration: _inputDecoration('Your Location (optional)', Icons.location_on_outlined),
+              decoration: _inputDecoration(_l10n.yourLocation, Icons.location_on_outlined),
             ),
           ]),
           const SizedBox(height: 32),
@@ -502,12 +536,12 @@ class _SellFishFormState extends State<SellFishForm> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.add_business_rounded, size: 20),
-                  SizedBox(width: 10),
+                children: [
+                  const Icon(Icons.add_business_rounded, size: 20),
+                  const SizedBox(width: 10),
                   Text(
-                    'Post Listing',
-                    style: TextStyle(
+                    _l10n.postListing,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
@@ -553,7 +587,7 @@ class _SellFishFormState extends State<SellFishForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Add photos of your fish (optional)',
+          _l10n.addPhotosOfFish,
           style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
         ),
         const SizedBox(height: 12),
@@ -630,8 +664,8 @@ class _SellFishFormState extends State<SellFishForm> {
                         color: const Color(0xFF0E7490).withValues(alpha: 0.6),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Add Photo',
+                      Text(
+                        _l10n.addPhoto,
                         style: TextStyle(
                           fontSize: 11,
                           color: Color(0xFF0E7490),
@@ -705,8 +739,8 @@ class _SellFishFormState extends State<SellFishForm> {
           children: [
             Icon(Icons.qr_code_rounded, size: 28, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
             const SizedBox(height: 8),
-            const Text(
-              'Upload Benefit Pay QR Code',
+            Text(
+              _l10n.uploadBenefitPayQRCode,
               style: TextStyle(
                 color: Color(0xFF0E7490),
                 fontWeight: FontWeight.w500,
@@ -714,7 +748,7 @@ class _SellFishFormState extends State<SellFishForm> {
               ),
             ),
             Text(
-              'Buyers will see this when they select Benefit Pay',
+              _l10n.buyersWillSeeThis,
               style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
             ),
           ],
@@ -788,21 +822,21 @@ class _SellFishFormState extends State<SellFishForm> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
-            SizedBox(width: 10),
-            Text('Login Required'),
+            const Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
+            const SizedBox(width: 10),
+            Text(_l10n.loginRequired),
           ],
         ),
-        content: const Text(
-          'You need to sign in to post a listing.\nGuest accounts cannot sell fish.',
-          style: TextStyle(height: 1.5),
+        content: Text(
+          _l10n.guestAccountSellMessage,
+          style: const TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(_l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -819,7 +853,7 @@ class _SellFishFormState extends State<SellFishForm> {
                 (_) => false,
               );
             },
-            child: const Text('Sign In'),
+            child: Text(_l10n.signIn),
           ),
         ],
       ),
@@ -829,6 +863,21 @@ class _SellFishFormState extends State<SellFishForm> {
   void _submitForm() {
     if (widget.isGuest || widget.currentUserId == null) {
       _showLoginRequired();
+      return;
+    }
+
+    // BenefitPay requires at least QR image or IBAN
+    if (_acceptedPayments.contains(PaymentMethod.benefitPay) &&
+        _benefitPayImage == null &&
+        _ibanController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_l10n.ibanOrQrRequired),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
       return;
     }
 
@@ -848,6 +897,11 @@ class _SellFishFormState extends State<SellFishForm> {
             : _descriptionController.text,
         imageUrls: _fishImages,
         benefitPayImageUrl: _benefitPayImage,
+        benefitPayIban: _acceptedPayments.contains(PaymentMethod.benefitPay) &&
+                _ibanController.text.trim().isNotEmpty
+            ? _ibanController.text.trim()
+            : null,
+        fromCatchId: _selectedCatchId,
         catchLocation: _catchLocationController.text.isEmpty
             ? null
             : _catchLocationController.text,
@@ -869,6 +923,7 @@ class _SellFishFormState extends State<SellFishForm> {
       _descriptionController.clear();
       _catchLocationController.clear();
       _customFishNameController.clear();
+      _ibanController.clear();
       setState(() {
         _selectedFishType = FishType.hamour;
         _selectedCondition = FishCondition.fresh;
@@ -876,6 +931,7 @@ class _SellFishFormState extends State<SellFishForm> {
         _acceptedPayments.add(PaymentMethod.cash);
         _fishImages.clear();
         _benefitPayImage = null;
+        _selectedCatchId = null;
       });
     }
   }

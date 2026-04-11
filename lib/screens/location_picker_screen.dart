@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:Bahaar/services/map/navigation_mask.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 
 /// Full-screen map picker. Returns the tapped [LatLng] via [Navigator.pop],
 /// or null if the user cancels.
@@ -98,7 +99,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pick Catch Location'),
-        backgroundColor: const Color(0xFF0D4F54),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         leading: BackButton(
           onPressed: () => Navigator.of(context).pop(null),

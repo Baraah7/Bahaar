@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,6 +6,7 @@ import 'package:Bahaar/models/fishing/trip_model.dart';
 import 'package:Bahaar/services/fishing/trip_service.dart';
 import 'package:Bahaar/screens/location_picker_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
 /// Full-screen view of a single trip. Allows editing and deleting each catch.
 class TripDetailScreen extends StatefulWidget {
@@ -14,7 +15,6 @@ class TripDetailScreen extends StatefulWidget {
   const TripDetailScreen({super.key, required this.trip});
 
   static Future<bool> open(BuildContext context, Trip trip) async {
-    // Returns true if any changes were made (so caller can reload)
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => TripDetailScreen(trip: trip)),
     );
@@ -28,7 +28,7 @@ class TripDetailScreen extends StatefulWidget {
 class _TripDetailScreenState extends State<TripDetailScreen> {
   final _service = TripService.instance;
   late List<CatchEntry> _catches;
-  bool _dirty = false; // track whether caller needs to refresh
+  bool _dirty = false;
 
   @override
   void initState() {
@@ -37,11 +37,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _addCatch() async {
+    final l10n = AppLocalizations.of(context)!;
     final trip = widget.trip;
-    // For finished trips, ask user to pick a time within the trip window
     DateTime? catchTime;
     if (trip.endTime != null) {
-      catchTime = await _pickCatchTime(trip.startTime, trip.endTime!);
+      catchTime = await _pickCatchTime(trip.startTime, trip.endTime!, l10n);
       if (catchTime == null || !mounted) return;
     }
 
@@ -70,38 +70,22 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     });
   }
 
-  /// Shows a time picker constrained between [start] and [end].
-  /// Returns null if cancelled.
-  Future<DateTime?> _pickCatchTime(DateTime start, DateTime end) async {
-    // Default to midpoint of trip
+  Future<DateTime?> _pickCatchTime(DateTime start, DateTime end, AppLocalizations l10n) async {
     final midMinutes = start.difference(end).inMinutes.abs() ~/ 2;
-    final initialTime = TimeOfDay.fromDateTime(
-        start.add(Duration(minutes: midMinutes)));
+    final initialTime = TimeOfDay.fromDateTime(start.add(Duration(minutes: midMinutes)));
 
     if (!mounted) return null;
     final picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
-      helpText: 'Pick catch time (${_fmt(start)} – ${_fmt(end)})',
-      builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.accent,
-            surface: Color(0xFF0D2E31),
-          ),
-        ),
-        child: child!,
-      ),
+      helpText: l10n.pickCatchTime,
     );
     if (picked == null) return null;
 
-    // Compose a DateTime on the same day as the trip start
     final candidate = DateTime(
       start.year, start.month, start.day,
       picked.hour, picked.minute,
     );
-
-    // Clamp to trip window
     if (candidate.isBefore(start)) return start;
     if (candidate.isAfter(end)) return end;
     return candidate;
@@ -144,28 +128,26 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _deleteCatch(CatchEntry entry) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D2E31),
-        title: const Text('Delete catch?',
-            style: TextStyle(color: Colors.white)),
-        content: Text(
-          'Remove "${entry.species}" from this trip?',
-          style: const TextStyle(color: Colors.white70),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.deleteCatch),
+        content: Text(l10n.removeCatchConfirm(entry.species)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent),
-            child: const Text('Delete',
-                style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -181,28 +163,24 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('EEE d MMM yyyy')
-        .format(widget.trip.startTime.toLocal());
-    final startStr = DateFormat('HH:mm')
-        .format(widget.trip.startTime.toLocal());
+    final l10n = AppLocalizations.of(context)!;
+    final dateStr = DateFormat('EEE d MMM yyyy').format(widget.trip.startTime.toLocal());
+    final startStr = _fmt(widget.trip.startTime);
     final endStr = widget.trip.endTime != null
-        ? DateFormat('HH:mm').format(widget.trip.endTime!.toLocal())
-        : 'Ongoing';
-    final totalKg =
-        _catches.fold<double>(0, (s, c) => s + (c.weightKg ?? 0));
+        ? _fmt(widget.trip.endTime!)
+        : l10n.ongoing;
+    final totalKg = _catches.fold<double>(0, (s, c) => s + (c.weightKg ?? 0));
 
     return PopScope(
       canPop: true,
-      onPopInvokedWithResult: (_, __) {
-        // nothing — _dirty is returned via Navigator.pop below
-      },
+      onPopInvokedWithResult: (_, __) {},
       child: Scaffold(
-        backgroundColor: const Color(0xFF0A2025),
+        backgroundColor: const Color(0xFFF4F7F9),
         appBar: AppBar(
-          title: Text(dateStr,
-              style: const TextStyle(fontSize: 16)),
+          title: Text(dateStr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          elevation: 0,
           leading: BackButton(
             onPressed: () => Navigator.of(context).pop(_dirty),
           ),
@@ -210,39 +188,36 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addCatch,
           backgroundColor: AppColors.accent,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Add Catch',
-              style: TextStyle(color: Colors.white)),
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.addCatch),
         ),
         body: Column(
           children: [
             // Trip summary header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 14),
-              color: const Color(0xFF0D2E31),
-              child: Wrap(
-                spacing: 24,
-                runSpacing: 8,
+              color: AppColors.primary,
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Row(
                 children: [
-                  _HeaderStat(
-                      icon: Icons.play_arrow,
-                      label: 'Start',
-                      value: startStr),
-                  _HeaderStat(
-                      icon: Icons.stop,
-                      label: 'End',
-                      value: endStr),
-                  _HeaderStat(
-                      icon: Icons.set_meal,
-                      label: 'Catches',
-                      value: '${_catches.length}'),
-                  if (totalKg > 0)
-                    _HeaderStat(
-                        icon: Icons.scale,
-                        label: 'Total weight',
-                        value: '${totalKg.toStringAsFixed(1)} kg'),
+                  _StatPill(icon: Icons.play_arrow_rounded, label: l10n.tripStart, value: startStr),
+                  const SizedBox(width: 12),
+                  _StatPill(icon: Icons.stop_rounded, label: l10n.tripEnd, value: endStr),
+                  const SizedBox(width: 12),
+                  _StatPill(
+                    icon: Icons.set_meal_rounded,
+                    label: l10n.catchWord,
+                    value: '${_catches.length}',
+                  ),
+                  if (totalKg > 0) ...[
+                    const SizedBox(width: 12),
+                    _StatPill(
+                      icon: Icons.scale_rounded,
+                      label: l10n.totalWeight,
+                      value: '${totalKg.toStringAsFixed(1)} kg',
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -250,27 +225,63 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             // Catches list
             Expanded(
               child: _catches.isEmpty
-                  ? const Center(
-                      child: Text('No catches logged.',
-                          style: TextStyle(
-                              color: Colors.white38, fontSize: 15)),
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.set_meal_rounded, size: 48, color: Colors.grey.shade300),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.noCatchesLogged,
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                          ),
+                        ],
+                      ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       itemCount: _catches.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 8),
-                      itemBuilder: (_, i) =>
-                          _CatchCard(
-                            entry: _catches[i],
-                            onEdit: () => _editCatch(_catches[i]),
-                            onDelete: () => _deleteCatch(_catches[i]),
-                          ),
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) => _CatchCard(
+                        entry: _catches[i],
+                        onEdit: () => _editCatch(_catches[i]),
+                        onDelete: () => _deleteCatch(_catches[i]),
+                      ),
                     ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Stat pill ─────────────────────────────────────────────────────────────────
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _StatPill({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white70, size: 16),
+          const SizedBox(height: 3),
+          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 10)),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+        ],
       ),
     );
   }
@@ -283,40 +294,38 @@ class _CatchCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _CatchCard({
-    required this.entry,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const _CatchCard({required this.entry, required this.onEdit, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
-    final timeStr =
-        DateFormat('HH:mm').format(entry.timestamp.toLocal());
+    final timeStr = DateFormat('HH:mm').format(entry.timestamp.toLocal());
 
-    return Card(
-      color: const Color(0xFF0D2E31),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
-            // Fish icon
             Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.25),
-                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.set_meal,
-                  color: Color(0xFF4FC3F7), size: 20),
+              child: Icon(Icons.set_meal_rounded, color: AppColors.primary, size: 22),
             ),
             const SizedBox(width: 12),
-
-            // Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,42 +333,28 @@ class _CatchCard extends StatelessWidget {
                   Text(
                     entry.species,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                      fontWeight: FontWeight.w700,
                       fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Row(
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 10,
                     children: [
-                      if (entry.weightKg != null) ...[
-                        const Icon(Icons.scale,
-                            color: Colors.white38, size: 12),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${entry.weightKg!.toStringAsFixed(1)} kg',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 12),
+                      if (entry.weightKg != null)
+                        _InfoChip(
+                          icon: Icons.scale_rounded,
+                          label: '${entry.weightKg!.toStringAsFixed(1)} kg',
                         ),
-                        const SizedBox(width: 10),
-                      ],
-                      const Icon(Icons.access_time,
-                          color: Colors.white38, size: 12),
-                      const SizedBox(width: 3),
-                      Text(
-                        timeStr,
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 12),
-                      ),
+                      _InfoChip(icon: Icons.access_time_rounded, label: timeStr),
                     ],
                   ),
-                  if (entry.notes != null &&
-                      entry.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 3),
+                  if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
                     Text(
                       entry.notes!,
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 11),
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -367,40 +362,30 @@ class _CatchCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(Icons.location_on,
-                          color: Colors.white24, size: 12),
+                      Icon(Icons.location_on_rounded, color: Colors.grey.shade400, size: 12),
                       const SizedBox(width: 3),
                       Text(
-                        '${entry.latitude.toStringAsFixed(4)}, '
-                        '${entry.longitude.toStringAsFixed(4)}',
-                        style: const TextStyle(
-                            color: Colors.white24, fontSize: 11),
+                        '${entry.latitude.toStringAsFixed(4)}, ${entry.longitude.toStringAsFixed(4)}',
+                        style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-
-            // Actions
             Column(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined,
-                      color: AppColors.accent, size: 20),
+                  icon: Icon(Icons.edit_outlined, color: AppColors.accent, size: 20),
                   onPressed: onEdit,
-                  tooltip: 'Edit',
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
-                const SizedBox(height: 8),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      color: Colors.redAccent, size: 20),
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                   onPressed: onDelete,
-                  tooltip: 'Delete',
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
               ],
             ),
@@ -411,35 +396,19 @@ class _CatchCard extends StatelessWidget {
   }
 }
 
-// ── Header stat ───────────────────────────────────────────────────────────────
-
-class _HeaderStat extends StatelessWidget {
+class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
-  const _HeaderStat(
-      {required this.icon, required this.label, required this.value});
+  const _InfoChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white38, size: 14),
-        const SizedBox(width: 4),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white38, fontSize: 10)),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
+        Icon(icon, size: 12, color: Colors.grey.shade400),
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
       ],
     );
   }
@@ -457,7 +426,6 @@ class _CatchEditResult {
 }
 
 class _CatchEditSheet extends StatefulWidget {
-  /// Non-null when editing an existing catch; null when adding a new one.
   final CatchEntry? entry;
   const _CatchEditSheet({required this.entry});
 
@@ -475,7 +443,17 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
 
   bool _mapPinned = false;
 
-  static const _quickSpecies = [
+  static const _quickSpeciesKeys = [
+    'quickSpeciesHamour',
+    'quickSpeciesSafi',
+    'quickSpeciesSobaity',
+    'quickSpeciesChanad',
+    'quickSpeciesZubaidi',
+    'quickSpeciesShrimp',
+    'quickSpeciesCrab',
+  ];
+
+  static const _quickSpeciesValues = [
     'Hamour', 'Safi', 'Sobaity', 'Chanad', 'Zubaidi', 'Shrimp', 'Crab',
   ];
 
@@ -511,8 +489,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
 
   Future<void> _pickOnMap() async {
     final current = _parseLocation();
-    final picked =
-        await LocationPickerScreen.open(context, initial: current);
+    final picked = await LocationPickerScreen.open(context, initial: current);
     if (picked != null && mounted) {
       setState(() {
         _latCtrl.text = picked.latitude.toStringAsFixed(6);
@@ -522,27 +499,39 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
     }
   }
 
+  String _localizedSpecies(AppLocalizations l10n, int index) {
+    switch (_quickSpeciesKeys[index]) {
+      case 'quickSpeciesHamour':   return l10n.quickSpeciesHamour;
+      case 'quickSpeciesSafi':     return l10n.quickSpeciesSafi;
+      case 'quickSpeciesSobaity':  return l10n.quickSpeciesSobaity;
+      case 'quickSpeciesChanad':   return l10n.quickSpeciesChanad;
+      case 'quickSpeciesZubaidi':  return l10n.quickSpeciesZubaidi;
+      case 'quickSpeciesShrimp':   return l10n.quickSpeciesShrimp;
+      case 'quickSpeciesCrab':     return l10n.quickSpeciesCrab;
+      default:                     return _quickSpeciesValues[index];
+    }
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(_CatchEditResult(
       species: _speciesCtrl.text.trim(),
       weightKg: double.tryParse(_weightCtrl.text.trim()),
-      notes: _notesCtrl.text.trim().isEmpty
-          ? null
-          : _notesCtrl.text.trim(),
+      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       location: _parseLocation(),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D2E31),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottom),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottom),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -555,58 +544,54 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                 child: Container(
                   width: 36, height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              Text(widget.entry == null ? 'Add Catch' : 'Edit Catch',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                widget.entry == null ? l10n.addCatch : l10n.editCatch,
+                style: const TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
 
               // Quick species chips
               Wrap(
                 spacing: 8, runSpacing: 6,
-                children: _quickSpecies.map((s) {
+                children: List.generate(_quickSpeciesKeys.length, (i) {
+                  final label = _localizedSpecies(l10n, i);
                   return ActionChip(
-                    label: Text(s,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12)),
-                    backgroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.accent),
-                    onPressed: () =>
-                        setState(() => _speciesCtrl.text = s),
+                    label: Text(label,
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF0D4F54))),
+                    backgroundColor: const Color(0xFF0D4F54).withValues(alpha: 0.08),
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                    onPressed: () => setState(() => _speciesCtrl.text = label),
                   );
-                }).toList(),
+                }),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Species
               TextFormField(
                 controller: _speciesCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Species *', Icons.set_meal),
+                decoration: _dec(l10n.speciesName, Icons.set_meal_rounded),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty)
-                        ? 'Enter species name'
-                        : null,
+                    (v == null || v.trim().isEmpty) ? '!' : null,
               ),
               const SizedBox(height: 12),
 
               // Weight
               TextFormField(
                 controller: _weightCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Weight (kg)', Icons.scale),
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
+                decoration: _dec('Weight (kg)', Icons.scale_rounded),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d*\.?\d*'))
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
                 ],
               ),
               const SizedBox(height: 12),
@@ -614,8 +599,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
               // Notes
               TextFormField(
                 controller: _notesCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Notes (optional)', Icons.notes),
+                decoration: _dec(l10n.notesOptional, Icons.notes_rounded),
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
@@ -623,25 +607,24 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
               // Location row
               Row(
                 children: [
-                  const Icon(Icons.location_on,
-                      color: Colors.white54, size: 16),
+                  Icon(Icons.location_on_rounded, color: Colors.grey.shade500, size: 16),
                   const SizedBox(width: 6),
-                  const Text('Catch Location',
-                      style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    'Catch Location',
+                    style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: _pickOnMap,
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.map_outlined,
-                            color: AppColors.accent, size: 14),
-                        SizedBox(width: 4),
-                        Text('Pin on Map',
-                            style: TextStyle(
-                                color: AppColors.accent, fontSize: 11)),
+                        Icon(Icons.map_outlined, color: AppColors.accent, size: 14),
+                        const SizedBox(width: 4),
+                        Text(l10n.pinOnMap,
+                            style: TextStyle(color: AppColors.accent, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -653,21 +636,16 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                   Expanded(
                     child: TextFormField(
                       controller: _latCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _dec('Latitude', null),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
+                      decoration: _dec(l10n.latitude, null),
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
+                        FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*'))
                       ],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return null;
                         final d = double.tryParse(v.trim());
-                        if (d == null || d < -90 || d > 90) {
-                          return 'Invalid';
-                        }
+                        if (d == null || d < -90 || d > 90) return '!';
                         return null;
                       },
                     ),
@@ -676,21 +654,16 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                   Expanded(
                     child: TextFormField(
                       controller: _lonCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _dec('Longitude', null),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
+                      decoration: _dec(l10n.longitude, null),
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
+                        FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*'))
                       ],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return null;
                         final d = double.tryParse(v.trim());
-                        if (d == null || d < -180 || d > 180) {
-                          return 'Invalid';
-                        }
+                        if (d == null || d < -180 || d > 180) return '!';
                         return null;
                       },
                     ),
@@ -699,9 +672,8 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
               ),
               if (_mapPinned) ...[
                 const SizedBox(height: 4),
-                const Text('Location pinned on map.',
-                    style: TextStyle(
-                        color: Colors.white38, fontSize: 10)),
+                Text(l10n.locationPinned,
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 10)),
               ],
               const SizedBox(height: 20),
 
@@ -710,13 +682,12 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _submit,
-                  icon: Icon(widget.entry == null ? Icons.add : Icons.save),
-                  label: Text(widget.entry == null ? 'Add Catch' : 'Save Changes'),
+                  icon: Icon(widget.entry == null ? Icons.add : Icons.save_rounded),
+                  label: Text(widget.entry == null ? l10n.addCatch : l10n.saveChanges),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
@@ -732,22 +703,21 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
   InputDecoration _dec(String label, IconData? icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white54),
+      labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
       prefixIcon: icon != null
-          ? Icon(icon, color: Colors.white38, size: 20)
+          ? Icon(icon, color: Colors.grey.shade400, size: 20)
           : null,
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
+      fillColor: const Color(0xFFF1F5F9),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.accent),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      errorStyle: const TextStyle(
-          color: Colors.orangeAccent, fontSize: 10),
+      errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 10),
     );
   }
 }

@@ -50,13 +50,13 @@ class AuthBlobsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _blob(canvas, size, 0.10, 0.08, 0.75, const Color(0xFF4ECBD8));
+    _blob(canvas, size, 0.10, 0.15, 0.55, const Color(0xFF1E7A8E));
     _blob(canvas, size, 0.92, 0.05, 0.70, const Color(0xFF162D5A));
     _blob(canvas, size, 0.15, 0.48, 0.65, const Color(0xFF1E8EA4));
     _blob(canvas, size, 0.88, 0.40, 0.60, const Color(0xFF17406A));
     _blob(canvas, size, 0.50, 0.80, 0.70, const Color(0xFF29B8C8));
     _blob(canvas, size, 0.90, 0.90, 0.55, const Color(0xFF0F2040));
-    _blob(canvas, size, 0.38, 0.12, 0.50, const Color(0xFFAADDE6));
+    _blob(canvas, size, 0.38, 0.18, 0.45, const Color(0xFF155E75));
   }
 
   @override

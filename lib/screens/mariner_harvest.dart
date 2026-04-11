@@ -26,6 +26,14 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   late FishMarketplaceService _marketplaceService;
   List<CatchEntry> _recentCatches = [];
 
+  List<CatchEntry> get _filteredCatches {
+    final usedIds = _marketplaceService.listings
+        .where((l) => l.fromCatchId != null)
+        .map((l) => l.fromCatchId!)
+        .toSet();
+    return _recentCatches.where((c) => !usedIds.contains(c.id)).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,12 +49,25 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
 
   Future<void> _loadRecentCatches() async {
     try {
+      // Load from local SQLite
       final trips = await TripService.instance.getAllTrips();
-      // Flatten all catches, sort newest first, keep last 20
-      final all = trips
-          .expand((t) => t.catches)
-          .toList()
+      final local = trips.expand((t) => t.catches).toList();
+
+      // Load from Firestore (account-based, works across devices)
+      final remote = await TripService.instance.fetchCatchesFromFirestore();
+
+      // Merge: deduplicate by ID, local takes precedence
+      final merged = <String, CatchEntry>{};
+      for (final c in remote) {
+        merged[c.id] = c;
+      }
+      for (final c in local) {
+        merged[c.id] = c;
+      }
+
+      final all = merged.values.toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
       if (mounted) {
         setState(() => _recentCatches = all.take(20).toList());
       }
@@ -97,25 +118,27 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     marketplaceService: _marketplaceService,
                     onFishTap: (listing) => _showFishDetails(listing),
                   ),
-                  Container(
-                    color: Colors.grey.shade50,
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      child: SellFishForm(
-                        currentUserId: user?.id,
-                        isGuest: authProvider.isGuest,
-                        currentUserName: fullName?.isNotEmpty == true
-                            ? fullName
-                            : user?.userName,
-                        currentUserPhone: user?.phone,
-                        currentUserLocation: user?.location,
-                        recentCatches: _recentCatches,
-                        onSubmit: (listing) =>
-                            _onListingSubmitted(listing, l10n),
-                      ),
-                    ),
-                  ),
+                  authProvider.isGuest
+                      ? _buildGuestLocked(l10n)
+                      : Container(
+                          color: Colors.grey.shade50,
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            child: SellFishForm(
+                              currentUserId: user?.id,
+                              isGuest: false,
+                              currentUserName: fullName?.isNotEmpty == true
+                                  ? fullName
+                                  : user?.userName,
+                              currentUserPhone: user?.phone,
+                              currentUserLocation: user?.location,
+                              recentCatches: _filteredCatches,
+                              onSubmit: (listing) =>
+                                  _onListingSubmitted(listing, l10n),
+                            ),
+                          ),
+                        ),
                   Container(
                     color: Colors.grey.shade50,
                     child: OrdersTab(
@@ -127,6 +150,60 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuestLocked(AppLocalizations l10n) {
+    return Container(
+      color: Colors.grey.shade50,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.lock_outline_rounded,
+                    size: 48, color: AppColors.primary),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.signInToSell,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => ref.read(authProviderProvider).logout(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text(
+                    l10n.logIn,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -148,38 +225,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
         bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.sailing_rounded, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.marinerHarvest,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 12),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -272,6 +318,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                 paymentProofImage) =>
             _processPurchase(listing, paymentMethod, buyerName, buyerPhone,
                 buyerLocation, paymentProofImage),
+        onDelete: () => _deleteListing(listing),
       ),
     );
   }
@@ -286,11 +333,13 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   ) async {
     final authProvider = ref.read(authProviderProvider);
     final user = authProvider.currentAppUser;
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please login to place an order'),
+          content: Text(l10n.pleaseLoginToOrder),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -312,79 +361,83 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     );
 
     if (mounted) {
+      final fishName = lang == 'ar' ? listing.fishType.arabicName : listing.displayName;
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(12),
+        builder: (ctx) {
+          final dl10n = AppLocalizations.of(ctx)!;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 28),
                 ),
-                child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 28),
-              ),
-              const SizedBox(width: 12),
-              const Text('Order Placed!', style: TextStyle(fontSize: 20)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('You have ordered ${listing.displayName}',
-                  style: const TextStyle(fontSize: 15)),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _buildDialogRow('Weight', '${listing.weight.toStringAsFixed(1)} kg'),
-                    const Divider(height: 16),
-                    _buildDialogRow('Total', '${listing.totalPrice.toStringAsFixed(2)} BD'),
-                    const Divider(height: 16),
-                    _buildDialogRow('Payment', paymentMethod.displayName),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Waiting for seller to accept your order.',
-                style: TextStyle(
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey.shade600,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                const SizedBox(width: 12),
+                Text(dl10n.orderPlacedTitle, style: const TextStyle(fontSize: 20)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(dl10n.youHaveOrderedFish(fishName),
+                    style: const TextStyle(fontSize: 15)),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDialogRow(dl10n.weight, '${listing.weight.toStringAsFixed(1)} ${dl10n.kgUnit}'),
+                      const Divider(height: 16),
+                      _buildDialogRow(dl10n.total, '${listing.totalPrice.toStringAsFixed(2)} ${dl10n.bdUnit}'),
+                      const Divider(height: 16),
+                      _buildDialogRow(dl10n.payment, paymentMethod.localizedName(Localizations.localeOf(ctx).languageCode)),
+                    ],
                   ),
                 ),
-                child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
+                const SizedBox(height: 12),
+                Text(
+                  dl10n.waitingForSellerToAccept,
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() {});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(dl10n.done, style: const TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
   }
@@ -397,6 +450,23 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
         Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       ],
     );
+  }
+
+  Future<void> _deleteListing(FishListing listing) async {
+    await _marketplaceService.removeListing(listing.id);
+    if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listingDeleted),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      setState(() {});
+    }
   }
 
   Future<void> _onListingSubmitted(

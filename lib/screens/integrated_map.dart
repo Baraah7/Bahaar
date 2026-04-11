@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
@@ -498,6 +499,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   void _handleMapTap(TapPosition tapPosition, LatLng point) {
     if (!_maskInitialized) return;
+    final l10n = AppLocalizations.of(context)!;
 
     // Handle feature edit mode
     if (_layerManager.isFeatureEditMode) {
@@ -528,8 +530,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
     if (_navMode == _NavMode.seaToSea) {
       if (!isNavigable) {
         final msg = isOutsideBounds
-            ? 'Outside territorial waters — tap on the sea'
-            : 'Tap on the sea, not on land';
+            ? l10n.outsideTerritorialWaters
+            : l10n.tapOnSea;
         setState(() {
           _outsideMaskWarning = msg;
           _outsideMaskWarningDismissed = false;
@@ -545,7 +547,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
       if (_seaOrigin == null) {
         setState(() => _seaOrigin = point);
-        _showMessage('Departure set. Now tap your sea destination.', Colors.blue);
+        _showMessage(l10n.departureSet, Colors.blue);
       } else {
         setState(() => _seaDestination = point);
         _calculateSeaToSeaRoute();
@@ -584,8 +586,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
           return;
         }
         final msg = isOutsideBounds
-            ? 'Outside territorial waters'
-            : _seaToLandOrigin == null ? 'Tap on the sea first' : 'Tap on the sea';
+            ? l10n.outsideTerritorialWaters
+            : l10n.tapOnSea;
         setState(() {
           _outsideMaskWarning = msg;
           _outsideMaskWarningDismissed = false;
@@ -601,7 +603,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
       if (_seaToLandOrigin == null) {
         setState(() => _seaToLandOrigin = point);
-        _showMessage('Departure set. Select a port, then tap your land destination.', Colors.blue);
+        _showMessage(l10n.seaDepartureSet, Colors.blue);
       }
       return;
     }
@@ -624,15 +626,15 @@ class _IntegratedMapState extends State<IntegratedMap> {
       // Land tap: allow setting a custom land origin
       if (_navMode == _NavMode.landToSea) {
         setState(() => _customLandOrigin = point);
-        _showMessage('Land origin updated. Now tap a port and sea destination.', Colors.blue);
+        _showMessage(l10n.customOriginSet, Colors.blue);
       }
       return;
     }
 
     if (!isNavigable) {
       final msg = isOutsideBounds
-          ? 'Outside territorial waters — cannot pin a destination here'
-          : 'Cannot pin a destination on land';
+          ? l10n.outsideTerritorialWaters
+          : l10n.tapOnSea;
       setState(() {
         _outsideMaskWarning = msg;
         _outsideMaskWarningDismissed = false;
@@ -655,7 +657,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
       if (_selectedPort != null) {
         _calculatePortToSeaRoute();
       } else {
-        _showMessage('Destination set. Now tap a port on the map to start from.', Colors.blue);
+        _showMessage(l10n.stepTapPort, Colors.blue);
       }
       return;
     }
@@ -1042,21 +1044,28 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   Future<void> _calculatePortToSeaRoute() async {
     if (_selectedPort == null || _seaDestination == null) {
-      _showMessage('Please select both port and sea destination', Colors.orange);
+      final l10n = AppLocalizations.of(context)!;
+      _showMessage(l10n.stepTapPort, Colors.orange);
       return;
     }
 
-    // Use custom land origin if set, otherwise fall back to GPS
-    final LatLng? gpsLocation = _locationData == null
-        ? null
-        : LatLng(
-            _locationData!.latitude ?? MapConstants.defaultLatitude,
-            _locationData!.longitude ?? MapConstants.defaultLongitude,
-          );
+    // Use custom land origin if set, otherwise fall back to GPS (only if on land)
+    LatLng? gpsLocation;
+    if (_locationData != null) {
+      final candidate = LatLng(
+        _locationData!.latitude ?? MapConstants.defaultLatitude,
+        _locationData!.longitude ?? MapConstants.defaultLongitude,
+      );
+      // Only use GPS as land origin if it is actually on land (not navigable water)
+      if (!_maskInitialized || !_navigationMask.isPointNavigable(candidate)) {
+        gpsLocation = candidate;
+      }
+    }
     final landOrigin = _customLandOrigin ?? gpsLocation;
 
     if (landOrigin == null) {
-      _showMessage('Current location not available', Colors.orange);
+      final l10n = AppLocalizations.of(context)!;
+      _showMessage(l10n.currentLocationOnLandRequired, Colors.orange);
       return;
     }
 
@@ -1188,6 +1197,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   /// Show bottom sheet to let user choose which navigation mode to start.
   void _openNavModeSelection() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1200,15 +1210,15 @@ class _IntegratedMapState extends State<IntegratedMap> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Choose Navigation Type',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                l10n.chooseNavType,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _NavModeOption(
                 icon: Icons.directions_boat,
-                title: 'Land → Port → Sea',
-                subtitle: 'Drive to a port, then navigate to a sea destination',
+                title: l10n.landToSea,
+                subtitle: l10n.landToSeaSubtitle,
                 onTap: () {
                   Navigator.pop(ctx);
                   _startLandToSeaMode();
@@ -1217,8 +1227,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
               const SizedBox(height: 8),
               _NavModeOption(
                 icon: Icons.waves,
-                title: 'Sea → Sea',
-                subtitle: 'Navigate directly between two sea points',
+                title: l10n.seaToSea,
+                subtitle: l10n.seaToSeaSubtitle,
                 onTap: () {
                   Navigator.pop(ctx);
                   _startSeaToSeaMode();
@@ -1227,8 +1237,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
               const SizedBox(height: 8),
               _NavModeOption(
                 icon: Icons.home,
-                title: 'Return: Sea → Port → Land',
-                subtitle: 'Return from sea, dock at a port, navigate home',
+                title: l10n.returnSeaToLand,
+                subtitle: l10n.returnSeaToLandSubtitle,
                 onTap: () {
                   Navigator.pop(ctx);
                   _startSeaToLandMode();
@@ -1260,7 +1270,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
       _seaOrigin = null;
       _seaDestination = null;
     });
-    _showMessage('Tap your departure point on the sea', Colors.blue);
+    _showMessage(AppLocalizations.of(context)!.tapSeaDeparture, Colors.blue);
   }
 
   void _startSeaToLandMode() {
@@ -1950,16 +1960,16 @@ class _IntegratedMapState extends State<IntegratedMap> {
               final isSelected = _selectedPort?.id == port.id;
               return Marker(
                 point: port.location,
-                width: 60,
-                height: 80,
+                width: 52,
+                height: 68,
                 child: GestureDetector(
                   onTap: () => _handlePortSelected(port),
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(9),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.green : Colors.deepPurple,
+                          color: isSelected ? Colors.green : AppColors.red,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: Colors.white,
@@ -1975,7 +1985,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                         child: const Icon(
                           Icons.anchor,
                           color: Colors.white,
-                          size: 24,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -2314,7 +2324,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     required String tooltip,
     VoidCallback? onPressed,
     bool isActive = false,
-    Color activeColor = Colors.blue,
+    Color activeColor = AppColors.red,
   }) {
     final iconColor = onPressed == null
         ? Colors.grey.shade400
@@ -2495,29 +2505,41 @@ class _IntegratedMapState extends State<IntegratedMap> {
             child: _buildNavigationStatusIndicator(l10n),
           ),
 
-          // Layer controls panel (top left, when visible)
+          // Layer controls panel (top right, with outside-tap dismissal)
           ListenableBuilder(
             listenable: _layerManager,
             builder: (context, _) {
               if (_layerManager.showLayerControls) {
-                return Positioned(
-                  top: 10,
-                  left: 10,
-                  child: LayerControlPanel(
-                    layerManager: _layerManager,
-                    geoJsonBuilder: _geoJsonBuilder,
-                    maskInitialized: _maskInitialized,
-                    onClose: () => _layerManager.showLayerControls = false,
-                    onEnterAdminEdit: _enterAdminEditMode,
-                    onEnterFeatureEdit: _enterFeatureEditMode,
-                    onEnterOutlineEdit: _enterOutlineEditMode,
-                    onOpenPrediction: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PredictionScreen(),
+                return Stack(
+                  children: [
+                    // Transparent barrier to dismiss on outside tap
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () => _layerManager.showLayerControls = false,
+                        behavior: HitTestBehavior.translucent,
+                        child: const SizedBox.expand(),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: LayerControlPanel(
+                        layerManager: _layerManager,
+                        geoJsonBuilder: _geoJsonBuilder,
+                        maskInitialized: _maskInitialized,
+                        onClose: () => _layerManager.showLayerControls = false,
+                        onEnterAdminEdit: _enterAdminEditMode,
+                        onEnterFeatureEdit: _enterFeatureEditMode,
+                        onEnterOutlineEdit: _enterOutlineEditMode,
+                        onOpenPrediction: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PredictionScreen(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -2761,10 +2783,10 @@ class _IntegratedMapState extends State<IntegratedMap> {
                         const SizedBox(width: 6),
                         Text(
                           _navMode == _NavMode.seaToSea
-                              ? 'Sea → Sea'
+                              ? l10n.seaToSea
                               : _navMode == _NavMode.seaToLand
-                                  ? 'Return: Sea → Port → Land'
-                                  : 'Land → Port → Sea',
+                                  ? l10n.returnSeaToLand
+                                  : l10n.landToSea,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -2777,50 +2799,50 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     Text(
                       _navMode == _NavMode.seaToSea
                           ? _seaOrigin == null
-                              ? '1. Tap your departure point on the sea'
+                              ? l10n.stepTapSeaDeparture
                               : _seaDestination == null
-                                  ? '2. Tap your sea destination'
+                                  ? l10n.stepTapSeaDestination
                                   : l10n.calculatingRoute
                           : _navMode == _NavMode.seaToLand
                               ? _seaToLandOrigin == null
-                                  ? '1. Tap your sea departure point'
+                                  ? l10n.stepTapSeaDeparture
                                   : _selectedPort == null
-                                      ? '2. Tap a port (anchor icon) to dock at'
+                                      ? l10n.stepTapPortDock
                                       : _customLandDestination == null
-                                          ? '3. Tap your land destination'
+                                          ? l10n.stepTapLandDestination
                                           : l10n.calculatingRoute
                               // landToSea
                               : _selectedPort == null
-                                  ? '1. Tap a port (anchor icon)\n2. Tap sea destination\n(Tap land to change your start location)'
+                                  ? l10n.stepTapPort
                                   : _seaDestination == null
-                                      ? '2. Tap your sea destination'
+                                      ? l10n.stepTapSeaDestination
                                       : l10n.calculatingRoute,
                       style: const TextStyle(fontSize: 12),
                     ),
                     // Confirmed steps summary
                     if (_navMode == _NavMode.landToSea && _customLandOrigin != null) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.location_on, 'Custom origin set'),
+                      _buildStepChip(Icons.location_on, l10n.customOriginSet),
                     ],
                     if (_seaOrigin != null && _navMode == _NavMode.seaToSea) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.radio_button_checked, 'Departure set'),
+                      _buildStepChip(Icons.radio_button_checked, l10n.departureSet),
                     ],
                     if (_seaToLandOrigin != null && _navMode == _NavMode.seaToLand) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.radio_button_checked, 'Sea departure set'),
+                      _buildStepChip(Icons.radio_button_checked, l10n.seaDepartureSet),
                     ],
                     if (_selectedPort != null) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.anchor, 'Port: ${_selectedPort!.name}'),
+                      _buildStepChip(Icons.anchor, '${l10n.portLabel}: ${_selectedPort!.name}'),
                     ],
                     if (_returnPort != null && _navMode == _NavMode.seaToLand && _selectedPort == null) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.history, 'Last port: ${_returnPort!.name} (tap to reuse)'),
+                      _buildStepChip(Icons.history, '${l10n.lastPort}: ${_returnPort!.name}'),
                     ],
                     if (_customLandDestination != null) ...[
                       const SizedBox(height: 6),
-                      _buildStepChip(Icons.home, 'Land destination set'),
+                      _buildStepChip(Icons.home, l10n.landDestinationSet),
                     ],
                   ],
                 ),
@@ -2920,13 +2942,13 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     color: Colors.red.shade700.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.wifi_off, color: Colors.white, size: 14),
-                      SizedBox(width: 6),
-                      Text('Offline — map tiles cached',
-                          style: TextStyle(color: Colors.white, fontSize: 12)),
+                      const Icon(Icons.wifi_off, color: Colors.white, size: 14),
+                      const SizedBox(width: 6),
+                      Text(l10n.offlineMapCached,
+                          style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -2944,7 +2966,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 backgroundColor: const Color(0xFF0D4F54),
                 foregroundColor: Colors.white,
                 icon: const Icon(Icons.add_circle_outline),
-                label: const Text('تسجيل صيدة'),
+                label: Text(l10n.logCatch),
               ),
             ),
 

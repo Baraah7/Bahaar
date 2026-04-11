@@ -46,6 +46,9 @@ enum FishType {
         return 'أخرى';
     }
   }
+
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
 }
 
 enum FishCondition {
@@ -66,6 +69,23 @@ enum FishCondition {
         return 'Filleted';
     }
   }
+
+  String get arabicName {
+    switch (this) {
+      case FishCondition.fresh:
+        return 'طازج';
+      case FishCondition.frozen:
+        return 'مثلج';
+      case FishCondition.cleaned:
+        return 'نظيف';
+      case FishCondition.filleted:
+        return 'شرائح';
+    }
+  }
+
+  /// Returns locale-aware display name.
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
 }
 
 enum PaymentMethod {
@@ -80,6 +100,18 @@ enum PaymentMethod {
         return 'Benefit Pay';
     }
   }
+
+  String get arabicName {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'نقداً';
+      case PaymentMethod.benefitPay:
+        return 'بنفت باي';
+    }
+  }
+
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
 }
 
 enum ListingStatus {
@@ -113,6 +145,9 @@ class FishListing {
   final String? description;
   final List<String> imageUrls;
   final String? benefitPayImageUrl;
+  final String? benefitPayIban;
+  /// ID of the CatchEntry this listing was created from (for suggestion filtering).
+  final String? fromCatchId;
   final String sellerId;
   final String sellerName;
   final String sellerPhone;
@@ -133,6 +168,8 @@ class FishListing {
     this.description,
     this.imageUrls = const [],
     this.benefitPayImageUrl,
+    this.benefitPayIban,
+    this.fromCatchId,
     required this.sellerId,
     required this.sellerName,
     required this.sellerPhone,
@@ -182,6 +219,8 @@ class FishListing {
               .toList() ??
           [],
       benefitPayImageUrl: data['benefitPayImageUrl'] as String?,
+      benefitPayIban: data['benefitPayIban'] as String?,
+      fromCatchId: data['fromCatchId'] as String?,
       sellerId: data['sellerId'] as String,
       sellerName: data['sellerName'] as String,
       sellerPhone: data['sellerPhone'] as String,
@@ -210,6 +249,8 @@ class FishListing {
       'description': description,
       'imageUrls': imageUrls,
       'benefitPayImageUrl': benefitPayImageUrl,
+      'benefitPayIban': benefitPayIban,
+      'fromCatchId': fromCatchId,
       'sellerId': sellerId,
       'sellerName': sellerName,
       'sellerPhone': sellerPhone,
@@ -233,6 +274,8 @@ class FishListing {
     String? description,
     List<String>? imageUrls,
     String? benefitPayImageUrl,
+    String? benefitPayIban,
+    String? fromCatchId,
     String? sellerId,
     String? sellerName,
     String? sellerPhone,
@@ -253,6 +296,8 @@ class FishListing {
       description: description ?? this.description,
       imageUrls: imageUrls ?? this.imageUrls,
       benefitPayImageUrl: benefitPayImageUrl ?? this.benefitPayImageUrl,
+      benefitPayIban: benefitPayIban ?? this.benefitPayIban,
+      fromCatchId: fromCatchId ?? this.fromCatchId,
       sellerId: sellerId ?? this.sellerId,
       sellerName: sellerName ?? this.sellerName,
       sellerPhone: sellerPhone ?? this.sellerPhone,

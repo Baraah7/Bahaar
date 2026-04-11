@@ -4,8 +4,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../app_start.dart';
+import '../../l10n/app_localizations.dart';
 import 'buildSellerCard.dart';
 import 'buildPaymentOption.dart';
+
+/// Returns the right ImageProvider depending on whether the path is a
+/// remote https:// URL (Firebase Storage) or a local file path.
+ImageProvider _resolveImage(String path) {
+  if (path.startsWith('http')) return NetworkImage(path);
+  return FileImage(File(path));
+}
 
 class FishDetailsSheet extends StatefulWidget {
   final FishListing listing;
@@ -15,6 +23,7 @@ class FishDetailsSheet extends StatefulWidget {
   final String? currentUserLocation;
   final bool isGuest;
   final Function(PaymentMethod, String, String, String?, String?) onBuy;
+  final VoidCallback? onDelete;
 
   const FishDetailsSheet({
     super.key,
@@ -25,6 +34,7 @@ class FishDetailsSheet extends StatefulWidget {
     this.currentUserLocation,
     this.isGuest = false,
     required this.onBuy,
+    this.onDelete,
   });
 
   @override
@@ -32,6 +42,16 @@ class FishDetailsSheet extends StatefulWidget {
 }
 
 class _FishDetailsSheetState extends State<FishDetailsSheet> {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  String _n(String value) {
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang != 'ar') return value;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value.replaceAllMapped(
+        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
+  }
+
   PaymentMethod? _selectedPayment;
   late TextEditingController _buyerNameController;
   late TextEditingController _buyerPhoneController;
@@ -111,12 +131,12 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                     children: [
                       _buildDetailsCard(),
                       const SizedBox(height: 20),
-                      _buildSectionHeader('Seller Information', Icons.store_outlined),
+                      _buildSectionHeader(_l10n.sellerInformation, Icons.store_outlined),
                       const SizedBox(height: 10),
                       _buildSellerCard(),
                       if (widget.listing.description != null) ...[
                         const SizedBox(height: 20),
-                        _buildSectionHeader('Description', Icons.description_outlined),
+                        _buildSectionHeader(_l10n.description, Icons.description_outlined),
                         const SizedBox(height: 10),
                         Container(
                           width: double.infinity,
@@ -143,73 +163,94 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         ),
                       ],
                       const SizedBox(height: 20),
-                      _buildSectionHeader('Your Information', Icons.person_outline),
-                      const SizedBox(height: 10),
-                      _buildBuyerForm(),
-                      const SizedBox(height: 20),
-                      _buildSectionHeader('Payment Method', Icons.payments_outlined),
-                      const SizedBox(height: 10),
-                      ...widget.listing.acceptedPayments.map((method) {
-                        return _buildPaymentOption(method);
-                      }),
-                      if (_selectedPayment == PaymentMethod.benefitPay) ...[
-                        const SizedBox(height: 12),
-                        _buildPaymentProofUpload(),
-                      ],
-                      const SizedBox(height: 28),
-                      // Buy button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _selectedPayment != null ? _handleBuy : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0D4F54),
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.grey.shade300,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.shopping_cart_checkout_rounded, size: 20),
-                              const SizedBox(width: 10),
-                              Text(
-                                _selectedPayment != null
-                                    ? 'Buy Now - ${widget.listing.totalPrice.toStringAsFixed(2)} BD'
-                                    : 'Select Payment Method',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.2,
-                                ),
+                      if (widget.currentUserId == widget.listing.sellerId) ...[
+                        // ── Seller view: delete listing ──────────────────
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _confirmDeleteListing(),
+                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            label: Text(_l10n.deleteListing),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red.shade600,
+                              side: BorderSide(color: Colors.red.shade300),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Contact seller button
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _contactSeller(),
-                          icon: const Icon(Icons.phone_outlined, size: 18),
-                          label: const Text('Contact Seller'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF0D4F54),
-                            side: const BorderSide(color: Color(0xFF0E7490)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
+                      ] else ...[
+                        // ── Buyer view ───────────────────────────────────
+                        _buildSectionHeader(_l10n.yourInformation, Icons.person_outline),
+                        const SizedBox(height: 10),
+                        _buildBuyerForm(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(_l10n.selectPaymentMethod, Icons.payments_outlined),
+                        const SizedBox(height: 10),
+                        ...widget.listing.acceptedPayments.map((method) {
+                          return _buildPaymentOption(method);
+                        }),
+                        if (_selectedPayment == PaymentMethod.benefitPay) ...[
+                          const SizedBox(height: 12),
+                          _buildPaymentProofUpload(),
+                        ],
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _selectedPayment != null ? _handleBuy : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D4F54),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.shopping_cart_checkout_rounded, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  _selectedPayment != null
+                                      ? '${_l10n.buyNow} - ${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}'
+                                      : _l10n.selectPaymentMethod,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _contactSeller(),
+                            icon: const Icon(Icons.phone_outlined, size: 18),
+                            label: Text(_l10n.contactSeller),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF0D4F54),
+                              side: const BorderSide(color: Color(0xFF0E7490)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ],
                   ),
                 ),
@@ -266,7 +307,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             image: DecorationImage(
-              image: FileImage(File(widget.listing.imageUrls[_currentImageIndex])),
+              image: _resolveImage(widget.listing.imageUrls[_currentImageIndex]),
               fit: BoxFit.cover,
             ),
             boxShadow: [
@@ -311,7 +352,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${_currentImageIndex + 1}/${widget.listing.imageUrls.length}',
+                      '${_n('${_currentImageIndex + 1}')}/${_n('${widget.listing.imageUrls.length}')}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -349,7 +390,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         width: isActive ? 2.5 : 1,
                       ),
                       image: DecorationImage(
-                        image: FileImage(File(widget.listing.imageUrls[index])),
+                        image: _resolveImage(widget.listing.imageUrls[index]),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -364,6 +405,11 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   }
 
   Widget _buildNameConditionSection() {
+    final lang = Localizations.localeOf(context).languageCode;
+    final isAr = lang == 'ar';
+    final primaryName = isAr ? widget.listing.fishType.arabicName : widget.listing.displayName;
+    final secondaryName = isAr ? widget.listing.displayName : widget.listing.fishType.arabicName;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -374,7 +420,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.listing.displayName,
+                  primaryName,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -384,7 +430,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  widget.listing.fishType.arabicName,
+                  secondaryName,
                   style: TextStyle(
                     fontSize: 15,
                     color: Colors.grey.shade500,
@@ -404,7 +450,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
               ),
             ),
             child: Text(
-              widget.listing.condition.displayName,
+              widget.listing.condition.localizedName(lang),
               style: TextStyle(
                 color: _getConditionColor(widget.listing.condition),
                 fontWeight: FontWeight.w700,
@@ -443,7 +489,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Price',
+                  _l10n.totalPrice,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 13,
@@ -452,7 +498,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${widget.listing.totalPrice.toStringAsFixed(2)} BD',
+                  '${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 26,
@@ -472,7 +518,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             child: Column(
               children: [
                 Text(
-                  '${widget.listing.weight.toStringAsFixed(1)} kg',
+                  '${_n(widget.listing.weight.toStringAsFixed(1))} ${_l10n.kgUnit}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -481,7 +527,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${widget.listing.pricePerKg.toStringAsFixed(1)} BD/kg',
+                  '${_n(widget.listing.pricePerKg.toStringAsFixed(1))} ${_l10n.bdPerKg}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 11,
@@ -514,7 +560,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         children: [
           if (widget.listing.catchLocation != null)
             _buildDetailRow(
-              'Catch Location',
+              _l10n.catchLocation,
               widget.listing.catchLocation!,
               Icons.location_on_outlined,
             ),
@@ -522,14 +568,14 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             Divider(height: 20, color: Colors.grey.shade100),
           if (widget.listing.catchDate != null)
             _buildDetailRow(
-              'Catch Date',
+              _l10n.catchDate,
               _formatDate(widget.listing.catchDate!),
               Icons.calendar_today_outlined,
             ),
           if (widget.listing.catchLocation == null && widget.listing.catchDate == null)
             _buildDetailRow(
-              'Weight',
-              '${widget.listing.weight.toStringAsFixed(1)} kg',
+              _l10n.weight,
+              '${_n(widget.listing.weight.toStringAsFixed(1))} ${_l10n.kgUnit}',
               Icons.scale_outlined,
             ),
         ],
@@ -580,26 +626,26 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         children: [
           TextFormField(
             controller: _buyerNameController,
-            decoration: _inputDecoration('Your Name', Icons.person_outline),
+            decoration: _inputDecoration(_l10n.yourName, Icons.person_outline),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your name';
+              if (value == null || value.isEmpty) return _l10n.pleaseEnterYourName;
               return null;
             },
           ),
           const SizedBox(height: 14),
           TextFormField(
             controller: _buyerPhoneController,
-            decoration: _inputDecoration('Phone Number', Icons.phone_outlined),
+            decoration: _inputDecoration(_l10n.phoneNumber, Icons.phone_outlined),
             keyboardType: TextInputType.phone,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your phone number';
+              if (value == null || value.isEmpty) return _l10n.pleaseEnterPhoneNumber;
               return null;
             },
           ),
           const SizedBox(height: 14),
           TextFormField(
             controller: _buyerLocationController,
-            decoration: _inputDecoration('Delivery Location (optional)', Icons.location_on_outlined),
+            decoration: _inputDecoration(_l10n.deliveryLocationOptional, Icons.location_on_outlined),
           ),
         ],
       ),
@@ -626,6 +672,10 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   }
 
   Widget _buildPaymentProofUpload() {
+    final hasQr = widget.listing.benefitPayImageUrl != null;
+    final hasIban = widget.listing.benefitPayIban != null &&
+        widget.listing.benefitPayIban!.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -643,6 +693,49 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Seller's BenefitPay info
+          if (hasQr || hasIban) ...[
+            Text(
+              _l10n.benefitPayQRCode,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1E293B)),
+            ),
+            const SizedBox(height: 10),
+            if (hasQr)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image(
+                  image: _resolveImage(widget.listing.benefitPayImageUrl!),
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            if (hasIban) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E7490).withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.account_balance_outlined, size: 16, color: Color(0xFF0E7490)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.listing.benefitPayIban!,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF0D4F54)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Divider(color: Colors.grey.shade200),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Container(
@@ -654,10 +747,10 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 child: const Icon(Icons.receipt_long, size: 16, color: Color(0xFF0E7490)),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Upload Payment Proof',
-                  style: TextStyle(
+                  _l10n.uploadPaymentProof,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF1E293B),
                     fontSize: 14,
@@ -671,7 +764,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Required',
+                  _l10n.required,
                   style: TextStyle(color: Colors.red.shade600, fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -679,7 +772,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Please upload a screenshot of your Benefit Pay payment',
+            _l10n.pleaseUploadPaymentScreenshot,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
           ),
           const SizedBox(height: 12),
@@ -724,7 +817,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
                 const SizedBox(width: 4),
                 Text(
-                  'Payment proof uploaded',
+                  _l10n.paymentProofUploaded,
                   style: TextStyle(color: Colors.green.shade600, fontSize: 12, fontWeight: FontWeight.w500),
                 ),
               ],
@@ -748,8 +841,8 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                   children: [
                     Icon(Icons.add_photo_alternate_rounded, size: 32, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Tap to upload screenshot',
+                    Text(
+                      _l10n.tapToUploadScreenshot,
                       style: TextStyle(
                         color: Color(0xFF0E7490),
                         fontWeight: FontWeight.w500,
@@ -770,21 +863,21 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
-            SizedBox(width: 10),
-            Text('Login Required'),
+            const Icon(Icons.lock_outline, color: Color(0xFF0D4F54)),
+            const SizedBox(width: 10),
+            Text(_l10n.loginRequired),
           ],
         ),
-        content: const Text(
-          'You need to sign in to place an order.\nGuest accounts cannot buy or sell fish.',
-          style: TextStyle(height: 1.5),
+        content: Text(
+          _l10n.guestAccountLoginMessage,
+          style: const TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(_l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -802,7 +895,43 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 (_) => false,
               );
             },
-            child: const Text('Sign In'),
+            child: Text(_l10n.signIn),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteListing() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.red.shade600),
+            const SizedBox(width: 10),
+            Text(_l10n.deleteListing),
+          ],
+        ),
+        content: Text(_l10n.confirmDeleteListing),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+              widget.onDelete?.call();
+            },
+            child: Text(_l10n.deleteListing),
           ),
         ],
       ),
@@ -818,7 +947,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please upload your payment proof screenshot'),
+            content: Text(_l10n.pleaseUploadPaymentProofScreenshot),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -876,7 +1005,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       setState(() {
         _selectedPayment = selectedMethod;
       });
-    });
+    }, context: context);
   }
 
   void _contactSeller() {
@@ -895,9 +1024,9 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
               child: const Icon(Icons.phone_rounded, color: Color(0xFF0E7490), size: 22),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Contact Seller',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Text(
+              _l10n.contactSeller,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -910,12 +1039,12 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildContactRow(Icons.person_outline, 'Name', widget.listing.sellerName),
+              _buildContactRow(Icons.person_outline, _l10n.name, widget.listing.sellerName),
               Divider(height: 16, color: Colors.grey.shade200),
-              _buildContactRow(Icons.phone_outlined, 'Phone', widget.listing.sellerPhone),
+              _buildContactRow(Icons.phone_outlined, _l10n.phone, widget.listing.sellerPhone),
               if (widget.listing.sellerLocation != null) ...[
                 Divider(height: 16, color: Colors.grey.shade200),
-                _buildContactRow(Icons.location_on_outlined, 'Location', widget.listing.sellerLocation!),
+                _buildContactRow(Icons.location_on_outlined, _l10n.location, widget.listing.sellerLocation!),
               ],
             ],
           ),
@@ -931,7 +1060,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: Text(_l10n.close, style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -956,11 +1085,11 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     final difference = now.difference(date);
 
     if (difference.inHours < 1) {
-      return '${difference.inMinutes} min ago';
+      return '${difference.inMinutes} ${_l10n.minAgo}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
+      return '${difference.inHours} ${_l10n.hoursAgo}';
     } else {
-      return '${difference.inDays} days ago';
+      return '${difference.inDays} ${_l10n.daysAgo}';
     }
   }
 

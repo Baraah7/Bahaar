@@ -29,6 +29,7 @@ dependencies:
   firebase_auth: ^5.3.0
   firebase_core: ^3.6.0
   cloud_firestore: ^5.4.0
+  firebase_storage: ^12.3.4
   flutter_map_marker_cluster: ^8.2.2
   sqflite: ^2.3.3
   path: ^1.9.0
@@ -74,7 +75,11 @@ flutter:
     - assets/depth_gebco.mbtiles
     - assets/models/fish_classifier.tflite
     - assets/models/labels.txt
-    - assets/data/stars_2500.json
+    - assets/images/Seabass.jpg
+    - assets/images/Shrimp.jpeg
+    - assets/images/Gilt-Head Bream.jpg
+    - assets/images/Horse mackerel.jpg
+
 
   #   - images/a_dot_ham.jpeg
 

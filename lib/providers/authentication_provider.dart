@@ -180,12 +180,12 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> resetPassword(String email) async {
+  Future<bool> resetPassword(String email, {String languageCode = 'en'}) async {
     try {
       isLoading = true;
       error = null;
       notifyListeners();
-      await _AuthenticationService.sendPasswordResetEmail(email);
+      await _AuthenticationService.sendPasswordResetEmail(email, languageCode: languageCode);
       return true;
     } catch (e) {
       error = e.toString();

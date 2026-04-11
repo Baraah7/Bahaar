@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:Bahaar/core/constants/species_data.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:Bahaar/screens/prediction_screen.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -39,7 +40,7 @@ class _SpeciesGuideScreenState extends State<SpeciesGuideScreen> {
             'دليل الأسماك',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: const Color(0xFF0D4F54),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           centerTitle: true,
           elevation: 0,
@@ -233,7 +234,7 @@ class SpeciesDetailScreen extends StatelessWidget {
             SliverAppBar(
               expandedHeight: 180,
               pinned: true,
-              backgroundColor: const Color(0xFF0D4F54),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(

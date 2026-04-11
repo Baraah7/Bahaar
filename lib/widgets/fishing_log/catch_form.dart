@@ -1,14 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/screens/location_picker_screen.dart';
+import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:Bahaar/l10n/app_localizations.dart';
 
-/// Bottom sheet form for logging a single catch during an active trip.
 class CatchForm extends StatefulWidget {
   const CatchForm({super.key});
 
-  /// Show the form and return a [CatchFormResult] if submitted, or null.
   static Future<CatchFormResult?> show(BuildContext context) {
     return showModalBottomSheet<CatchFormResult>(
       context: context,
@@ -27,23 +27,27 @@ class _CatchFormState extends State<CatchForm> {
   final _speciesCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
-  final _latCtrl = TextEditingController();
-  final _lonCtrl = TextEditingController();
 
   bool _locating = false;
-  bool _locationLocked = false; // true once GPS populated the fields
-  bool _mapPinned = false;     // true when location was pinned on the map
+  LatLng? _location;
+  bool _mapPinned = false;
 
-  // Common Gulf species for quick-pick
+  static const _teal = Color(0xFF0D4F54);
+  static const _tealLight = Color(0xFF0E7490);
+
+  // (Arabic name, English name) pairs
   static const _quickSpecies = [
-    'Hamour',
-    'Safi',
-    'Sobaity',
-    'Chanad',
-    'Zubaidi',
-    'Shrimp',
-    'Crab',
+    ('هامور', 'Hamour'),
+    ('صافي', 'Safi'),
+    ('صبيطي', 'Sobaity'),
+    ('كنعد', 'Chanad'),
+    ('زبيدي', 'Zubaidi'),
+    ('ربيان', 'Shrimp'),
+    ('قبقب', 'Crab'),
   ];
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  bool get _isAr => _l10n.localeName == 'ar';
 
   @override
   void initState() {
@@ -56,8 +60,6 @@ class _CatchFormState extends State<CatchForm> {
     _speciesCtrl.dispose();
     _weightCtrl.dispose();
     _notesCtrl.dispose();
-    _latCtrl.dispose();
-    _lonCtrl.dispose();
     super.dispose();
   }
 
@@ -68,9 +70,8 @@ class _CatchFormState extends State<CatchForm> {
       final data = await loc.getLocation();
       if (data.latitude != null && data.longitude != null && mounted) {
         setState(() {
-          _latCtrl.text = data.latitude!.toStringAsFixed(6);
-          _lonCtrl.text = data.longitude!.toStringAsFixed(6);
-          _locationLocked = true;
+          _location = LatLng(data.latitude!, data.longitude!);
+          _mapPinned = false;
         });
       }
     } catch (_) {}
@@ -78,50 +79,38 @@ class _CatchFormState extends State<CatchForm> {
   }
 
   Future<void> _pickOnMap() async {
-    final current = _parseLocation();
-    final picked = await LocationPickerScreen.open(context, initial: current);
+    final picked =
+        await LocationPickerScreen.open(context, initial: _location);
     if (picked != null && mounted) {
       setState(() {
-        _latCtrl.text = picked.latitude.toStringAsFixed(6);
-        _lonCtrl.text = picked.longitude.toStringAsFixed(6);
-        _locationLocked = true;
+        _location = picked;
         _mapPinned = true;
       });
     }
   }
 
-  LatLng? _parseLocation() {
-    final lat = double.tryParse(_latCtrl.text.trim());
-    final lon = double.tryParse(_lonCtrl.text.trim());
-    if (lat != null && lon != null) return LatLng(lat, lon);
-    return null;
-  }
-
-  Future<void> _submit() async {
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
-
-    final location = _parseLocation();
     final weight = double.tryParse(_weightCtrl.text.trim());
-
-    if (!mounted) return;
     Navigator.of(context).pop(CatchFormResult(
       species: _speciesCtrl.text.trim(),
       weightKg: weight,
       notes:
           _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-      location: location,
+      location: _location,
     ));
   }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D2E31),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottom),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, bottom),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -129,210 +118,303 @@ class _CatchFormState extends State<CatchForm> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
+              // ── Header ───────────────────────────────────────────────────
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Log Catch',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Quick-pick species chips
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: _quickSpecies.map((s) {
-                  return ActionChip(
-                    label: Text(s,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12)),
-                    backgroundColor: const Color(0xFF1A5C62),
-                    side: const BorderSide(color: Colors.teal),
-                    onPressed: () => _speciesCtrl.text = s,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-
-              // Species field
-              TextFormField(
-                controller: _speciesCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Species *', Icons.set_meal),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty)
-                        ? 'Enter species name'
-                        : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Weight field
-              TextFormField(
-                controller: _weightCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Weight (kg)', Icons.scale),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Notes field
-              TextFormField(
-                controller: _notesCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: _dec('Notes (optional)', Icons.notes),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-
-              // ── Catch location ───────────────────────────────────────
-              Row(
-                children: [
-                  const Icon(Icons.location_on,
-                      color: Colors.white54, size: 16),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Catch Location',
-                    style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  if (_locating)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.teal),
-                    )
-                  else
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
-                        GestureDetector(
-                          onTap: _fetchLocation,
-                          child: const Row(
-                            children: [
-                              Icon(Icons.my_location,
-                                  color: Colors.teal, size: 14),
-                              SizedBox(width: 4),
-                              Text('Re-fetch GPS',
-                                  style: TextStyle(
-                                      color: Colors.teal, fontSize: 11)),
-                            ],
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          child: const Icon(Icons.set_meal_rounded,
+                              color: Colors.white, size: 22),
                         ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onTap: _pickOnMap,
-                          child: const Row(
-                            children: [
-                              Icon(Icons.map_outlined,
-                                  color: Colors.teal, size: 14),
-                              SizedBox(width: 4),
-                              Text('Pin on Map',
-                                  style: TextStyle(
-                                      color: Colors.teal, fontSize: 11)),
-                            ],
-                          ),
+                        const SizedBox(width: 14),
+                        Text(
+                          _l10n.logCatchTitle,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800),
                         ),
                       ],
                     ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _latCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _dec('Latitude', null),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
-                      ],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final d = double.tryParse(v.trim());
-                        if (d == null || d < -90 || d > 90) {
-                          return 'Invalid';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lonCtrl,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _dec('Longitude', null),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
-                      ],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final d = double.tryParse(v.trim());
-                        if (d == null || d < -180 || d > 180) {
-                          return 'Invalid';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _mapPinned
-                    ? 'Location pinned on map.'
-                    : _locationLocked
-                        ? 'GPS location auto-filled — edit if needed.'
-                        : 'Location blank — GPS unavailable.',
-                style:
-                    const TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-              const SizedBox(height: 20),
 
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _submit,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Log Catch'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0E7490),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
+              // ── Body ─────────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quick-pick chips
+                    _sectionLabel(_l10n.chooseSpecies),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: _quickSpecies.map((s) {
+                          final name = _isAr ? s.$1 : s.$2;
+                          final isSelected = _speciesCtrl.text == name;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _speciesCtrl.text = name),
+                              child: AnimatedContainer(
+                                duration:
+                                    const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected ? _teal : Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? _teal
+                                        : Colors.grey.shade200,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isSelected
+                                          ? _teal.withValues(alpha: 0.2)
+                                          : Colors.black
+                                              .withValues(alpha: 0.04),
+                                      blurRadius: isSelected ? 8 : 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  name,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
+                                    fontSize: 12,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Species + Weight in a white card
+                    _sectionLabel(_l10n.catchDetails),
+                    const SizedBox(height: 10),
+                    _WhiteCard(
+                      child: Column(
+                        children: [
+                          _CardField(
+                            controller: _speciesCtrl,
+                            icon: Icons.set_meal_outlined,
+                            iconColor: _tealLight,
+                            label: _l10n.speciesNameLabel,
+                            validator: (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? _l10n.speciesRequired
+                                    : null,
+                          ),
+                          const _CardDivider(),
+                          _CardField(
+                            controller: _weightCtrl,
+                            icon: Icons.scale_outlined,
+                            iconColor: AppColors.brown,
+                            label: _l10n.weightKg,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                                    decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d*'))
+                            ],
+                          ),
+                          const _CardDivider(),
+                          _CardField(
+                            controller: _notesCtrl,
+                            icon: Icons.notes_outlined,
+                            iconColor: Colors.grey,
+                            label: _l10n.notesOptionalLabel,
+                            maxLines: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Location card
+                    _sectionLabel(_l10n.catchLocationLabel),
+                    const SizedBox(height: 10),
+                    _WhiteCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius:
+                                      BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.red.shade400,
+                                    size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _location != null
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                _mapPinned
+                                                    ? Icons
+                                                        .push_pin_rounded
+                                                    : Icons
+                                                        .gps_fixed_rounded,
+                                                size: 13,
+                                                color: Colors
+                                                    .green.shade600,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                _mapPinned
+                                                    ? _l10n.pinnedOnMap
+                                                    : _l10n
+                                                        .gpsLocationLabel,
+                                                style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors
+                                                        .green.shade600,
+                                                    fontWeight:
+                                                        FontWeight
+                                                            .w600),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${_location!.latitude.toStringAsFixed(5)}, '
+                                            '${_location!.longitude.toStringAsFixed(5)}',
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors
+                                                    .grey.shade600),
+                                          ),
+                                        ],
+                                      )
+                                    : Text(
+                                        _l10n.locationNotSet,
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color:
+                                                Colors.grey.shade400),
+                                      ),
+                              ),
+                              if (_locating)
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: _teal),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _LocationButton(
+                                  icon: Icons.my_location_rounded,
+                                  label: 'GPS',
+                                  onTap: _fetchLocation,
+                                  color: _teal,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _LocationButton(
+                                  icon: Icons.map_outlined,
+                                  label: _l10n.mapLabel,
+                                  onTap: _pickOnMap,
+                                  color: _tealLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _submit,
+                        icon: const Icon(Icons.check_rounded, size: 20),
+                        label: Text(_l10n.logCatch,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _teal,
+                          foregroundColor: Colors.white,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -342,28 +424,170 @@ class _CatchFormState extends State<CatchForm> {
     );
   }
 
-  InputDecoration _dec(String label, IconData? icon) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white54),
-      prefixIcon: icon != null
-          ? Icon(icon, color: Colors.white38, size: 20)
-          : null,
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
+  Widget _sectionLabel(String label) {
+    return Text(label,
+        style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: Color(0xFF1E293B)));
+  }
+}
+
+// ── White card ────────────────────────────────────────────────────────────────
+
+class _WhiteCard extends StatelessWidget {
+  final Widget child;
+  const _WhiteCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0E7490)),
-      ),
-      errorStyle:
-          const TextStyle(color: Colors.orangeAccent, fontSize: 10),
+      child: child,
     );
   }
 }
+
+// ── Card field ────────────────────────────────────────────────────────────────
+
+class _CardField extends StatelessWidget {
+  final TextEditingController controller;
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final String? Function(String?)? validator;
+  final int maxLines;
+
+  const _CardField({
+    required this.controller,
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    this.keyboardType,
+    this.inputFormatters,
+    this.validator,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              inputFormatters: inputFormatters,
+              validator: validator,
+              maxLines: maxLines,
+              style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF1E293B),
+                  fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                labelText: label,
+                labelStyle: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w400),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+                errorStyle: const TextStyle(
+                    color: Colors.redAccent, fontSize: 10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Card divider ──────────────────────────────────────────────────────────────
+
+class _CardDivider extends StatelessWidget {
+  const _CardDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+        height: 1, indent: 64, endIndent: 14, color: Color(0xFFEEEEEE));
+  }
+}
+
+// ── Location button ───────────────────────────────────────────────────────────
+
+class _LocationButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _LocationButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 15),
+            const SizedBox(width: 6),
+            Text(label,
+                style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Result ────────────────────────────────────────────────────────────────────
 
 class CatchFormResult {
   final String species;

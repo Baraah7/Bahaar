@@ -29,9 +29,14 @@ const Duration _kTimeout = Duration(seconds: 10);
 /// Thrown when the server is unreachable or the request times out.
 class BahaarOfflineException implements Exception {
   final String messageAr;
+  final String messageEn;
   final String messageTechnical;
 
-  const BahaarOfflineException(this.messageAr, {required this.messageTechnical});
+  const BahaarOfflineException(
+    this.messageAr, {
+    required this.messageEn,
+    required this.messageTechnical,
+  });
 
   @override
   String toString() => 'BahaarOfflineException: $messageTechnical';
@@ -165,6 +170,7 @@ class BahaarAIService {
       if (e is BahaarOfflineException) rethrow;
       throw BahaarOfflineException(
         'لا يوجد اتصال بالإنترنت، يرجى المحاولة لاحقاً',
+        messageEn: 'No internet connection, please try again later',
         messageTechnical: 'Network error on POST $path: $e',
       );
     }
@@ -190,6 +196,7 @@ class BahaarAIService {
       if (e is BahaarOfflineException) rethrow;
       throw BahaarOfflineException(
         'لا يوجد اتصال بالإنترنت، يرجى المحاولة لاحقاً',
+        messageEn: 'No internet connection, please try again later',
         messageTechnical: 'Network error on GET $path: $e',
       );
     }
@@ -201,6 +208,7 @@ class BahaarAIService {
     final errMsg = decoded['error'] ?? decoded['message'] ?? resp.body;
     throw BahaarOfflineException(
       'خطأ في الخادم، يرجى المحاولة لاحقاً',
+      messageEn: 'Server error, please try again later',
       messageTechnical: 'API ${resp.statusCode} on $path: $errMsg',
     );
   }

@@ -1,6 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/authentication_provider.dart';
+import '../l10n/app_localizations.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -24,10 +26,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     final user = ref.read(authProviderProvider).currentAppUser;
     _firstName = TextEditingController(text: user?.firstName ?? '');
-    _lastName = TextEditingController(text: user?.lastName ?? '');
-    _userName = TextEditingController(text: user?.userName ?? '');
-    _phone = TextEditingController(text: user?.phone ?? '');
-    _location = TextEditingController(text: user?.location ?? '');
+    _lastName  = TextEditingController(text: user?.lastName ?? '');
+    _userName  = TextEditingController(text: user?.userName ?? '');
+    _phone     = TextEditingController(text: user?.phone ?? '');
+    _location  = TextEditingController(text: user?.location ?? '');
   }
 
   @override
@@ -46,10 +48,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       await ref.read(authProviderProvider).updateProfile(
             firstName: _firstName.text.trim(),
-            lastName: _lastName.text.trim(),
-            userName: _userName.text.trim(),
-            phone: _phone.text.trim(),
-            location: _location.text.trim(),
+            lastName:  _lastName.text.trim(),
+            userName:  _userName.text.trim(),
+            phone:     _phone.text.trim(),
+            location:  _location.text.trim(),
           );
       if (mounted) Navigator.pop(context);
     } finally {
@@ -59,73 +61,410 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _Field(controller: _firstName, label: 'First Name', icon: Icons.person),
-            _Field(controller: _lastName, label: 'Last Name', icon: Icons.person_outline),
-            _Field(controller: _userName, label: 'Username', icon: Icons.alternate_email),
-            _Field(controller: _phone, label: 'Phone', icon: Icons.phone, keyboardType: TextInputType.phone),
-            _Field(controller: _location, label: 'Location', icon: Icons.location_on),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _saving ? null : _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: _saving
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Save Changes', style: TextStyle(fontSize: 16)),
+    final l10n = AppLocalizations.of(context)!;
+    final user = ref.watch(authProviderProvider).currentAppUser;
+    final fullName =
+        '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.accent, AppColors.primary],
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
             ),
-          ],
+          ),
+          child: Form(
+            key: _formKey,
+            child: CustomScrollView(
+              slivers: [
+                // ── Header ────────────────────────────────────────────────────
+                SliverAppBar(
+                  expandedHeight: 200,
+                  pinned: true,
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 20),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: _saving ? null : _save,
+                      child: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : Text(
+                              l10n.save,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    background: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.accent, AppColors.primary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              // Avatar with edit badge
+                              Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.6),
+                                          width: 2.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.18),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 34,
+                                      backgroundColor: AppColors.primary,
+                                      child: Text(
+                                        _initials(user?.firstName,
+                                            user?.lastName),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: AppColors.accent,
+                                            width: 1.5),
+                                      ),
+                                      child: const Icon(Icons.edit_rounded,
+                                          size: 12,
+                                          color: AppColors.accent),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                fullName.isEmpty
+                                    ? l10n.editProfile
+                                    : fullName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                user?.email ?? '',
+                                style: TextStyle(
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Body ──────────────────────────────────────────────────────
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF2F5F7),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(28),
+                        topRight: Radius.circular(28),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                          16,
+                          28,
+                          16,
+                          MediaQuery.of(context).padding.bottom + 40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Personal Info ──────────────────────────────────
+                          _SectionLabel(l10n.profile),
+                          const SizedBox(height: 12),
+                          _EditCard(children: [
+                            _EditTile(
+                              controller: _firstName,
+                              icon: Icons.person_outlined,
+                              iconBg: AppColors.accent.withValues(alpha: 0.12),
+                              iconColor: AppColors.accent,
+                              label: l10n.firstName,
+                            ),
+                            const _TileDivider(),
+                            _EditTile(
+                              controller: _lastName,
+                              icon: Icons.person_outline,
+                              iconBg: AppColors.primary.withValues(alpha: 0.10),
+                              iconColor: AppColors.primary,
+                              label: l10n.lastName,
+                            ),
+                          ]),
+
+                          const SizedBox(height: 28),
+
+                          // ── Contact ────────────────────────────────────────
+                          _SectionLabel(l10n.contactInformation),
+                          const SizedBox(height: 12),
+                          _EditCard(children: [
+                            _EditTile(
+                              controller: _phone,
+                              icon: Icons.phone_outlined,
+                              iconBg: AppColors.brown.withValues(alpha: 0.12),
+                              iconColor: AppColors.brown,
+                              label: l10n.phone,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const _TileDivider(),
+                            _EditTile(
+                              controller: _location,
+                              icon: Icons.location_on_outlined,
+                              iconBg: AppColors.red.withValues(alpha: 0.10),
+                              iconColor: AppColors.red,
+                              label: l10n.location,
+                            ),
+                          ]),
+
+                          const SizedBox(height: 28),
+
+                          // ── Account ────────────────────────────────────────
+                          _SectionLabel(l10n.account),
+                          const SizedBox(height: 12),
+                          _EditCard(children: [
+                            _EditTile(
+                              controller: _userName,
+                              icon: Icons.alternate_email,
+                              iconBg: AppColors.primary.withValues(alpha: 0.10),
+                              iconColor: AppColors.primary,
+                              label: l10n.username,
+                            ),
+                          ]),
+
+                          const SizedBox(height: 32),
+
+                          // ── Save button ────────────────────────────────────
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _saving ? null : _save,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16)),
+                                elevation: 0,
+                              ),
+                              child: _saving
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white),
+                                    )
+                                  : Text(
+                                      l10n.saveChanges,
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _initials(String? first, String? last) {
+    final f = first?.isNotEmpty == true ? first![0] : '';
+    final l = last?.isNotEmpty == true ? last![0] : '';
+    final combined = '$f$l'.toUpperCase();
+    return combined.isEmpty ? '?' : combined;
+  }
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
         ),
       ),
     );
   }
 }
 
-class _Field extends StatelessWidget {
+// ── Edit card ─────────────────────────────────────────────────────────────────
+
+class _EditCard extends StatelessWidget {
+  final List<Widget> children;
+  const _EditCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.055),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+// ── Edit tile ─────────────────────────────────────────────────────────────────
+
+class _EditTile extends StatelessWidget {
   final TextEditingController controller;
-  final String label;
   final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
   final TextInputType keyboardType;
 
-  const _Field({
+  const _EditTile({
     required this.controller,
-    required this.label,
     required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
     this.keyboardType = TextInputType.text,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: AppColors.primary),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.primary),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-        ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF1A1A2E),
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                labelText: label,
+                labelStyle: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+// ── Tile divider ──────────────────────────────────────────────────────────────
+
+class _TileDivider extends StatelessWidget {
+  const _TileDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+        height: 1, indent: 72, endIndent: 16, color: Color(0xFFEEEEEE));
   }
 }

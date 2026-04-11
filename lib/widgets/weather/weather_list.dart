@@ -37,6 +37,132 @@ class WeatherList extends StatelessWidget {
 
   const WeatherList({super.key, required this.weatherData, required this.l10n, this.tides = const []});
 
+  /// Arabic translations for common Bahraini city/area names returned by WeatherAPI.
+  static const Map<String, String> _cityArabic = {
+    'manama': 'المنامة',
+    'muharraq': 'المحرق',
+    'riffa': 'الرفاع',
+    'isa town': 'مدينة عيسى',
+    'hamad town': 'مدينة حمد',
+    'sitra': 'سترة',
+    'budaiya': 'البديع',
+    'jidhafs': 'جدحفص',
+    'jidd hafs': 'جدحفص',
+    'hidd': 'الحد',
+    'tubli': 'توبلي',
+    'sanabis': 'السنابس',
+    'janabiyah': 'الجنبية',
+    'aali': 'عالي',
+    'zallaq': 'الزلاق',
+    'nuwaidrat': 'نويدرات',
+    'diraz': 'دراز',
+    'barbar': 'بربار',
+    'bilad al qadeem': 'بلاد القديم',
+    'sar': 'سار',
+    'bani jamra': 'بني جمرة',
+    'karbabad': 'كرباباد',
+    'malkiya': 'المالكية',
+    'jasra': 'الجسرة',
+    'shahrakan': 'شهركان',
+    'al malikiyah': 'المالكية',
+    'bahrain': 'البحرين',
+    'east riffa': 'الرفاع الشرقي',
+    'west riffa': 'الرفاع الغربي',
+    'northern city': 'المدينة الشمالية',
+    'southern city': 'المدينة الجنوبية',
+    'manamah': 'المنامة',
+    'al muharraq': 'المحرق',
+    'al hidd': 'الحد',
+    'al janabiyah': 'الجنبية',
+    'al budaiya': 'البديع',
+    'al sitra': 'سترة',
+    'al aali': 'عالي',
+    'qudaibiya': 'قضيبية',
+    'adliya': 'العدلية',
+    'hoora': 'الحورة',
+    'um al hassam': 'أم الحصم',
+    'mahooz': 'المحوز',
+    'segaya': 'سيجيئة',
+  };
+
+  /// Arabic translations for WeatherAPI condition text strings.
+  static const Map<String, String> _conditionArabic = {
+    'sunny': 'مشمس',
+    'clear': 'صافٍ',
+    'partly cloudy': 'غائم جزئياً',
+    'cloudy': 'غائم',
+    'overcast': 'ملبد بالغيوم',
+    'mist': 'ضباب خفيف',
+    'fog': 'ضباب',
+    'freezing fog': 'ضباب متجمد',
+    'haze': 'ضباب دخاني',
+    'dust': 'غبار',
+    'sand': 'رمال',
+    'dust whirls': 'أعمدة غبار',
+    'blowing dust': 'عواصف غبارية',
+    'blowing sand': 'عواصف رملية',
+    'sandstorm': 'عاصفة رملية',
+    'dust storm': 'عاصفة ترابية',
+    'patchy rain possible': 'أمطار متفرقة محتملة',
+    'patchy snow possible': 'ثلوج متفرقة محتملة',
+    'patchy sleet possible': 'زخات صقيع متفرقة',
+    'patchy freezing drizzle possible': 'رذاذ متجمد متفرق',
+    'thundery outbreaks possible': 'عواصف رعدية محتملة',
+    'blowing snow': 'عواصف ثلجية',
+    'blizzard': 'عاصفة ثلجية شديدة',
+    'patchy light drizzle': 'رذاذ خفيف متفرق',
+    'light drizzle': 'رذاذ خفيف',
+    'freezing drizzle': 'رذاذ متجمد',
+    'heavy freezing drizzle': 'رذاذ متجمد كثيف',
+    'patchy light rain': 'أمطار خفيفة متفرقة',
+    'light rain': 'أمطار خفيفة',
+    'moderate rain at times': 'أمطار معتدلة أحياناً',
+    'moderate rain': 'أمطار معتدلة',
+    'heavy rain at times': 'أمطار غزيرة أحياناً',
+    'heavy rain': 'أمطار غزيرة',
+    'light freezing rain': 'مطر متجمد خفيف',
+    'moderate or heavy freezing rain': 'مطر متجمد معتدل أو غزير',
+    'light sleet': 'صقيع خفيف',
+    'moderate or heavy sleet': 'صقيع معتدل أو غزير',
+    'patchy light snow': 'ثلج خفيف متفرق',
+    'light snow': 'ثلج خفيف',
+    'patchy moderate snow': 'ثلج معتدل متفرق',
+    'moderate snow': 'ثلج معتدل',
+    'patchy heavy snow': 'ثلج كثيف متفرق',
+    'heavy snow': 'ثلج كثيف',
+    'ice pellets': 'حبات صقيع',
+    'light rain shower': 'زخة مطر خفيفة',
+    'moderate or heavy rain shower': 'زخة مطر معتدلة أو غزيرة',
+    'torrential rain shower': 'زخة مطر غزيرة جداً',
+    'light snow showers': 'زخات ثلج خفيفة',
+    'moderate or heavy snow showers': 'زخات ثلج معتدلة أو غزيرة',
+    'patchy light rain with thunder': 'أمطار خفيفة مع رعد',
+    'moderate or heavy rain with thunder': 'أمطار معتدلة أو غزيرة مع رعد',
+    'patchy light snow with thunder': 'ثلج خفيف مع رعد',
+    'moderate or heavy snow with thunder': 'ثلج معتدل أو غزير مع رعد',
+    'thunderstorm': 'عاصفة رعدية',
+    'light thunderstorm': 'عاصفة رعدية خفيفة',
+    'heavy thunderstorm': 'عاصفة رعدية شديدة',
+  };
+
+  /// Arabic translations for moon phase strings from WeatherAPI.
+  static const Map<String, String> _moonPhaseArabic = {
+    'new moon': 'محاق',
+    'waxing crescent': 'هلال متصاعد',
+    'first quarter': 'تربيع أول',
+    'waxing gibbous': 'أحدب متصاعد',
+    'full moon': 'بدر',
+    'waning gibbous': 'أحدب متناقص',
+    'last quarter': 'تربيع أخير',
+    'waning crescent': 'هلال متناقص',
+  };
+
+  /// Returns city name translated to Arabic when locale is Arabic.
+  String _cityName(String name) {
+    if (l10n.localeName != 'ar') return name;
+    return _cityArabic[name.toLowerCase()] ?? name;
+  }
+
   /// Converts ASCII digits to Arabic-Indic numerals when locale is Arabic.
   String _n(dynamic value) {
     final str = value.toString();
@@ -47,6 +173,33 @@ class WeatherList extends StatelessWidget {
       (m) => digits[int.parse(m.group(0)!)],
     );
   }
+
+  /// Translates WeatherAPI condition text when locale is Arabic.
+  String _conditionText(String text) {
+    if (l10n.localeName != 'ar') return text;
+    return _conditionArabic[text.toLowerCase()] ?? text;
+  }
+
+  /// Translates moon phase text when locale is Arabic.
+  String _moonPhase(String phase) {
+    if (l10n.localeName != 'ar') return phase;
+    return _moonPhaseArabic[phase.toLowerCase()] ?? phase;
+  }
+
+  /// Converts "06:30 AM" / "07:15 PM" to Arabic format when locale is Arabic.
+  String _formatTime(String time) {
+    if (l10n.localeName != 'ar') return time;
+    final t = time.toUpperCase()
+        .replaceAll(' AM', ' ص')
+        .replaceAll(' PM', ' م');
+    return _n(t);
+  }
+
+  /// Returns localized km/h unit string.
+  String get _kmh => l10n.localeName == 'ar' ? 'كم/س' : 'km/h';
+
+  /// Returns localized km unit string.
+  String get _km => l10n.localeName == 'ar' ? 'كم' : 'km';
 
   // Reusable weather icon widget
   Widget _weatherIcon(String iconUrl, {double size = 32}) {
@@ -157,7 +310,7 @@ class WeatherList extends StatelessWidget {
                     Expanded(child: _buildCompactCard(
                       icon: Icons.visibility_outlined,
                       title: l10n.visibility,
-                      value: '${_n(weatherData.currentWeather.vis_km.round())} km',
+                      value: '${_n(weatherData.currentWeather.vis_km.round())} $_km',
                       subtitle: _getVisibilityDescription(),
                       accentColor: const Color(0xFF81C784),
                     )),
@@ -204,7 +357,7 @@ class WeatherList extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                weatherData.location.name.toUpperCase(),
+                _cityName(weatherData.location.name).toUpperCase(),
                 style: TextStyle(
                   color: _WeatherStyles.white(0.9),
                   fontSize: 16,
@@ -282,7 +435,7 @@ class WeatherList extends StatelessWidget {
                 _weatherIcon(weatherData.currentWeather.condition.icon, size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  weatherData.currentWeather.condition.text,
+                  _conditionText(weatherData.currentWeather.condition.text),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -543,7 +696,7 @@ class WeatherList extends StatelessWidget {
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('km/h', style: TextStyle(color: _WeatherStyles.white(0.7), fontSize: 16)),
+                      child: Text(_kmh, style: TextStyle(color: _WeatherStyles.white(0.7), fontSize: 16)),
                     ),
                     const SizedBox(width: 12),
                     Padding(
@@ -564,7 +717,7 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.waves, color: _WeatherStyles.white(0.5), size: 14),
                     const SizedBox(width: 6),
-                    Text('${l10n.weatherGusts} ${_n(wind.gust_kph.round())} km/h', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
+                    Text('${l10n.weatherGusts} ${_n(wind.gust_kph.round())} $_kmh', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
                   ],
                 ),
               ],
@@ -616,9 +769,9 @@ class WeatherList extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, l10n.sunrise, astro.sunrise)),
+              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, l10n.sunrise, _formatTime(astro.sunrise))),
               _gradientDivider(vertical: true),
-              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, l10n.sunset, astro.sunset)),
+              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, l10n.sunset, _formatTime(astro.sunset))),
             ],
           ),
           Padding(
@@ -633,7 +786,7 @@ class WeatherList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(astro.moon_phase, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
+                    Text(_moonPhase(astro.moon_phase), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
                     Text('${_n(astro.moon_illumination)}${l10n.illuminated}', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
                   ],
                 ),
@@ -641,9 +794,9 @@ class WeatherList extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _moonTime(Icons.arrow_upward, astro.moonrise),
+                  _moonTime(Icons.arrow_upward, _formatTime(astro.moonrise)),
                   const SizedBox(height: 4),
-                  _moonTime(Icons.arrow_downward, astro.moonset),
+                  _moonTime(Icons.arrow_downward, _formatTime(astro.moonset)),
                 ],
               ),
             ],

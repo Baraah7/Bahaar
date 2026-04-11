@@ -309,6 +309,23 @@ class FishMarketplaceService extends ChangeNotifier {
     }
   }
 
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      final orderDoc = await _db.collection('orders').doc(orderId).get();
+      if (orderDoc.exists) {
+        final listingId = orderDoc.data()!['listingId'] as String;
+        await _db.collection('orders').doc(orderId).update({
+          'status': OrderStatus.cancelled.name,
+          'respondAt': Timestamp.now(),
+        });
+        await updateListingStatus(listingId, ListingStatus.available);
+      }
+    } catch (e) {
+      _error = 'Failed to cancel order: $e';
+      notifyListeners();
+    }
+  }
+
   Future<void> completeOrder(String orderId) async {
     try {
       final orderDoc = await _db.collection('orders').doc(orderId).get();

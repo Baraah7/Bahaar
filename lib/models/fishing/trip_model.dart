@@ -2,8 +2,11 @@ import 'package:latlong2/latlong.dart';
 
 class Trip {
   final String id;
+  final String? userId;
+  final String? title;
   final DateTime startTime;
   final DateTime? endTime;
+  final int pausedSeconds; // total seconds spent paused (breaks)
   final double? startLat;
   final double? startLon;
   final List<CatchEntry> catches;
@@ -12,8 +15,11 @@ class Trip {
 
   const Trip({
     required this.id,
+    this.userId,
+    this.title,
     required this.startTime,
     this.endTime,
+    this.pausedSeconds = 0,
     this.startLat,
     this.startLon,
     this.catches = const [],
@@ -26,17 +32,24 @@ class Trip {
 
   bool get isActive => endTime == null;
 
+  /// Active fishing duration, excluding paused breaks.
   Duration get duration {
     final end = endTime ?? DateTime.now();
-    return end.difference(startTime);
+    final raw = end.difference(startTime);
+    final paused = Duration(seconds: pausedSeconds);
+    final net = raw - paused;
+    return net.isNegative ? Duration.zero : net;
   }
 
   double get totalWeightKg => catches.fold(0, (sum, c) => sum + (c.weightKg ?? 0));
 
   Trip copyWith({
     String? id,
+    String? userId,
+    String? title,
     DateTime? startTime,
     DateTime? endTime,
+    int? pausedSeconds,
     double? startLat,
     double? startLon,
     List<CatchEntry>? catches,
@@ -45,8 +58,11 @@ class Trip {
   }) {
     return Trip(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
+      pausedSeconds: pausedSeconds ?? this.pausedSeconds,
       startLat: startLat ?? this.startLat,
       startLon: startLon ?? this.startLon,
       catches: catches ?? this.catches,
@@ -55,11 +71,13 @@ class Trip {
     );
   }
 
-  // SQLite row conversion
   Map<String, dynamic> toRow() => {
         'id': id,
+        'user_id': userId,
+        'title': title,
         'start_time': startTime.toIso8601String(),
         'end_time': endTime?.toIso8601String(),
+        'paused_seconds': pausedSeconds,
         'start_lat': startLat,
         'start_lon': startLon,
         'notes': notes,
@@ -69,10 +87,13 @@ class Trip {
   factory Trip.fromRow(Map<String, dynamic> row, List<CatchEntry> catches) {
     return Trip(
       id: row['id'] as String,
+      userId: row['user_id'] as String?,
+      title: row['title'] as String?,
       startTime: DateTime.parse(row['start_time'] as String),
       endTime: row['end_time'] != null
           ? DateTime.parse(row['end_time'] as String)
           : null,
+      pausedSeconds: row['paused_seconds'] as int? ?? 0,
       startLat: row['start_lat'] as double?,
       startLon: row['start_lon'] as double?,
       notes: row['notes'] as String?,
@@ -83,8 +104,10 @@ class Trip {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        if (title != null) 'title': title,
         'start_time': startTime.toIso8601String(),
         if (endTime != null) 'end_time': endTime!.toIso8601String(),
+        'paused_seconds': pausedSeconds,
         if (startLat != null) 'start_lat': startLat,
         if (startLon != null) 'start_lon': startLon,
         if (notes != null) 'notes': notes,
