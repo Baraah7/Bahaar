@@ -30,37 +30,20 @@ android {
         versionName = flutter.versionName
 
         // ── DS-1 Vision Engine (C++ / OpenCV) ────────────────────────────────
-        // Only build for real-device ABIs; emulators (x86/x86_64) lack
-        // reliable OpenCL and are not a supported DS-1 target.
+        // Disabled until OpenCV SDK is installed
+        // To enable: add opencvSdk=/path/to/OpenCV-android-sdk to local.properties
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
-
-        // Point CMake at our cpp directory.
-        // OPENCV_DIR must be set in android/local.properties:
-        //   opencvSdk=/absolute/path/to/OpenCV-android-sdk
-        val opencvDir = rootProject.extra.properties["opencvSdk"]
-            ?.toString()
-            ?.let { "$it/sdk/native/jni" }
-            ?: ""   // empty string → CMake will emit a clear FATAL_ERROR
-
-        externalNativeBuild {
-            cmake {
-                arguments(
-                    "-DOPENCV_DIR=$opencvDir",
-                    "-DANDROID_STL=c++_shared"
-                )
-                cppFlags("-std=c++17")
-            }
-        }
     }
 
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
+    // externalNativeBuild disabled until OpenCV SDK is available
+    // externalNativeBuild {
+    //     cmake {
+    //         path = file("src/main/cpp/CMakeLists.txt")
+    //         version = "3.22.1"
+    //     }
+    // }
 
     buildTypes {
         release {
