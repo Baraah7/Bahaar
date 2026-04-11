@@ -196,10 +196,10 @@ class AuthField extends StatelessWidget {
       obscureText: obscure,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontSize: 14, color: Colors.white),
+      style: const TextStyle(fontSize: 14, color: Color(0xFF0A2A30)),
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.55)),
+        hintStyle: TextStyle(fontSize: 13, color: AppColors.primary),
         prefixIcon: icon != null
             ? Icon(icon, size: 18, color: AppColors.accent)
             : null,
