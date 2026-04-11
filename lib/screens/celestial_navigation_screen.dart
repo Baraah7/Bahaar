@@ -8,6 +8,8 @@ import 'package:Bahaar/navigation/sidereal_time.dart';
 import 'package:Bahaar/navigation/corrections.dart';
 import 'package:Bahaar/navigation/confidence_engine.dart';
 import 'package:Bahaar/navigation/celestial_fix_notifier.dart';
+import 'package:Bahaar/navigation/camera_service.dart';
+import 'package:Bahaar/navigation/star_identifier.dart';
 
 class CelestialNavigationScreen extends StatefulWidget {
   const CelestialNavigationScreen({super.key});
@@ -39,6 +41,22 @@ class _CelestialNavigationScreenState
   final _starsController = TextEditingController(text: '12');
   final _driftController = TextEditingController(text: '0.05');
 
+  // ── Sky Scanner ──────────────────────────────────────────────────────────
+  final _cameraService = CameraService();
+  bool _scannerReady   = false;
+  bool _scanning       = false;
+  String? _scannerError;
+  StreamSubscription<CameraFrameResult>? _frameSub;
+
+  // Latest frame data (refreshed on every processed frame)
+  int    _detectedStars     = 0;
+  double _engineConfidence  = 0.0;
+  double _imuDrift          = 0.0;
+  bool   _motionBlurred     = false;
+  bool   _horizonDetected   = false;
+  double _horizonAngle      = 0.0;
+  List<String> _identifiedStarNames = [];
+
   // ── Results ──────────────────────────────────────────────────────────────
   double? _correctedAltDeg; // after refraction + dip correction
   double? _correctionArcmin;
@@ -51,16 +69,23 @@ class _CelestialNavigationScreenState
   @override
   void initState() {
     super.initState();
-    // Update clock every second
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _nowUtc = DateTime.now().toUtc());
     });
     _fetchGps();
+    // Load star catalog in the background — needed by Sky Scanner
+    StarIdentifier.instance.loadCatalog().then((err) {
+      if (err != null && mounted) {
+        setState(() => _scannerError = err);
+      }
+    });
   }
 
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _frameSub?.cancel();
+    _cameraService.dispose();
     _altController.dispose();
     _hoeController.dispose();
     _pressController.dispose();
@@ -236,6 +261,71 @@ class _CelestialNavigationScreenState
     );
 
     setState(() => _confidenceResult = result);
+  }
+
+  // ── Sky Scanner ───────────────────────────────────────────────────────────
+
+  Future<void> _initScanner() async {
+    setState(() { _scannerError = null; });
+    final err = await _cameraService.initialize();
+    if (mounted) {
+      setState(() {
+        _scannerReady = err == null;
+        _scannerError = err;
+      });
+    }
+  }
+
+  Future<void> _startScan() async {
+    if (!_scannerReady) {
+      await _initScanner();
+      if (!_scannerReady) return;
+    }
+    await _cameraService.startCapture();
+    _frameSub = _cameraService.results.listen(_onFrame);
+    if (mounted) setState(() => _scanning = true);
+  }
+
+  Future<void> _stopScan() async {
+    await _cameraService.stopCapture();
+    await _frameSub?.cancel();
+    _frameSub = null;
+    if (mounted) setState(() => _scanning = false);
+  }
+
+  void _onFrame(CameraFrameResult frame) {
+    if (!mounted) return;
+
+    // Pull star names from identified triplet (if any)
+    final names = <String>[];
+    if (frame.stars.hasStars) {
+      final centroids = frame.stars.stars!;
+      final match = StarIdentifier.instance.identify(
+        centroids:   centroids,
+        imageWidth:  1920,
+        imageHeight: 1080,
+        fovHDeg:     (_cameraService.fovHDeg),
+      );
+      if (match != null) {
+        for (final s in match.catalogTriplet) {
+          if (s.name.isNotEmpty) names.add(s.name);
+        }
+      }
+    }
+
+    setState(() {
+      _motionBlurred     = frame.motionBlurred;
+      _engineConfidence  = frame.engineConfidence;
+      _imuDrift          = frame.imuTag.driftDegPerSec;
+      _horizonDetected   = frame.horizon.detected;
+      _horizonAngle      = frame.horizon.angleDeg ?? 0.0;
+      _detectedStars     = frame.stars.stars?.length ?? 0;
+      if (names.isNotEmpty) _identifiedStarNames = names;
+    });
+
+    // Auto-fill confidence inputs from live data
+    _starsController.text = _detectedStars.toString();
+    _driftController.text  = _imuDrift.toStringAsFixed(3);
   }
 
   // ── Post fix to map ───────────────────────────────────────────────────────
@@ -444,6 +534,81 @@ class _CelestialNavigationScreenState
                   padding: EdgeInsets.only(top: 8),
                   child: Text('Enable GPS for live body positions.',
                       style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // ── Sky Scanner ─────────────────────────────────────────────────
+          _SectionCard(
+            title: 'Sky Scanner (DS-1 Camera)',
+            icon: Icons.camera_alt_outlined,
+            children: [
+              if (_scannerError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    _scannerError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              // Start / Stop button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _scanning
+                        ? Colors.red.shade700
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: Icon(
+                    _scanning ? Icons.stop : Icons.videocam_outlined,
+                    size: 18,
+                  ),
+                  label: Text(_scanning ? 'Stop Scan' : 'Start Sky Scan'),
+                  onPressed: _scanning ? _stopScan : _startScan,
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Live status
+              if (_scanning || _detectedStars > 0) ...[
+                _Row('Stars detected', '$_detectedStars'),
+                _Row('Engine confidence',
+                    '${_engineConfidence.toStringAsFixed(1)} %'),
+                _Row('IMU drift',
+                    '${_imuDrift.toStringAsFixed(3)} °/s'),
+                _Row('Motion blurred', _motionBlurred ? 'YES' : 'No'),
+                _Row(
+                  'Horizon',
+                  _horizonDetected
+                      ? 'Detected  ${_horizonAngle.toStringAsFixed(1)}°'
+                      : 'Not detected',
+                ),
+                if (_identifiedStarNames.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: _identifiedStarNames.map((name) {
+                      return Chip(
+                        label: Text(name,
+                            style: const TextStyle(fontSize: 11)),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
+                        side: BorderSide(
+                            color: AppColors.primary.withValues(alpha: 0.3)),
+                        padding: EdgeInsets.zero,
+                        materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ] else
+                const Text(
+                  'Point the camera at the night sky and tap Start Sky Scan.',
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
             ],
           ),
