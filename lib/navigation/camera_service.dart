@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -118,6 +119,10 @@ class CameraService {
     _focalMm  = focalMm;
     _sensorMm = sensorMm;
   }
+
+  /// Horizontal field of view in degrees derived from current calibration.
+  double get fovHDeg =>
+      2.0 * math.atan(_sensorMm / (2.0 * _focalMm)) * 180.0 / math.pi;
 
   // ── Initialization ──────────────────────────────────────────────────────────
 
