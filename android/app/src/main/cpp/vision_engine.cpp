@@ -95,17 +95,17 @@ int init_vision_engine(int    image_width,
     }
 
     // ── GPU check ─────────────────────────────────────────────────────────────
-    // We call this but do NOT block on it — UMat silently falls back to CPU
-    // when OpenCL is unavailable. We log a warning instead of hard-failing,
-    // because many mid-range Android devices have OpenCL but report it only
-    // after the first UMat operation.
-    if (!cv::ocl::haveOpenCL()) {
-        LOGW("init: OpenCL not detected — UMat will use CPU fallback. "
-             "Performance may exceed 500 ms target on slow devices.");
-        // Per blueprint: return -2 if GPU not available.
-        return -2;
+    // UMat silently falls back to CPU when OpenCL is unavailable, so we
+    // never hard-fail here. Many devices only expose OpenCL after the first
+    // UMat operation anyway. Enable it if available, otherwise CPU is used.
+    if (cv::ocl::haveOpenCL()) {
+        cv::ocl::setUseOpenCL(true);
+        LOGI("init: OpenCL available — GPU path enabled.");
+    } else {
+        cv::ocl::setUseOpenCL(false);
+        LOGW("init: OpenCL not available — running on CPU. "
+             "Performance may exceed 500 ms on slow devices.");
     }
-    cv::ocl::setUseOpenCL(true);
 
     // Limit threads to avoid starving the UI thread
     cv::setNumThreads(2);

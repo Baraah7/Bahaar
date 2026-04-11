@@ -90,6 +90,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       l10n.weather,
       l10n.fishRecognition,
       l10n.fishingLog,
+      'Sextant',
     ];
 
     return Scaffold(

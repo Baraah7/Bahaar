@@ -15,16 +15,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT DEFINED OPENCV_DIR)
     message(FATAL_ERROR
         "DS1: OPENCV_DIR is not set.\n"
-        "Download the OpenCV Android SDK from https://opencv.org/releases/ "
-        "and add  opencvSdk=/absolute/path/to/OpenCV-android-sdk  "
+        "Add  opencv.dir=/path/to/OpenCV-android-sdk  "
         "to android/local.properties, then re-sync.\n"
         "CMake variable: -DOPENCV_DIR=<path>/sdk/native/jni")
 endif()
 
-find_package(OpenCV REQUIRED
-    PATHS "${OPENCV_DIR}"
-    NO_DEFAULT_PATH
-    COMPONENTS core imgproc)
+# OpenCV Android SDK requires OpenCV_DIR to point at the jni folder;
+# find_package then locates the ABI-specific config inside it.
+set(OpenCV_DIR "${OPENCV_DIR}")
+
+find_package(OpenCV REQUIRED COMPONENTS core imgproc)
 
 # ── Shared library ────────────────────────────────────────────────────────────
 add_library(ds1_vision SHARED

@@ -38,8 +38,8 @@ class ImuTag {
 
   /// Magnitude of rotation rate in °/s.
   double get driftDegPerSec {
-    final rad = gyroX * gyroX + gyroY * gyroY + gyroZ * gyroZ;
-    return (rad < 0 ? 0.0 : rad) * (180.0 / 3.14159265358979);
+    final sumSq = gyroX * gyroX + gyroY * gyroY + gyroZ * gyroZ;
+    return math.sqrt(sumSq) * (180.0 / math.pi);
   }
 }
 

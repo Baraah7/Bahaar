@@ -226,10 +226,6 @@ class VisionBridge {
     if (!_loaded) return 'DS-1: call loadLibrary() before init().';
 
     final rc = _init(width, height, focalLengthMm, sensorWidthMm);
-    if (rc == kDs1NoGpu) {
-      return 'DS-1: GPU (OpenCL) not available on this device. '
-          'Vision engine cannot run.';
-    }
     if (rc == kDs1BadArg) {
       return 'DS-1: Invalid camera parameters '
           '(${width}x$height focal=${focalLengthMm}mm sensor=${sensorWidthMm}mm).';

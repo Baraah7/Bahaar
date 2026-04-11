@@ -1,9 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+}
+
+val localProps = Properties().apply {
+    load(FileInputStream(rootProject.file("local.properties")))
 }
 
 android {
@@ -19,6 +26,7 @@ android {
     }
 
     kotlinOptions {
+        @Suppress("DEPRECATION")
         jvmTarget = "17"
     }
 
@@ -30,31 +38,33 @@ android {
         versionName = flutter.versionName
 
         // ── DS-1 Vision Engine (C++ / OpenCV) ────────────────────────────────
-        // Disabled until OpenCV SDK is installed
-        // To enable: add opencvSdk=/path/to/OpenCV-android-sdk to local.properties
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
+        externalNativeBuild {
+            cmake {
+                val opencvDir = localProps.getProperty("opencv.dir")
+                    ?: error("opencv.dir not set in android/local.properties")
+                arguments += "-DOPENCV_DIR=${opencvDir.replace("\\", "/")}/sdk/native/jni"
+            }
+        }
     }
 
-    // externalNativeBuild disabled until OpenCV SDK is available
-    // externalNativeBuild {
-    //     cmake {
-    //         path = file("src/main/cpp/CMakeLists.txt")
-    //         version = "3.22.1"
-    //     }
-    // }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
 
-    aaptOptions {
-        noCompress += listOf("tflite")
+    androidResources {
+        noCompress += "tflite"
     }
 }
 
