@@ -49,7 +49,10 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     return MaterialApp(
       title: 'Bahaar',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: 'Zain',
+      ),
       home: const AppStart(),
       debugShowCheckedModeBanner: false,
       locale: locale,

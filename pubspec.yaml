@@ -75,6 +75,7 @@ flutter:
     - assets/images/Shrimp.jpeg
     - assets/images/Gilt-Head Bream.jpg
     - assets/images/Horse mackerel.jpg
+    - assets/logo/logoForLogin.png
 
 
   #   - images/a_dot_ham.jpeg
@@ -90,15 +91,18 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: Zain
+      fonts:
+        - asset: assets/fonts/Zain/Zain-Regular.ttf
+        - asset: assets/fonts/Zain/Zain-Italic.ttf
+        - asset: assets/fonts/Zain/Zain-Bold.ttf
+        - asset: assets/fonts/Zain/Zain-Light.ttf
+          weight: 300
+    - family: Space_Grotesk
+      fonts:
+        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Regular.ttf
+        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Bold.ttf
+        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Light.ttf
+          weight: 300
   

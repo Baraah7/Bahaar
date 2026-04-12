@@ -164,10 +164,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 22),
-                        const Center(
+                        Center(
                           child: Text(
-                            'بحـــــــــــــــــار',
-                            style: TextStyle(
+                            l10n.appName,
+                            style: const TextStyle(
+                              fontFamily: 'Zain',
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
                               color: AppColors.cream,
@@ -181,7 +182,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             l10n.loginSubtitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontFamily: 'Zain',
+                              fontSize: 15,
                               color: Colors.white.withValues(alpha: 0.70),
                               height: 1.6,
                             ),
@@ -231,7 +233,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(
                               l10n.forgotPassword,
                               style: TextStyle(
-                                fontSize: 12.5,
+                                fontFamily: 'Zain',
+                                fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.70),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -258,8 +261,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(
                               l10n.orDivider,
                               style: TextStyle(
+                                fontFamily: 'Zain',
                                 color: Colors.white.withValues(alpha: 0.75),
-                                fontSize: 12,
+                                fontSize: 14,
                               ),
                             ),
                           ),
@@ -275,7 +279,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(
                               l10n.continueAsGuest,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontFamily: 'Zain',
+                                fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.75),
                                 decoration: TextDecoration.underline,
                                 decorationColor: Colors.white,
@@ -293,7 +298,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             Text(
                               l10n.dontHaveAccount,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontFamily: 'Zain',
+                                fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.75),
                               ),
                             ),
@@ -306,7 +312,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Text(
                                 l10n.signUp,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontFamily: 'Zain',
+                                  fontSize: 14,
                                   color: AppColors.tan.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -340,6 +347,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text(
                   l10n.localeName == 'ar' ? 'EN' : 'عربي',
                   style: const TextStyle(
+                    fontFamily: 'Zain',
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

@@ -26,7 +26,11 @@ class AuthField extends StatelessWidget {
       obscureText: obscure,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(
+        fontFamily: 'Zain',
+        color: Colors.white,
+        fontSize: 14,
+        ),
       decoration: InputDecoration(
         hintText: label,
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
@@ -78,6 +82,7 @@ class AuthGradientButton extends StatelessWidget {
             : Text(
                 label,
                 style: const TextStyle(
+                  fontFamily: 'Zain',
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
