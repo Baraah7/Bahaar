@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/utilities/celestial_calculator.dart';
+import 'package:Bahaar/utilities/cn/celestial_calculator.dart';
 import 'package:Bahaar/l10n/app_localizations.dart';
 
 /// Displays sunrise, solar noon, sunset, moonrise and moonset times.

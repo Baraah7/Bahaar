@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:Bahaar/utilities/cn/localization_helper.dart';
 
 class OrderCard extends StatelessWidget {
   final Order order;
@@ -28,12 +29,7 @@ class OrderCard extends StatelessWidget {
     this.onViewPaymentProof,
   });
 
-  String _n(String value, String lang) {
-    if (lang != 'ar') return value;
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return value.replaceAllMapped(
-        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
-  }
+  String _n(String value, String lang) => arabicN(value, lang);
 
   @override
   Widget build(BuildContext context) {

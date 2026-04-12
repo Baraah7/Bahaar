@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:Bahaar/utilities/cn/localization_helper.dart';
 
 ImageProvider _resolveImage(String path) {
   if (path.startsWith('http')) return NetworkImage(path);
@@ -157,14 +158,7 @@ class FishCard extends StatelessWidget {
     );
   }
 
-  String _n(String value, String lang) {
-    if (lang != 'ar') return value;
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return value.replaceAllMapped(
-      RegExp(r'[0-9]'),
-      (m) => digits[int.parse(m.group(0)!)],
-    );
-  }
+  String _n(String value, String lang) => arabicN(value, lang);
 
   Widget _buildInfoSection(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:Bahaar/utilities/map_constants.dart';
+import 'package:Bahaar/utilities/map/map_constants.dart';
 import 'package:Bahaar/services/map/map_layer_manager.dart';
 import 'package:Bahaar/widgets/map/depth_soundings_layer.dart'
     show MbTilesDb, MbTileProvider;

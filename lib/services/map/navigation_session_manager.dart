@@ -9,7 +9,7 @@ import 'package:Bahaar/models/navigation/navigation_session_model.dart';
 import 'package:Bahaar/models/navigation/waypoint_model.dart';
 import 'package:Bahaar/services/map/hybrid_route_coordinator.dart';
 import 'package:Bahaar/services/marine_weather_service.dart';
-import 'package:Bahaar/utilities/navigation_constants.dart';
+import 'package:Bahaar/utilities/map/navigation_constants.dart';
 
 /// Service for managing active navigation sessions with real-time tracking
 ///

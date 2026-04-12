@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/screens/location_picker_screen.dart';
+import 'package:Bahaar/screens/fishing log/location_picker_screen.dart';
 import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:Bahaar/widgets/common/app_card.dart';
+import 'package:Bahaar/widgets/common/section_label.dart';
+import 'package:Bahaar/widgets/common/card_divider.dart';
 
 class CatchForm extends StatefulWidget {
   const CatchForm({super.key});
@@ -177,7 +180,7 @@ class _CatchFormState extends State<CatchForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Quick-pick chips
-                    _sectionLabel(_l10n.chooseSpecies),
+                    SectionLabel(_l10n.chooseSpecies),
                     const SizedBox(height: 10),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -238,9 +241,9 @@ class _CatchFormState extends State<CatchForm> {
                     const SizedBox(height: 20),
 
                     // Species + Weight in a white card
-                    _sectionLabel(_l10n.catchDetails),
+                    SectionLabel(_l10n.catchDetails),
                     const SizedBox(height: 10),
-                    _WhiteCard(
+                    AppCard(
                       child: Column(
                         children: [
                           _CardField(
@@ -253,7 +256,7 @@ class _CatchFormState extends State<CatchForm> {
                                     ? _l10n.speciesRequired
                                     : null,
                           ),
-                          const _CardDivider(),
+                          const CardDivider(),
                           _CardField(
                             controller: _weightCtrl,
                             icon: Icons.scale_outlined,
@@ -267,7 +270,7 @@ class _CatchFormState extends State<CatchForm> {
                                   RegExp(r'^\d*\.?\d*'))
                             ],
                           ),
-                          const _CardDivider(),
+                          const CardDivider(),
                           _CardField(
                             controller: _notesCtrl,
                             icon: Icons.notes_outlined,
@@ -281,9 +284,9 @@ class _CatchFormState extends State<CatchForm> {
                     const SizedBox(height: 20),
 
                     // Location card
-                    _sectionLabel(_l10n.catchLocationLabel),
+                    SectionLabel(_l10n.catchLocationLabel),
                     const SizedBox(height: 10),
-                    _WhiteCard(
+                    AppCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -424,39 +427,6 @@ class _CatchFormState extends State<CatchForm> {
     );
   }
 
-  Widget _sectionLabel(String label) {
-    return Text(label,
-        style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: Color(0xFF1E293B)));
-  }
-}
-
-// ── White card ────────────────────────────────────────────────────────────────
-
-class _WhiteCard extends StatelessWidget {
-  final Widget child;
-  const _WhiteCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: child,
-    );
-  }
 }
 
 // ── Card field ────────────────────────────────────────────────────────────────
@@ -529,18 +499,6 @@ class _CardField extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// ── Card divider ──────────────────────────────────────────────────────────────
-
-class _CardDivider extends StatelessWidget {
-  const _CardDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(
-        height: 1, indent: 64, endIndent: 14, color: Color(0xFFEEEEEE));
   }
 }
 

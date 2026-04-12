@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:Bahaar/models/navigation/route_model.dart';
-import 'package:Bahaar/utilities/navigation_constants.dart';
+import 'package:Bahaar/utilities/map/navigation_constants.dart';
 
 /// Service for interfacing with OSRM (Open Source Routing Machine) for land-based routing
 class OsrmRoutingService {

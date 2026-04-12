@@ -92,7 +92,7 @@ class DatabaseService {
           whereArgs: [userId],
           orderBy: 'start_time DESC');
     }
-    return db.query('trips', orderBy: 'start_time DESC');
+    return [];
   }
 
   /// Returns all trips that have no end_time, ordered oldest-first.

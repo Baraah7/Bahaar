@@ -4,7 +4,7 @@ import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
 import '../../models/weather/tide_model.dart';
-import '../../utilities/celestial_calculator.dart';
+import 'package:Bahaar/utilities/cn/celestial_calculator.dart';
 import '../../l10n/app_localizations.dart';
 import 'celestial_almanac_card.dart';
 

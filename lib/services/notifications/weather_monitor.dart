@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:Bahaar/services/notifications/notification_service.dart';
 import 'package:Bahaar/services/marine_weather_service.dart';
-import 'package:Bahaar/services/world_tides_service.dart';
+import 'package:Bahaar/services/weather/world_tides_service.dart';
 
 /// Periodically checks weather and tide conditions, fires local notifications
 /// when thresholds are exceeded.
