@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 enum FishType {
   // Fish types in the marketplace
   hamour,
@@ -101,4 +102,4 @@ enum ListingStatus {
         return 'Sold';
     }
   }
-}
+}*/

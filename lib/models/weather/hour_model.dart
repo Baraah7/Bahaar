@@ -1,139 +1,139 @@
-class hour_model{
-  final int time_epoch;
+class HourModel {
+  final int timeEpoch;
   final String time;
-  final double temp_c;
-  final double temp_f;
-  final int is_day;
-  final String condition_text;
-  final String condition_icon;
-  final double wind_mph;
-  final double wind_kph;
-  final int wind_degree;
-  final String wind_dir;
-  final double pressure_mb;
-  final double pressure_in;
-  final double precip_mm;
-  final double precip_in;
-  final double snow_cm;
-  final double humidity;
-  final double cloud;
-  final double feelslike_c;
-  final double feelslike_f;
-  final double windchill_c;
-  final double windchill_f;
-  final double heatindex_c;
-  final double heatindex_f;
-  final double dewpoint_c;
-  final double dewpoint_f;
-  final bool will_it_rain;
-  final int chance_of_rain;
-  final bool will_it_snow;
-  final int chance_of_snow;
-  final double vis_km;
-  final double vis_miles;
-  final double gust_mph;
-  final double gust_kph;
+  final double tempC;
+  final double tempF;
+  final int isDay;
+  final String conditionText;
+  final String conditionIcon;
+  final double windMph;
+  final double windKph;
+  final int windDegree;
+  final String windDir;
+  final double pressureMb;
+  final double pressureIn;
+  final double precipMm;
+  final double precipIn;
+  final double snowCm;
+  final int humidity;
+  final int cloud;
+  final double feelslikeC;
+  final double feelslikeF;
+  final double? windchillC;
+  final double? windchillF;
+  final double? heatindexC;
+  final double? heatindexF;
+  final double? dewpointC;
+  final double? dewpointF;
+  final bool willItRain;
+  final int chanceOfRain;
+  final bool willItSnow;
+  final int chanceOfSnow;
+  final double visKm;
+  final double visMiles;
+  final double gustMph;
+  final double gustKph;
   final double uv;
   // Solar radiation fields - optional (may not be in all API responses)
-  final double? short_rad;
-  final double? diff_rad;
+  final double? shortRad;
+  final double? diffRad;
   final double? dni;
   final double? gti;
 
-  hour_model({
-    required this.time_epoch,
+  HourModel({
+    required this.timeEpoch,
     required this.time,
-    required this.temp_c,
-    required this.temp_f,
-    required this.is_day,
-    required this.condition_text,
-    required this.condition_icon,
-    required this.wind_mph,
-    required this.wind_kph,
-    required this.wind_degree,
-    required this.wind_dir,
-    required this.pressure_mb,
-    required this.pressure_in,
-    required this.precip_mm,
-    required this.precip_in,
-    required this.snow_cm,
+    required this.tempC,
+    required this.tempF,
+    required this.isDay,
+    required this.conditionText,
+    required this.conditionIcon,
+    required this.windMph,
+    required this.windKph,
+    required this.windDegree,
+    required this.windDir,
+    required this.pressureMb,
+    required this.pressureIn,
+    required this.precipMm,
+    required this.precipIn,
+    required this.snowCm,
     required this.humidity,
     required this.cloud,
-    required this.feelslike_c,
-    required this.feelslike_f,
-    required this.windchill_c,
-    required this.windchill_f,
-    required this.heatindex_c,
-    required this.heatindex_f,
-    required this.dewpoint_c,
-    required this.dewpoint_f,
-    required this.will_it_rain,
-    required this.chance_of_rain,
-    required this.will_it_snow,
-    required this.chance_of_snow,
-    required this.vis_km,
-    required this.vis_miles,
-    required this.gust_mph,
-    required this.gust_kph,
+    required this.feelslikeC,
+    required this.feelslikeF,
+    this.windchillC,
+    this.windchillF,
+    this.heatindexC,
+    this.heatindexF,
+    this.dewpointC,
+    this.dewpointF,
+    required this.willItRain,
+    required this.chanceOfRain,
+    required this.willItSnow,
+    required this.chanceOfSnow,
+    required this.visKm,
+    required this.visMiles,
+    required this.gustMph,
+    required this.gustKph,
     required this.uv,
-    this.short_rad,
-    this.diff_rad,
+    this.shortRad,
+    this.diffRad,
     this.dni,
     this.gti,
   });
 
-  factory hour_model.fromJson(Map<String, dynamic> json) {
+  factory HourModel.fromJson(Map<String, dynamic> json) {
     try {
-      print('Parsing hour_model for time: ${json['time']}');
+      // print('Parsing HourModel for time: ${json['time']}');
 
       if (json['condition'] == null) throw Exception('Missing "condition" field in hour');
 
-      return hour_model(
-        time_epoch: json['time_epoch'] as int,
+      return HourModel(
+        timeEpoch: json['time_epoch'] as int,
         time: json['time'] is String ? json['time'] as String : json['time'].toString(),
-        temp_c: (json['temp_c'] as num).toDouble(),
-        temp_f: (json['temp_f'] as num).toDouble(),
-        is_day: json['is_day'] as int,
-        condition_text: json['condition']['text'] is String ? json['condition']['text'] as String : json['condition']['text'].toString(),
-        condition_icon: json['condition']['icon'] is String ? json['condition']['icon'] as String : json['condition']['icon'].toString(),
-        wind_mph: (json['wind_mph'] as num).toDouble(),
-        wind_kph: (json['wind_kph'] as num).toDouble(),
-        wind_degree: json['wind_degree'] as int,
-        wind_dir: json['wind_dir'] is String ? json['wind_dir'] as String : json['wind_dir'].toString(),
-        pressure_mb: (json['pressure_mb'] as num).toDouble(),
-        pressure_in: (json['pressure_in'] as num).toDouble(),
-        precip_mm: (json['precip_mm'] as num).toDouble(),
-        precip_in: (json['precip_in'] as num).toDouble(),
-        snow_cm: (json['snow_cm'] as num).toDouble(),
-        humidity: (json['humidity'] as num).toDouble(),
-        cloud: (json['cloud'] as num).toDouble(),
-        feelslike_c: (json['feelslike_c'] as num).toDouble(),
-        feelslike_f: (json['feelslike_f'] as num).toDouble(),
-        windchill_c: (json['windchill_c'] as num).toDouble(),
-        windchill_f: (json['windchill_f'] as num).toDouble(),
-        heatindex_c: (json['heatindex_c'] as num).toDouble(),
-        heatindex_f: (json['heatindex_f'] as num).toDouble(),
-        dewpoint_c: (json['dewpoint_c'] as num).toDouble(),
-        dewpoint_f: (json['dewpoint_f'] as num).toDouble(),
-        will_it_rain: (json['will_it_rain'] as int) == 1,
-        chance_of_rain: json['chance_of_rain'] as int,
-        will_it_snow: (json['will_it_snow'] as int) == 1,
-        chance_of_snow: json['chance_of_snow'] as int,
-        vis_km: (json['vis_km'] as num).toDouble(),
-        vis_miles: (json['vis_miles'] as num).toDouble(),
-        gust_mph: (json['gust_mph'] as num).toDouble(),
-        gust_kph: (json['gust_kph'] as num).toDouble(),
+        tempC: (json['temp_c'] as num).toDouble(),
+        tempF: (json['temp_f'] as num).toDouble(),
+        isDay: json['is_day'] as int,
+        conditionText: json['condition']['text'] is String ? json['condition']['text'] as String : json['condition']['text'].toString(),
+        conditionIcon: json['condition']['icon'] is String ? json['condition']['icon'] as String : json['condition']['icon'].toString(),
+        windMph: (json['wind_mph'] as num).toDouble(),
+        windKph: (json['wind_kph'] as num).toDouble(),
+        windDegree: json['wind_degree'] as int,
+        windDir: json['wind_dir'] is String ? json['wind_dir'] as String : json['wind_dir'].toString(),
+        pressureMb: (json['pressure_mb'] as num).toDouble(),
+        pressureIn: (json['pressure_in'] as num).toDouble(),
+        precipMm: (json['precip_mm'] as num).toDouble(),
+        precipIn: (json['precip_in'] as num).toDouble(),
+        snowCm: (json['snow_cm'] as num).toDouble(),
+        humidity: (json['humidity'] as num).toInt(),
+        cloud: (json['cloud'] as num).toInt(),
+        feelslikeC: (json['feelslike_c'] as num).toDouble(),
+        feelslikeF: (json['feelslike_f'] as num).toDouble(),
+        windchillC: json['windchill_c'] != null ? (json['windchill_c'] as num).toDouble() : null,
+        windchillF: json['windchill_f'] != null ? (json['windchill_f'] as num).toDouble() : null,
+        heatindexC: json['heatindex_c'] != null ? (json['heatindex_c'] as num).toDouble() : null,
+        heatindexF: json['heatindex_f'] != null ? (json['heatindex_f'] as num).toDouble() : null,
+        dewpointC: json['dewpoint_c'] != null ? (json['dewpoint_c'] as num).toDouble() : null,
+        dewpointF: json['dewpoint_f'] != null ? (json['dewpoint_f'] as num).toDouble() : null,
+        willItRain: (json['will_it_rain'] as int) == 1,
+        chanceOfRain: (json['chance_of_rain'] as num).toInt(),
+        willItSnow: (json['will_it_snow'] as int) == 1,
+        chanceOfSnow: (json['chance_of_snow'] as num).toInt(),
+        visKm: (json['vis_km'] as num).toDouble(),
+        visMiles: (json['vis_miles'] as num).toDouble(),
+        gustMph: (json['gust_mph'] as num).toDouble(),
+        gustKph: (json['gust_kph'] as num).toDouble(),
         uv: (json['uv'] as num).toDouble(),
         // Solar radiation fields - optional, may be null in some API responses
-        short_rad: json['short_rad'] != null ? (json['short_rad'] as num).toDouble() : null,
-        diff_rad: json['diff_rad'] != null ? (json['diff_rad'] as num).toDouble() : null,
+        shortRad: json['short_rad'] != null ? (json['short_rad'] as num).toDouble() : null,
+        diffRad: json['diff_rad'] != null ? (json['diff_rad'] as num).toDouble() : null,
         dni: json['dni'] != null ? (json['dni'] as num).toDouble() : null,
         gti: json['gti'] != null ? (json['gti'] as num).toDouble() : null,
       );
     } catch (e, stackTrace) {
-      print('ERROR in hour_model.fromJson: $e');
-      print('Stack trace: $stackTrace');
-      print('JSON data keys: ${json.keys.toList()}');
+      // print('ERROR in HourModel.fromJson: $e');
+      // print('Stack trace: $stackTrace');
+      // print('JSON data keys: ${json.keys.toList()}');
       rethrow;
     }
   }

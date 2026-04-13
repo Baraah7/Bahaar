@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:bahaar/models/fishing/fishing_activity_model.dart';
+import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/fishing/fishing_activity_model.dart';
-import 'package:Bahaar/utilities/geometry_utils.dart';
 
 /// Service for fetching and managing fishing activity data.
 /// Tries Global Fishing Watch API first, falls back to bundled sample data.

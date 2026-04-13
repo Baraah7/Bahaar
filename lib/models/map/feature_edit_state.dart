@@ -1,6 +1,6 @@
+import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
 
 /// Interaction modes for feature editing
 enum FeatureEditInteraction {

@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 class BuyerInfo {
   final String id;
   final String name;
@@ -28,4 +29,4 @@ class BuyerInfo {
       'location': location,
     };
   }
-}
+}*/

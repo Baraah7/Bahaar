@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/navigation/route_model.dart';
 
 /// Widget for displaying navigation route as colored polylines
 ///
@@ -107,9 +107,9 @@ class RoutePolylineLayer extends StatelessWidget {
   Color _getSegmentColor(SegmentType type) {
     switch (type) {
       case SegmentType.land:
-        return Colors.blue.withValues(alpha: 0.9);
+        return Colors.orange.withValues(alpha: 0.9);
       case SegmentType.marine:
-        return Colors.cyan.withValues(alpha: 0.9);
+        return const Color(0xFF1565C0).withValues(alpha: 0.9);
     }
   }
 

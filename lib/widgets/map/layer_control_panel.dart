@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/services/map/map_layer_manager.dart';
-import 'package:Bahaar/widgets/map/geojson_layers.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/services/map/map_layer_manager.dart';
+import 'package:bahaar/widgets/map/geojson_layers.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 
 /// Control panel widget for managing all map layers
 class LayerControlPanel extends StatefulWidget {

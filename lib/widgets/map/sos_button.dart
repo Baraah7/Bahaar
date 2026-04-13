@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:Bahaar/services/sos_service.dart';
+import 'package:bahaar/services/sos_service.dart';
 
 /// A persistent floating SOS button that requires a 3-second long-press
 /// to activate, preventing accidental triggers.

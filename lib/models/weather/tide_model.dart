@@ -18,6 +18,13 @@ class TideEntry {
         type: (json['type'] as String).toUpperCase(),
       );
 
+  // Stormglass API format: {"time": "2024-01-01T05:00:00+00:00", "height": 1.23, "type": "high"}
+  factory TideEntry.fromStormglassJson(Map<String, dynamic> json) => TideEntry(
+        time: json['time'] as String,
+        heightMt: (json['height'] as num).toDouble(),
+        type: (json['type'] as String).toUpperCase(),
+      );
+
   bool get isHigh => type == 'HIGH';
 
   DateTime get dateTime => DateTime.parse(time);

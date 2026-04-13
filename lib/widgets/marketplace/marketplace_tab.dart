@@ -183,7 +183,11 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                         Icon(Icons.filter_list_rounded, size: 13, color: const Color(0xFF0D4F54)),
                         const SizedBox(width: 4),
                         Text(
-                          l10n.clearFilters,
+                          '${[
+                            if (_selectedTypeFilter != null) 1,
+                            if (_selectedConditionFilter != null) 1,
+                            if (_minPrice != null || _maxPrice != null) 1,
+                          ].length} ${l10n.filtersActive}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

@@ -277,6 +277,194 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentLocationNotAvailable => 'Current location not available';
 
   @override
+  String get chooseNavType => 'Choose Navigation Type';
+
+  @override
+  String get landToSea => 'Land → Port → Sea';
+
+  @override
+  String get landToSeaSubtitle => 'Drive to a port, then navigate to a sea destination';
+
+  @override
+  String get seaToSea => 'Sea → Sea';
+
+  @override
+  String get seaToSeaSubtitle => 'Navigate directly between two sea points';
+
+  @override
+  String get returnSeaToLand => 'Return: Sea → Port → Land';
+
+  @override
+  String get returnSeaToLandSubtitle => 'Return from sea, dock at a port, navigate home';
+
+  @override
+  String get tapSeaDeparture => 'Tap your departure point on the sea';
+
+  @override
+  String get stepTapSeaDeparture => '1. Tap your departure point on the sea';
+
+  @override
+  String get stepTapSeaDestination => '2. Tap your sea destination';
+
+  @override
+  String get stepTapPort => '1. Tap a port (anchor icon)\n2. Tap sea destination\n(Tap land to change your start location)';
+
+  @override
+  String get stepTapPortDock => '2. Tap a port (anchor icon) to dock at';
+
+  @override
+  String get stepTapLandDestination => '3. Tap your land destination';
+
+  @override
+  String get customOriginSet => 'Custom origin set';
+
+  @override
+  String get departureSet => 'Departure set';
+
+  @override
+  String get seaDepartureSet => 'Sea departure set';
+
+  @override
+  String get portLabel => 'Port';
+
+  @override
+  String get lastPort => 'Last port';
+
+  @override
+  String get landDestinationSet => 'Land destination set';
+
+  @override
+  String get offlineMapCached => 'Offline — map tiles cached';
+
+  @override
+  String get logCatch => 'Log Catch';
+
+  @override
+  String get outsideTerritorialWaters => 'Outside territorial waters — tap on the sea';
+
+  @override
+  String get tapOnSea => 'Tap on the sea, not on land';
+
+  @override
+  String get currentLocationOnLandRequired => 'Current location not available or not on land. Tap the map to set a custom land origin.';
+
+  @override
+  String get tripDetailTitle => 'Trip Detail';
+
+  @override
+  String get tripStart => 'Start';
+
+  @override
+  String get tripEnd => 'End';
+
+  @override
+  String get totalWeight => 'Total weight';
+
+  @override
+  String get noCatchesLogged => 'No catches logged.';
+
+  @override
+  String get deleteCatch => 'Delete catch?';
+
+  @override
+  String removeCatchConfirm(String species) {
+    return 'Remove \"$species\" from this trip?';
+  }
+
+  @override
+  String get editCatch => 'Edit Catch';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get speciesName => 'Species *';
+
+  @override
+  String get notesOptional => 'Notes (optional)';
+
+  @override
+  String get pinOnMap => 'Pin on Map';
+
+  @override
+  String get latitude => 'Latitude';
+
+  @override
+  String get longitude => 'Longitude';
+
+  @override
+  String get locationPinned => 'Location pinned on map.';
+
+  @override
+  String get ongoing => 'Ongoing';
+
+  @override
+  String get pickCatchTime => 'Pick catch time';
+
+  @override
+  String get quickSpeciesHamour => 'Hamour';
+
+  @override
+  String get quickSpeciesSafi => 'Safi';
+
+  @override
+  String get quickSpeciesSobaity => 'Sobaity';
+
+  @override
+  String get quickSpeciesChanad => 'Chanad';
+
+  @override
+  String get quickSpeciesZubaidi => 'Zubaidi';
+
+  @override
+  String get quickSpeciesShrimp => 'Shrimp';
+
+  @override
+  String get quickSpeciesCrab => 'Crab';
+
+  @override
+  String get fishingLog => 'Fishing Log';
+
+  @override
+  String get tripAlreadyActive => 'A trip is already active — end it first.';
+
+  @override
+  String get endActiveTripFirst => 'End the active trip first.';
+
+  @override
+  String get endButtonLabel => 'End';
+
+  @override
+  String get editTripTitle => 'Edit Title';
+
+  @override
+  String get tripNameHint => 'Trip name';
+
+  @override
+  String get editTitleTooltip => 'Edit title';
+
+  @override
+  String get deleteTripTooltip => 'Delete trip';
+
+  @override
+  String get signInToTrack => 'Sign in to track your trips and catches.';
+
+  @override
+  String get forgotPasswordHint => 'Enter your email to receive a password reset link.';
+
+  @override
+  String get sendResetLink => 'Send Reset Link';
+
+  @override
+  String get resetLinkSent => 'Reset link sent.';
+
+  @override
+  String get resetLinkFailed => 'Failed to send reset link.';
+
+  @override
+  String get signInToSell => 'Sign in to sell your catch.';
+
+  @override
   String get marketplace => 'Marketplace';
 
   @override
@@ -296,6 +484,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearFilters => 'Clear Filters';
+
+  @override
+  String get filtersActive => 'filters active';
 
   @override
   String get filterByFishType => 'Filter by Fish Type';
@@ -947,79 +1138,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickSpeciesShrimp => 'Shrimp';
 
   @override
-  String get quickSpeciesCrab => 'Crab';
+  String get phoneEightDigits => 'Phone number must be 8 digits';
 
   @override
-  String get editCatch => 'Edit Catch';
+  String get selectLocationFirst => 'Please select a location first';
 
   @override
-  String get speciesName => 'Species Name';
+  String get unexpectedError => 'An unexpected error occurred';
 
   @override
-  String get notesOptional => 'Notes (optional)';
+  String get probExcellent => 'Excellent';
 
   @override
-  String get pinOnMap => 'Pin on Map';
+  String get probVeryGood => 'Very Good';
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get probModerate => 'Moderate';
 
   @override
-  String get policyDataCollection => 'Data Collection';
+  String get probWeak => 'Weak';
 
   @override
-  String get policyDataCollectionBody => 'We collect fishing trip data, catch logs, and location data to provide navigation and prediction services.';
+  String get probNotSuitable => 'Not Suitable';
 
   @override
-  String get policyLocation => 'Location';
+  String get predictionTitle => 'Catch Prediction';
 
   @override
-  String get policyLocationBody => 'Location is used for navigation and fishing spot suggestions. It is not shared with third parties.';
+  String get hideMap => 'Hide Map';
 
   @override
-  String get policyFishRecognition => 'Fish Recognition';
+  String get selectFromMap => 'Select from Map';
 
   @override
-  String get policyFishRecognitionBody => 'Photos taken for fish recognition are processed on-device and are not uploaded or stored.';
+  String get tapMapToSelect => 'Tap the map to select a location';
 
   @override
-  String get policyAuthentication => 'Authentication';
+  String get chooseSpecies => 'Choose Species';
 
   @override
-  String get policyAuthenticationBody => 'Authentication is handled securely via Firebase. Passwords are never stored in plain text.';
+  String get getPrediction => 'Get Prediction';
 
   @override
-  String get dayTue => 'Tue';
+  String get retry => 'Retry';
 
   @override
-  String get dayWed => 'Wed';
+  String get insideProtectedZone => 'Inside protected zone';
 
   @override
-  String get dayThu => 'Thu';
+  String get factorSeason => 'Season';
 
   @override
-  String get dayFri => 'Fri';
+  String get factorWeather => 'Weather';
 
   @override
-  String get daySat => 'Sat';
+  String get factorReports => 'Reports';
 
   @override
-  String get daySun => 'Sun';
+  String get factorProximity => 'Proximity to Spots';
 
   @override
-  String get uvLow => 'Low';
+  String get nearbyFishingSpots => 'Nearby Fishing Spots';
 
   @override
-  String get uvModerate => 'Moderate';
+  String get kmUnit => 'km';
 
   @override
-  String get uvHigh => 'High';
+  String get tripResumed => 'Trip resumed';
 
   @override
-  String get uvVeryHigh => 'Very High';
+  String get endTrip => 'End Trip';
 
   @override
-  String get logCatchTitle => 'Log Catch';
+  String get endCurrentTrip => 'Are you sure you want to end this trip?';
+
+  @override
+  String get tripEndedAndSaved => 'Trip ended and saved';
+
+  @override
+  String get deleteTrip => 'Delete Trip';
+
+  @override
+  String deleteTripConfirmFinished(String name) {
+    return 'Delete the trip \'$name\'?';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteActiveTrip => 'Delete Active Trip';
+
+  @override
+  String get deleteTripConfirm => 'This trip is still active. Are you sure you want to delete it?';
+
+  @override
+  String get tripDeleted => 'Trip deleted';
+
+  @override
+  String get noTripsYet => 'No trips yet';
+
+  @override
+  String get tapStartTrip => 'Tap the button below to start your first trip';
+
+  @override
+  String get resumeTrip => 'Resume Trip';
+
+  @override
+  String get startTrip => 'Start Trip';
+
+  @override
+  String get tripInProgress => 'Trip in progress';
+
+  @override
+  String get catchWord => 'catch';
+
+  @override
+  String get catches => 'catches';
+
+  @override
+  String get addCatch => 'Add Catch';
+
+  @override
+  String get logCatchTitle => 'Log a Catch';
 
   @override
   String get catchDetails => 'Catch Details';
@@ -1028,10 +1269,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speciesNameLabel => 'Species Name';
 
   @override
-  String get speciesRequired => 'Species name is required';
+  String get speciesRequired => 'Species is required';
 
   @override
-  String get notesOptionalLabel => 'Notes (optional)';
+  String get notesOptionalLabel => 'Notes (Optional)';
 
   @override
   String get catchLocationLabel => 'Catch Location';
@@ -1040,118 +1281,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedOnMap => 'Pinned on map';
 
   @override
-  String get gpsLocationLabel => 'GPS Location';
+  String get gpsLocationLabel => 'GPS location';
 
   @override
   String get locationNotSet => 'Location not set';
 
   @override
   String get mapLabel => 'Map';
-
-  @override
-  String get uvExtreme => 'Extreme';
-
-  @override
-  String get feelsLikeSimilar => 'Similar to actual temperature';
-
-  @override
-  String get feelsLikeWarmer => 'Feels warmer than actual';
-
-  @override
-  String get feelsLikeCooler => 'Feels cooler than actual';
-
-  @override
-  String get visibilityClear => 'Clear';
-
-  @override
-  String get visibilityGood => 'Good';
-
-  @override
-  String get visibilityLow => 'Low visibility';
-
-  @override
-  String get fromYourFishingLog => 'From Your Fishing Log';
-
-  @override
-  String get tapRecentCatchToFill => 'Tap a recent catch to auto-fill details';
-
-  @override
-  String get today => 'Today';
-
-  @override
-  String get yesterday => 'Yesterday';
-
-  @override
-  String get or => 'or';
-
-  @override
-  String get ibanOptional => 'IBAN (optional)';
-
-  @override
-  String get sellerBenefitNote => 'Buyers will send payment to your Benefit Pay number';
-
-  @override
-  String get phoneEightDigits => 'Enter 8-digit phone number';
-
-  @override
-  String get loginRequired => 'Login Required';
-
-  @override
-  String get guestAccountSellMessage => 'You need an account to sell fish. Please sign in or create an account.';
-
-  @override
-  String get forgotPasswordHint => 'Enter your email address and we will send you a password reset link.';
-
-  @override
-  String get enterEmail => 'Enter email';
-
-  @override
-  String get sendResetLink => 'Send Reset Link';
-
-  @override
-  String get resetLinkSent => 'Reset link sent to your email.';
-
-  @override
-  String get resetLinkFailed => 'Failed to send reset link. Please try again.';
-
-  @override
-  String get kmUnit => 'km';
-
-  @override
-  String get guestUser => 'Guest User';
-
-  @override
-  String get guestAccount => 'Guest Account';
-
-  @override
-  String get accountStatus => 'Account Status';
-
-  @override
-  String get guestBannerMessage => 'You are browsing as a guest. Sign in to access all features.';
-
-  @override
-  String get policyRetention => 'Data Retention';
-
-  @override
-  String get policyRetentionBody => 'Your data is retained as long as your account is active. You may request deletion at any time.';
-
-  @override
-  String get policyContactSection => 'Contact';
-
-  @override
-  String get policyContactSectionBody => 'For privacy concerns, contact us through the app support channel.';
-
-  @override
-  String get gotIt => 'Got It';
-
-  @override
-  String get latitude => 'Latitude';
-
-  @override
-  String get longitude => 'Longitude';
-
-  @override
-  String get locationPinned => 'Location pinned';
 
   @override
   String get tripActiveLabel => 'Active';
@@ -1166,22 +1302,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripCatchesLabel => 'Catches';
 
   @override
+  String get mapLayers => 'Map Layers';
+
+  @override
+  String get depthVisualization => 'Depth Visualization';
+
+  @override
+  String get showDepthLayer => 'Show depth layer';
+
+  @override
+  String get visualizationType => 'Visualization Type';
+
+  @override
+  String get opacityLabel => 'Opacity';
+
+  @override
+  String get protectedExclusionZones => 'Protected & Exclusion Zones';
+
+  @override
+  String get protectedZones => 'Protected Zones';
+
+  @override
+  String featuresLoaded(int count) {
+    return '$count features loaded';
+  }
+
+  @override
+  String get marineReservesReefs => 'Marine Reserves & Reefs';
+
+  @override
   String get mpaRestrictedArea => 'MPA / Restricted Area';
 
   @override
-  String get oilGasExclusion => 'Oil & Gas Exclusion Zone';
+  String get oilGasExclusion => 'Oil & Gas Exclusion';
 
   @override
   String get safetyBuffersVisible => 'Safety buffers visible';
 
   @override
-  String get safetyRulesApplyWhenHidden => 'Safety rules still apply when hidden';
+  String get safetyRulesApplyWhenHidden => 'Safety rules apply when hidden';
 
   @override
-  String get showFishingSpots => 'Show Fishing Spots';
+  String get fishingSpotSuggestions => 'Fishing Spot Suggestions';
 
   @override
-  String get zonesMpasLocations => 'Zones, MPAs & suggested locations';
+  String get showFishingSpots => 'Show fishing spots';
+
+  @override
+  String get zonesMpasLocations => 'Zones, MPAs & locations';
 
   @override
   String get highConfidenceSpot => 'High confidence spot';
@@ -1196,52 +1364,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fishingPrediction => 'Fishing Prediction';
 
   @override
-  String get deleteListing => 'Delete Listing';
-
-  @override
-  String get bdPerKg => 'BD/kg';
-
-  @override
-  String get guestAccountLoginMessage => 'Please sign in to place an order.';
-
-  @override
-  String get confirmDeleteListing => 'Are you sure you want to delete this listing?';
-
-  @override
-  String priceRangeFilter(String min, String max) => '$min - $max BD/kg';
-
-  @override
-  String get priceRange => 'Price Range';
-
-  @override
-  String get allPrices => 'All Prices';
-
-  @override
-  String get pleaseLoginToViewOrders => 'Please log in to view your orders';
-
-  @override
-  String sellingTab(int count) => 'Selling ($count)';
-
-  @override
-  String purchasesTab(int count) => 'Purchases ($count)';
-
-  @override
-  String get noOrdersForListings => 'No orders for your listings yet';
-
-  @override
-  String get noPurchasesYet => 'No purchases yet';
-
-  @override
-  String get whenSomeoneOrdersYourFish => 'When someone orders your fish, it will appear here';
-
-  @override
-  String get yourPurchasesWillAppear => 'Your purchases will appear here';
-
-  @override
-  String get cancelOrder => 'Cancel Order';
-
-  @override
-  String get confirmCancelOrder => 'Are you sure you want to cancel this order?';
+  String get aiCatchProbability => 'AI catch probability';
 
   @override
   String get celestialAlmanac => 'Celestial Almanac';
@@ -1250,29 +1373,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get solarNoon => 'Solar Noon';
 
   @override
-  String get moonrise => 'Moonrise';
+  String get emergency => 'Emergency';
 
   @override
-  String get moonset => 'Moonset';
+  String get emergencyComingSoon => 'Emergency features are coming soon.';
 
   @override
-  String get aiCatchProbability => 'AI catch probability';
+  String get emergencyContacts => 'Emergency Contacts';
 
   @override
-  String get phoneNumberCopied => 'Phone number copied';
+  String get coastGuard => 'Coast Guard';
 
   @override
-  String get sellerLabel => 'Seller';
+  String get marineRescue => 'Marine Rescue';
 
   @override
-  String get rejectionReason => 'Rejection reason';
+  String get police => 'Police';
 
   @override
-  String get orderAcceptedContactSeller => 'Order accepted — contact the seller to arrange pickup';
+  String get ambulance => 'Ambulance';
 
   @override
-  String get orderCancelled => 'Order cancelled';
+  String get fishingRules => 'Fishing Rules';
 
   @override
-  String get ibanOrQrRequired => 'Please add an IBAN or QR code before listing';
+  String get sosLongPressHint => 'Long-press 3 seconds to activate SOS';
+
+  @override
+  String get emergencyChannelHint => 'Emergency VHF Channel 16';
+
+  @override
+  String get rule1Title => 'Fishing Licence';
+
+  @override
+  String get rule1Body => 'All fishers must hold a valid fishing licence issued by the Ministry of Works, Municipalities Affairs & Urban Planning.';
+
+  @override
+  String get rule2Title => 'Protected Areas';
+
+  @override
+  String get rule2Body => 'Fishing is strictly prohibited within designated marine protected areas and restricted military zones shown on the map.';
+
+  @override
+  String get rule3Title => 'Equipment';
+
+  @override
+  String get rule3Body => 'Use of explosives, poisons, or electric shocks to catch fish is illegal and punishable by law.';
+
+  @override
+  String get rule4Title => 'Protected Species';
+
+  @override
+  String get rule4Body => 'Catching, trading, or possessing protected species (hawksbill turtle, dugong, whale shark) is prohibited.';
+
+  @override
+  String get rule5Title => 'Night Fishing';
+
+  @override
+  String get rule5Body => 'Night fishing requires proper navigation lights and is restricted in certain zones. Check local regulations.';
+
+  @override
+  String get rule6Title => 'Vessel Safety';
+
+  @override
+  String get rule6Body => 'Life jackets are mandatory for all passengers. Vessels must carry a working VHF radio and flares.';
 }

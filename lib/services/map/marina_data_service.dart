@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'package:bahaar/models/navigation/marina_model.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/models/navigation/marina_model.dart';
 import 'navigation_mask.dart';
 
 /// Service for loading, validating, and querying marina/launch point data
@@ -29,7 +29,6 @@ class MarinaDataService {
     final validatedMarinas = _validateMarinas(manualMarinas, navigationMask);
 
     // 3. Filter by restricted areas (for now, just store all)
-    // TODO: Implement restricted area filtering when GeoJsonLayerBuilder is available
     _marinas = validatedMarinas;
 
     _isInitialized = true;
@@ -128,7 +127,6 @@ class MarinaDataService {
     List<Marina> marinas,
     List<Polygon> restrictedAreas,
   ) async {
-    // TODO: Implement point-in-polygon check for each marina
     // For now, return all marinas
     return marinas;
   }

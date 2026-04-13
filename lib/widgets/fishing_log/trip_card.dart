@@ -1,7 +1,8 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
 
 class TripCard extends StatelessWidget {
   final Trip trip;
@@ -17,12 +18,7 @@ class TripCard extends StatelessWidget {
     this.onEditTitle,
   });
 
-  String _n(String value, String lang) {
-    if (lang != 'ar') return value;
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return value.replaceAllMapped(
-        RegExp(r'[0-9]'), (m) => digits[int.parse(m.group(0)!)]);
-  }
+  String _n(String value, String lang) => arabicN(value, lang);
 
   String _formatDurationLocale(Duration d, String lang) {
     final isAr = lang == 'ar';
@@ -45,7 +41,7 @@ class TripCard extends StatelessWidget {
     final lang = l10n.localeName;
     final locale = lang == 'ar' ? 'ar' : 'en';
     final dateStr = DateFormat('EEE d MMM yyyy', locale).format(trip.startTime.toLocal());
-    final timeStr = DateFormat('HH:mm').format(trip.startTime.toLocal());
+    final timeStr = _n(DateFormat('HH:mm').format(trip.startTime.toLocal()), lang);
     final duration = trip.duration;
     final durationStr = _formatDurationLocale(duration, lang);
     final totalWeight = trip.totalWeightKg;

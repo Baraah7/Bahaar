@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:Bahaar/models/ais_model.dart';
+import 'package:bahaar/models/ais_model.dart';
 
 /// Computes Closest Point of Approach (CPA) between own vessel and a target.
 ///

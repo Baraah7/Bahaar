@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:Bahaar/services/marine_weather_service.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
 
 /// Creates a mock HTTP client that returns predefined marine + forecast responses
 MockClient createMockClient({
@@ -142,14 +142,13 @@ void main() {
     });
 
     test('hasConditionsChanged detects level changes', () async {
-      bool returnDangerous = false;
       final client = MockClient((request) async {
         final url = request.url.toString();
         if (url.contains('marine-api.open-meteo.com')) {
           return http.Response(
             jsonEncode({
               'current': {
-                'wave_height': returnDangerous ? 2.5 : 0.3,
+                'wave_height': 0.3,
                 'wave_period': 5.0,
                 'wind_wave_height': 0.0,
                 'swell_wave_height': 0.0,

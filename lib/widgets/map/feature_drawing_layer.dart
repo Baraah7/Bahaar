@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
-import 'package:Bahaar/models/map/feature_edit_state.dart';
+import 'package:bahaar/models/map/editable_map_feature.dart';
+import 'package:bahaar/models/map/feature_edit_state.dart';
 
 /// Renders in-progress drawings and selection highlights on the map
 /// during feature edit mode.

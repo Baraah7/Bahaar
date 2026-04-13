@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:Bahaar/utilities/navigation_constants.dart';
+import 'package:bahaar/utilities/map/navigation_constants.dart';
 
 void main() {
   group('NavigationConstants - Weather & Safety', () {

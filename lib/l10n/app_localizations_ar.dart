@@ -9,7 +9,7 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appName => 'بحار';
+  String get appName => 'بـحّــــــــار';
 
   @override
   String get settings => 'الإعدادات';
@@ -275,6 +275,194 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentLocationNotAvailable => 'الموقع الحالي غير متاح';
 
   @override
+  String get chooseNavType => 'اختر نوع الملاحة';
+
+  @override
+  String get landToSea => 'بر → ميناء → بحر';
+
+  @override
+  String get landToSeaSubtitle => 'سِر إلى الميناء ثم انطلق إلى وجهتك البحرية';
+
+  @override
+  String get seaToSea => 'بحر → بحر';
+
+  @override
+  String get seaToSeaSubtitle => 'ملاحة مباشرة بين نقطتين بحريتين';
+
+  @override
+  String get returnSeaToLand => 'عودة: بحر → ميناء → بر';
+
+  @override
+  String get returnSeaToLandSubtitle => 'عُد من البحر وارسُ في الميناء ثم توجّه للبر';
+
+  @override
+  String get tapSeaDeparture => 'انقر على نقطة انطلاقك في البحر';
+
+  @override
+  String get stepTapSeaDeparture => '١. انقر على نقطة الانطلاق في البحر';
+
+  @override
+  String get stepTapSeaDestination => '٢. انقر على وجهتك البحرية';
+
+  @override
+  String get stepTapPort => '١. انقر على ميناء\n٢. انقر على الوجهة البحرية\n(انقر على البر لتغيير نقطة بدايتك)';
+
+  @override
+  String get stepTapPortDock => '٢. انقر على ميناء للرسو';
+
+  @override
+  String get stepTapLandDestination => '٣. انقر على وجهتك البرية';
+
+  @override
+  String get customOriginSet => 'تم تحديد نقطة الانطلاق';
+
+  @override
+  String get departureSet => 'تم تحديد نقطة المغادرة';
+
+  @override
+  String get seaDepartureSet => 'تم تحديد نقطة مغادرة البحر';
+
+  @override
+  String get portLabel => 'الميناء';
+
+  @override
+  String get lastPort => 'آخر ميناء';
+
+  @override
+  String get landDestinationSet => 'تم تحديد الوجهة البرية';
+
+  @override
+  String get offlineMapCached => 'غير متصل — تم تخزين خرائط مؤقتاً';
+
+  @override
+  String get logCatch => 'تسجيل صيد';
+
+  @override
+  String get outsideTerritorialWaters => 'خارج المياه الإقليمية — انقر في البحر';
+
+  @override
+  String get tapOnSea => 'انقر في البحر وليس على البر';
+
+  @override
+  String get currentLocationOnLandRequired => 'الموقع الحالي غير متاح أو أنت في البحر. انقر على الخريطة لتحديد نقطة انطلاق برية.';
+
+  @override
+  String get tripDetailTitle => 'تفاصيل الرحلة';
+
+  @override
+  String get tripStart => 'البداية';
+
+  @override
+  String get tripEnd => 'النهاية';
+
+  @override
+  String get totalWeight => 'الوزن الإجمالي';
+
+  @override
+  String get noCatchesLogged => 'لا توجد صيدة مسجلة.';
+
+  @override
+  String get deleteCatch => 'حذف الصيدة؟';
+
+  @override
+  String removeCatchConfirm(String species) {
+    return 'إزالة \"$species\" من هذه الرحلة؟';
+  }
+
+  @override
+  String get editCatch => 'تعديل الصيدة';
+
+  @override
+  String get saveChanges => 'حفظ التغييرات';
+
+  @override
+  String get speciesName => 'النوع *';
+
+  @override
+  String get notesOptional => 'ملاحظات (اختياري)';
+
+  @override
+  String get pinOnMap => 'تحديد على الخريطة';
+
+  @override
+  String get latitude => 'خط العرض';
+
+  @override
+  String get longitude => 'خط الطول';
+
+  @override
+  String get locationPinned => 'تم تحديد الموقع على الخريطة.';
+
+  @override
+  String get ongoing => 'جارٍ';
+
+  @override
+  String get pickCatchTime => 'اختر وقت الصيد';
+
+  @override
+  String get quickSpeciesHamour => 'هامور';
+
+  @override
+  String get quickSpeciesSafi => 'صافي';
+
+  @override
+  String get quickSpeciesSobaity => 'صبيطي';
+
+  @override
+  String get quickSpeciesChanad => 'شعاف';
+
+  @override
+  String get quickSpeciesZubaidi => 'زبيدي';
+
+  @override
+  String get quickSpeciesShrimp => 'ربيان';
+
+  @override
+  String get quickSpeciesCrab => 'قبقب';
+
+  @override
+  String get fishingLog => 'سجل الصيد';
+
+  @override
+  String get tripAlreadyActive => 'رحلة نشطة بالفعل — أنهِ الرحلة الحالية أولاً.';
+
+  @override
+  String get endActiveTripFirst => 'أنهِ الرحلة النشطة أولاً.';
+
+  @override
+  String get endButtonLabel => 'إنهاء';
+
+  @override
+  String get editTripTitle => 'تعديل العنوان';
+
+  @override
+  String get tripNameHint => 'اسم الرحلة';
+
+  @override
+  String get editTitleTooltip => 'تعديل العنوان';
+
+  @override
+  String get deleteTripTooltip => 'حذف الرحلة';
+
+  @override
+  String get signInToTrack => 'سجّل الدخول لتتبع رحلاتك وصيدك.';
+
+  @override
+  String get forgotPasswordHint => 'أدخل بريدك الإلكتروني لاستلام رابط إعادة تعيين كلمة المرور.';
+
+  @override
+  String get sendResetLink => 'إرسال رابط الإعادة';
+
+  @override
+  String get resetLinkSent => 'تم إرسال رابط الإعادة.';
+
+  @override
+  String get resetLinkFailed => 'فشل إرسال رابط الإعادة.';
+
+  @override
+  String get signInToSell => 'سجّل الدخول لبيع صيدك.';
+
+  @override
   String get marketplace => 'السوق';
 
   @override
@@ -294,6 +482,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearFilters => 'مسح الفلاتر';
+
+  @override
+  String get filtersActive => 'فلاتر نشطة';
 
   @override
   String get filterByFishType => 'تصفية حسب نوع السمك';
@@ -943,332 +1134,303 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickSpeciesShrimp => 'روبيان';
 
   @override
-  String get quickSpeciesCrab => 'سرطان بحر';
+  String get phoneEightDigits => 'يجب أن يكون رقم الهاتف 8 أرقام';
 
   @override
-  String get editCatch => 'تعديل الصيد';
+  String get selectLocationFirst => 'يرجى تحديد موقع أولاً';
 
   @override
-  String get speciesName => 'اسم النوع';
+  String get unexpectedError => 'حدث خطأ غير متوقع';
 
   @override
-  String get notesOptional => 'ملاحظات (اختياري)';
+  String get probExcellent => 'ممتاز';
 
   @override
-  String get pinOnMap => 'تثبيت على الخريطة';
+  String get probVeryGood => 'جيد جداً';
 
   @override
-  String get privacyPolicy => 'سياسة الخصوصية';
+  String get probModerate => 'متوسط';
 
   @override
-  String get policyDataCollection => 'جمع البيانات';
+  String get probWeak => 'ضعيف';
 
   @override
-  String get policyDataCollectionBody => 'نجمع بيانات رحلات الصيد وسجلات الصيد وبيانات الموقع لتقديم خدمات الملاحة والتوقعات.';
+  String get probNotSuitable => 'غير مناسب';
 
   @override
-  String get policyLocation => 'الموقع';
+  String get predictionTitle => 'توقع الصيد';
 
   @override
-  String get policyLocationBody => 'يُستخدم الموقع للملاحة واقتراحات مواقع الصيد. لا يُشارك مع أطراف ثالثة.';
+  String get hideMap => 'إخفاء الخريطة';
 
   @override
-  String get policyFishRecognition => 'التعرف على الأسماك';
+  String get selectFromMap => 'اختر من الخريطة';
 
   @override
-  String get policyFishRecognitionBody => 'تُعالج صور التعرف على الأسماك على الجهاز ولا تُرفع أو تُخزّن.';
+  String get tapMapToSelect => 'انقر على الخريطة لتحديد موقع';
 
   @override
-  String get policyAuthentication => 'المصادقة';
+  String get chooseSpecies => 'اختر نوع السمكة';
 
   @override
-  String get policyAuthenticationBody => 'تتم المصادقة بأمان عبر Firebase. لا تُخزّن كلمات المرور بنص عادي.';
+  String get getPrediction => 'احصل على توقع';
 
   @override
-  String get dayTue => 'الثلاثاء';
+  String get retry => 'إعادة المحاولة';
 
   @override
-  String get dayWed => 'الأربعاء';
+  String get insideProtectedZone => 'داخل منطقة محمية';
 
   @override
-  String get dayThu => 'الخميس';
+  String get factorSeason => 'الموسم';
 
   @override
-  String get dayFri => 'الجمعة';
+  String get factorWeather => 'الطقس';
 
   @override
-  String get daySat => 'السبت';
+  String get factorReports => 'التقارير';
 
   @override
-  String get daySun => 'الأحد';
+  String get factorProximity => 'القرب من المناطق';
 
   @override
-  String get uvLow => 'منخفض';
-
-  @override
-  String get uvModerate => 'متوسط';
-
-  @override
-  String get uvHigh => 'عالي';
-
-  @override
-  String get uvVeryHigh => 'عالي جداً';
-
-  @override
-  String get logCatchTitle => 'تسجيل صيد';
-
-  @override
-  String get catchDetails => 'تفاصيل الصيد';
-
-  @override
-  String get speciesNameLabel => 'اسم النوع';
-
-  @override
-  String get speciesRequired => 'اسم النوع مطلوب';
-
-  @override
-  String get notesOptionalLabel => 'ملاحظات (اختياري)';
-
-  @override
-  String get catchLocationLabel => 'موقع الصيد';
-
-  @override
-  String get pinnedOnMap => 'مثبت على الخريطة';
-
-  @override
-  String get gpsLocationLabel => 'موقع GPS';
-
-  @override
-  String get locationNotSet => 'لم يتم تحديد الموقع';
-
-  @override
-  String get mapLabel => 'الخريطة';
-
-  @override
-  String get uvExtreme => 'شديد جداً';
-
-  @override
-  String get feelsLikeSimilar => 'مشابه لدرجة الحرارة الفعلية';
-
-  @override
-  String get feelsLikeWarmer => 'يبدو أدفأ من الفعلي';
-
-  @override
-  String get feelsLikeCooler => 'يبدو أبرد من الفعلي';
-
-  @override
-  String get visibilityClear => 'صافي';
-
-  @override
-  String get visibilityGood => 'جيد';
-
-  @override
-  String get visibilityLow => 'رؤية منخفضة';
-
-  @override
-  String get fromYourFishingLog => 'من سجل صيدك';
-
-  @override
-  String get tapRecentCatchToFill => 'اضغط على صيدة حديثة لملء التفاصيل تلقائياً';
-
-  @override
-  String get today => 'اليوم';
-
-  @override
-  String get yesterday => 'أمس';
-
-  @override
-  String get or => 'أو';
-
-  @override
-  String get ibanOptional => 'آيبان (اختياري)';
-
-  @override
-  String get sellerBenefitNote => 'سيرسل المشترون الدفعة إلى رقم بنفت باي الخاص بك';
-
-  @override
-  String get phoneEightDigits => 'أدخل رقم هاتف من 8 أرقام';
-
-  @override
-  String get loginRequired => 'تسجيل الدخول مطلوب';
-
-  @override
-  String get guestAccountSellMessage => 'تحتاج إلى حساب لبيع السمك. يرجى تسجيل الدخول أو إنشاء حساب.';
-
-  @override
-  String get forgotPasswordHint => 'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور.';
-
-  @override
-  String get enterEmail => 'أدخل البريد الإلكتروني';
-
-  @override
-  String get sendResetLink => 'إرسال رابط الإعادة';
-
-  @override
-  String get resetLinkSent => 'تم إرسال رابط الإعادة إلى بريدك.';
-
-  @override
-  String get resetLinkFailed => 'فشل إرسال رابط الإعادة. حاول مرة أخرى.';
+  String get nearbyFishingSpots => 'مناطق الصيد القريبة';
 
   @override
   String get kmUnit => 'كم';
 
   @override
-  String get guestUser => 'مستخدم ضيف';
+  String get tripResumed => 'تم استئناف الرحلة';
 
   @override
-  String get guestAccount => 'حساب ضيف';
+  String get endTrip => 'إنهاء الرحلة';
 
   @override
-  String get accountStatus => 'حالة الحساب';
+  String get endCurrentTrip => 'هل أنت متأكد أنك تريد إنهاء هذه الرحلة؟';
 
   @override
-  String get guestBannerMessage => 'أنت تتصفح كضيف. سجّل الدخول للوصول إلى جميع الميزات.';
+  String get tripEndedAndSaved => 'انتهت الرحلة وتم حفظها';
 
   @override
-  String get policyRetention => 'الاحتفاظ بالبيانات';
+  String get deleteTrip => 'حذف الرحلة';
 
   @override
-  String get policyRetentionBody => 'يتم الاحتفاظ ببياناتك طالما حسابك نشط. يمكنك طلب الحذف في أي وقت.';
+  String deleteTripConfirmFinished(String name) {
+    return 'هل تريد حذف رحلة \'$name\'؟';
+  }
 
   @override
-  String get policyContactSection => 'تواصل';
+  String get delete => 'حذف';
 
   @override
-  String get policyContactSectionBody => 'للاستفسار عن الخصوصية، تواصل معنا عبر قناة دعم التطبيق.';
+  String get deleteActiveTrip => 'حذف الرحلة النشطة';
 
   @override
-  String get gotIt => 'حسناً';
+  String get deleteTripConfirm => 'هذه الرحلة لا تزال نشطة. هل أنت متأكد أنك تريد حذفها؟';
 
   @override
-  String get latitude => 'خط العرض';
+  String get tripDeleted => 'تم حذف الرحلة';
 
   @override
-  String get longitude => 'خط الطول';
+  String get noTripsYet => 'لا توجد رحلات بعد';
 
   @override
-  String get locationPinned => 'تم تثبيت الموقع';
+  String get tapStartTrip => 'انقر على الزر أدناه لبدء رحلتك الأولى';
 
   @override
-  String get tripActiveLabel => 'نشط';
+  String get resumeTrip => 'استئناف الرحلة';
 
   @override
-  String get tripStartedLabel => 'بدأ';
+  String get startTrip => 'بدء رحلة';
+
+  @override
+  String get tripInProgress => 'رحلة جارية';
+
+  @override
+  String get catchWord => 'صيدة';
+
+  @override
+  String get catches => 'صيدات';
+
+  @override
+  String get addCatch => 'إضافة صيدة';
+
+  @override
+  String get logCatchTitle => 'تسجيل صيدة';
+
+  @override
+  String get catchDetails => 'تفاصيل الصيدة';
+
+  @override
+  String get speciesNameLabel => 'اسم السمكة';
+
+  @override
+  String get speciesRequired => 'اسم السمكة مطلوب';
+
+  @override
+  String get notesOptionalLabel => 'ملاحظات (اختياري)';
+
+  @override
+  String get catchLocationLabel => 'موقع الصيدة';
+
+  @override
+  String get pinnedOnMap => 'مثبّت على الخريطة';
+
+  @override
+  String get gpsLocationLabel => 'موقع GPS';
+
+  @override
+  String get locationNotSet => 'الموقع غير محدد';
+
+  @override
+  String get mapLabel => 'الخريطة';
+
+  @override
+  String get tripActiveLabel => 'نشطة';
+
+  @override
+  String get tripStartedLabel => 'بدأت';
 
   @override
   String get tripDurationLabel => 'المدة';
 
   @override
-  String get tripCatchesLabel => 'المصيد';
+  String get tripCatchesLabel => 'الصيدات';
 
   @override
-  String get mpaRestrictedArea => 'منطقة محمية / مقيدة';
+  String get mapLayers => 'طبقات الخريطة';
+
+  @override
+  String get depthVisualization => 'تصور عمق المياه';
+
+  @override
+  String get showDepthLayer => 'عرض طبقة العمق';
+
+  @override
+  String get visualizationType => 'نوع التصور';
+
+  @override
+  String get opacityLabel => 'الشفافية';
+
+  @override
+  String get protectedExclusionZones => 'المناطق المحمية والمقيّدة';
+
+  @override
+  String get protectedZones => 'المناطق المحمية';
+
+  @override
+  String featuresLoaded(int count) {
+    return '$count عناصر محملة';
+  }
+
+  @override
+  String get marineReservesReefs => 'المحميات البحرية والشعاب المرجانية';
+
+  @override
+  String get mpaRestrictedArea => 'منطقة محمية / مقيّدة';
 
   @override
   String get oilGasExclusion => 'منطقة استثناء النفط والغاز';
 
   @override
-  String get safetyBuffersVisible => 'مناطق الأمان ظاهرة';
+  String get safetyBuffersVisible => 'نطاقات السلامة مرئية';
 
   @override
-  String get safetyRulesApplyWhenHidden => 'قواعد السلامة سارية حتى عند الإخفاء';
+  String get safetyRulesApplyWhenHidden => 'قواعد السلامة تُطبَّق عند الإخفاء';
 
   @override
-  String get showFishingSpots => 'إظهار مواقع الصيد';
+  String get fishingSpotSuggestions => 'اقتراحات مناطق الصيد';
 
   @override
-  String get zonesMpasLocations => 'المناطق والمحميات والمواقع المقترحة';
+  String get showFishingSpots => 'عرض مناطق الصيد';
 
   @override
-  String get highConfidenceSpot => 'موقع ثقة عالية';
+  String get zonesMpasLocations => 'المناطق والمحميات والمواقع';
 
   @override
-  String get mediumConfidenceSpot => 'موقع ثقة متوسطة';
+  String get highConfidenceSpot => 'موقع ذو احتمالية عالية';
+
+  @override
+  String get mediumConfidenceSpot => 'موقع ذو احتمالية متوسطة';
 
   @override
   String get fishingZone => 'منطقة صيد';
 
   @override
-  String get fishingPrediction => 'توقعات الصيد';
-
-  @override
-  String get deleteListing => 'حذف العرض';
-
-  @override
-  String get bdPerKg => 'د.ب/كجم';
-
-  @override
-  String get guestAccountLoginMessage => 'يرجى تسجيل الدخول لتقديم طلب.';
-
-  @override
-  String get confirmDeleteListing => 'هل أنت متأكد من حذف هذا العرض؟';
-
-  @override
-  String priceRangeFilter(String min, String max) => '$min - $max د.ب/كجم';
-
-  @override
-  String get priceRange => 'نطاق السعر';
-
-  @override
-  String get allPrices => 'جميع الأسعار';
-
-  @override
-  String get pleaseLoginToViewOrders => 'يرجى تسجيل الدخول لعرض طلباتك';
-
-  @override
-  String sellingTab(int count) => 'بيع ($count)';
-
-  @override
-  String purchasesTab(int count) => 'مشتريات ($count)';
-
-  @override
-  String get noOrdersForListings => 'لا توجد طلبات لعروضك بعد';
-
-  @override
-  String get noPurchasesYet => 'لا توجد مشتريات بعد';
-
-  @override
-  String get whenSomeoneOrdersYourFish => 'عندما يطلب شخص سمكك، سيظهر هنا';
-
-  @override
-  String get yourPurchasesWillAppear => 'ستظهر مشترياتك هنا';
-
-  @override
-  String get cancelOrder => 'إلغاء الطلب';
-
-  @override
-  String get confirmCancelOrder => 'هل أنت متأكد من إلغاء هذا الطلب؟';
-
-  @override
-  String get celestialAlmanac => 'التقويم الفلكي';
-
-  @override
-  String get solarNoon => 'الظهيرة الشمسية';
-
-  @override
-  String get moonrise => 'شروق القمر';
-
-  @override
-  String get moonset => 'غروب القمر';
+  String get fishingPrediction => 'توقع الصيد';
 
   @override
   String get aiCatchProbability => 'احتمالية الصيد بالذكاء الاصطناعي';
 
   @override
-  String get phoneNumberCopied => 'تم نسخ رقم الهاتف';
+  String get celestialAlmanac => 'التقويم الفلكي';
 
   @override
-  String get sellerLabel => 'البائع';
+  String get solarNoon => 'الذروة الشمسية';
 
   @override
-  String get rejectionReason => 'سبب الرفض';
+  String get emergency => 'الطوارئ';
 
   @override
-  String get orderAcceptedContactSeller => 'تم قبول الطلب — تواصل مع البائع لترتيب الاستلام';
+  String get emergencyComingSoon => 'ميزات الطوارئ قادمة قريباً.';
 
   @override
-  String get orderCancelled => 'تم إلغاء الطلب';
+  String get emergencyContacts => 'أرقام الطوارئ';
 
   @override
-  String get ibanOrQrRequired => 'يرجى إضافة رقم IBAN أو رمز QR قبل النشر';
+  String get coastGuard => 'خفر السواحل';
+
+  @override
+  String get marineRescue => 'الإنقاذ البحري';
+
+  @override
+  String get police => 'الشرطة';
+
+  @override
+  String get ambulance => 'الإسعاف';
+
+  @override
+  String get fishingRules => 'قواعد الصيد';
+
+  @override
+  String get sosLongPressHint => 'اضغط مطولاً 3 ثوانٍ لتفعيل نداء الاستغاثة';
+
+  @override
+  String get emergencyChannelHint => 'قناة الطوارئ VHF 16';
+
+  @override
+  String get rule1Title => 'رخصة الصيد';
+
+  @override
+  String get rule1Body => 'يجب على جميع الصيادين امتلاك رخصة صيد سارية صادرة عن وزارة الأشغال وشؤون البلديات والتخطيط العمراني.';
+
+  @override
+  String get rule2Title => 'المناطق المحمية';
+
+  @override
+  String get rule2Body => 'يُحظر الصيد تمامًا داخل المناطق البحرية المحمية والمناطق العسكرية المقيّدة الموضّحة على الخريطة.';
+
+  @override
+  String get rule3Title => 'معدات الصيد';
+
+  @override
+  String get rule3Body => 'يُعدّ استخدام المتفجرات أو السموم أو الصعقات الكهربائية في صيد الأسماك جريمة يعاقب عليها القانون.';
+
+  @override
+  String get rule4Title => 'الأنواع المحمية';
+
+  @override
+  String get rule4Body => 'يُحظر اصطياد أو الاتجار أو حيازة الأنواع المحمية (السلحفاة منقارية الفم، الدجونج، قرش الحوت).';
+
+  @override
+  String get rule5Title => 'الصيد الليلي';
+
+  @override
+  String get rule5Body => 'يستلزم الصيد الليلي وجود أضواء ملاحية مناسبة وهو مقيّد في بعض المناطق. يُرجى الاطلاع على اللوائح المحلية.';
+
+  @override
+  String get rule6Title => 'سلامة المركب';
+
+  @override
+  String get rule6Body => 'أحزمة النجاة إلزامية لجميع الركاب. يجب أن تحمل المراكب جهاز راديو VHF يعمل بشكل صحيح وصواريخ إشارة.';
 }

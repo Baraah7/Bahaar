@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
-import 'package:Bahaar/utilities/navigation_constants.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/utilities/map/navigation_constants.dart';
 
 /// Service for fetching marine weather data from Open-Meteo and mapping it
 /// to the navigation grid for safety-aware routing.

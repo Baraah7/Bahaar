@@ -29,6 +29,8 @@
   "marinerHarvestSubtitle": "شراء وبيع الأسماك الطازجة",
   "signOut": "تسجيل الخروج",
 
+// Fish Recognition
+
   "loadingRecognitionModel": "جاري تحميل نموذج التعرف...",
   "takePhotoOfFish": "التقط صورة للسمكة أو الروبيان",
   "systemWillIdentify": "سيتعرف النظام على النوع تلقائياً",
@@ -45,6 +47,8 @@
   "modelNotReady": "النموذج غير جاهز",
   "classificationFailed": "فشل التصنيف",
 
+// weather
+
   "hourlyForecast": "الـ 24 ساعة القادمة",
   "dailyForecast": "توقعات الأيام",
   "wind": "الرياح",
@@ -56,6 +60,8 @@
   "sunset": "الغروب",
   "unableToLoadWeather": "تعذر تحميل الطقس",
 
+// Settings 
+
   "changeLanguage": "تغيير اللغة",
   "selectLanguage": "اختر اللغة",
   "account": "الحساب",
@@ -63,12 +69,15 @@
   "about": "حول التطبيق",
   "version": "الإصدار",
 
+// Sign in 
   "signIn": "تسجيل الدخول",
   "signUp": "إنشاء حساب",
   "email": "البريد الإلكتروني",
   "password": "كلمة المرور",
   "forgotPassword": "نسيت كلمة المرور؟",
   "continueAsGuest": "المتابعة كضيف",
+
+// Map
 
   "navigationReady": "الملاحة جاهزة",
   "calculatingRoute": "جاري حساب المسار...",
@@ -118,6 +127,9 @@
   "outsideTerritorialWaters": "خارج المياه الإقليمية — انقر في البحر",
   "tapOnSea": "انقر في البحر وليس على البر",
   "currentLocationOnLandRequired": "الموقع الحالي غير متاح أو أنت في البحر. انقر على الخريطة لتحديد نقطة انطلاق برية.",
+  
+// Fishing Log 
+
   "tripDetailTitle": "تفاصيل الرحلة",
   "tripStart": "البداية",
   "tripEnd": "النهاية",
@@ -163,6 +175,8 @@
   "resetLinkFailed": "فشل إرسال رابط الإعادة.",
   "signInToSell": "سجّل الدخول لبيع صيدك.",
 
+// Marcketplace
+
   "marketplace": "السوق",
   "sellFish": "بيع سمك",
   "myOrders": "طلباتي",
@@ -170,6 +184,7 @@
   "type": "النوع",
   "condition": "الحالة",
   "clearFilters": "مسح الفلاتر",
+  "filtersActive": "فلاتر نشطة",
   "filterByFishType": "تصفية حسب نوع السمك",
   "allTypes": "جميع الأنواع",
   "filterByCondition": "تصفية حسب الحالة",
@@ -412,5 +427,121 @@
   "pleaseLoginToOrder": "يرجى تسجيل الدخول لإتمام الطلب",
   "ibanOptional": "آيبان (اختياري)",
   "sellerBenefitNote": "سيرى المشتري تفاصيل بنفت باي لإتمام الدفع",
-  "phoneEightDigits": "يجب أن يكون رقم الهاتف 8 أرقام"
+  "phoneEightDigits": "يجب أن يكون رقم الهاتف 8 أرقام",
+
+  "selectLocationFirst": "يرجى تحديد موقع أولاً",
+  "unexpectedError": "حدث خطأ غير متوقع",
+  "probExcellent": "ممتاز",
+  "probVeryGood": "جيد جداً",
+  "probModerate": "متوسط",
+  "probWeak": "ضعيف",
+  "probNotSuitable": "غير مناسب",
+  "predictionTitle": "توقع الصيد",
+  "hideMap": "إخفاء الخريطة",
+  "selectFromMap": "اختر من الخريطة",
+  "tapMapToSelect": "انقر على الخريطة لتحديد موقع",
+  "chooseSpecies": "اختر نوع السمكة",
+  "getPrediction": "احصل على توقع",
+  "retry": "إعادة المحاولة",
+  "insideProtectedZone": "داخل منطقة محمية",
+  "factorSeason": "الموسم",
+  "factorWeather": "الطقس",
+  "factorReports": "التقارير",
+  "factorProximity": "القرب من المناطق",
+  "nearbyFishingSpots": "مناطق الصيد القريبة",
+  "kmUnit": "كم",
+
+  "tripResumed": "تم استئناف الرحلة",
+  "endTrip": "إنهاء الرحلة",
+  "endCurrentTrip": "هل أنت متأكد أنك تريد إنهاء هذه الرحلة؟",
+  "tripEndedAndSaved": "انتهت الرحلة وتم حفظها",
+  "deleteTrip": "حذف الرحلة",
+  "deleteTripConfirmFinished": "هل تريد حذف رحلة '{name}'؟",
+  "@deleteTripConfirmFinished": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "delete": "حذف",
+  "deleteActiveTrip": "حذف الرحلة النشطة",
+  "deleteTripConfirm": "هذه الرحلة لا تزال نشطة. هل أنت متأكد أنك تريد حذفها؟",
+  "tripDeleted": "تم حذف الرحلة",
+  "noTripsYet": "لا توجد رحلات بعد",
+  "tapStartTrip": "انقر على الزر أدناه لبدء رحلتك الأولى",
+  "resumeTrip": "استئناف الرحلة",
+  "startTrip": "بدء رحلة",
+  "tripInProgress": "رحلة جارية",
+  "catchWord": "صيدة",
+  "catches": "صيدات",
+  "addCatch": "إضافة صيدة",
+
+  "logCatchTitle": "تسجيل صيدة",
+  "catchDetails": "تفاصيل الصيدة",
+  "speciesNameLabel": "اسم السمكة",
+  "speciesRequired": "اسم السمكة مطلوب",
+  "notesOptionalLabel": "ملاحظات (اختياري)",
+  "catchLocationLabel": "موقع الصيدة",
+  "pinnedOnMap": "مثبّت على الخريطة",
+  "gpsLocationLabel": "موقع GPS",
+  "locationNotSet": "الموقع غير محدد",
+  "mapLabel": "الخريطة",
+
+  "tripActiveLabel": "نشطة",
+  "tripStartedLabel": "بدأت",
+  "tripDurationLabel": "المدة",
+  "tripCatchesLabel": "الصيدات",
+
+  "mapLayers": "طبقات الخريطة",
+  "depthVisualization": "تصور عمق المياه",
+  "showDepthLayer": "عرض طبقة العمق",
+  "visualizationType": "نوع التصور",
+  "opacityLabel": "الشفافية",
+  "protectedExclusionZones": "المناطق المحمية والمقيّدة",
+  "protectedZones": "المناطق المحمية",
+  "featuresLoaded": "{count} عناصر محملة",
+  "@featuresLoaded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "marineReservesReefs": "المحميات البحرية والشعاب المرجانية",
+  "mpaRestrictedArea": "منطقة محمية / مقيّدة",
+  "oilGasExclusion": "منطقة استثناء النفط والغاز",
+  "safetyBuffersVisible": "نطاقات السلامة مرئية",
+  "safetyRulesApplyWhenHidden": "قواعد السلامة تُطبَّق عند الإخفاء",
+  "fishingSpotSuggestions": "اقتراحات مناطق الصيد",
+  "showFishingSpots": "عرض مناطق الصيد",
+  "zonesMpasLocations": "المناطق والمحميات والمواقع",
+  "highConfidenceSpot": "موقع ذو احتمالية عالية",
+  "mediumConfidenceSpot": "موقع ذو احتمالية متوسطة",
+  "fishingZone": "منطقة صيد",
+  "fishingPrediction": "توقع الصيد",
+  "aiCatchProbability": "احتمالية الصيد بالذكاء الاصطناعي",
+
+  "celestialAlmanac": "التقويم الفلكي",
+  "solarNoon": "الذروة الشمسية",
+
+  "emergency": "الطوارئ",
+  "emergencyComingSoon": "ميزات الطوارئ قادمة قريباً.",
+
+  "emergencyContacts": "أرقام الطوارئ",
+  "coastGuard": "خفر السواحل",
+  "marineRescue": "الإنقاذ البحري",
+  "police": "الشرطة",
+  "ambulance": "الإسعاف",
+  "fishingRules": "قواعد الصيد",
+  "sosLongPressHint": "اضغط مطولاً 3 ثوانٍ لتفعيل نداء الاستغاثة",
+  "emergencyChannelHint": "قناة الطوارئ VHF 16",
+  "rule1Title": "رخصة الصيد",
+  "rule1Body": "يجب على جميع الصيادين امتلاك رخصة صيد سارية صادرة عن وزارة الأشغال وشؤون البلديات والتخطيط العمراني.",
+  "rule2Title": "المناطق المحمية",
+  "rule2Body": "يُحظر الصيد تمامًا داخل المناطق البحرية المحمية والمناطق العسكرية المقيّدة الموضّحة على الخريطة.",
+  "rule3Title": "معدات الصيد",
+  "rule3Body": "يُعدّ استخدام المتفجرات أو السموم أو الصعقات الكهربائية في صيد الأسماك جريمة يعاقب عليها القانون.",
+  "rule4Title": "الأنواع المحمية",
+  "rule4Body": "يُحظر اصطياد أو الاتجار أو حيازة الأنواع المحمية (السلحفاة منقارية الفم، الدجونج، قرش الحوت).",
+  "rule5Title": "الصيد الليلي",
+  "rule5Body": "يستلزم الصيد الليلي وجود أضواء ملاحية مناسبة وهو مقيّد في بعض المناطق. يُرجى الاطلاع على اللوائح المحلية.",
+  "rule6Title": "سلامة المركب",
+  "rule6Body": "أحزمة النجاة إلزامية لجميع الركاب. يجب أن تحمل المراكب جهاز راديو VHF يعمل بشكل صحيح وصواريخ إشارة."
 }
