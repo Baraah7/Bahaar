@@ -257,8 +257,8 @@ class AuthSocialBtn extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.20), width: 1),
+          color: AppColors.tan.withValues(alpha: 0.10),
+          border: Border.all(color: AppColors.tan.withValues(alpha: 0.20), width: 1),
         ),
         child: Center(
           child: Text(

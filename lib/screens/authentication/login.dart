@@ -49,11 +49,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final submitted = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D2B35),
+        backgroundColor: AppColors.tan.withValues(alpha: 0.80),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.forgotPassword,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Color.fromARGB(255, 65, 53, 39), fontSize: 18, fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -61,16 +61,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             Text(
               l10n.forgotPasswordHint,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13, height: 1.5),
+              style: TextStyle(color: Color.fromARGB(255, 65, 53, 39), fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: emailCtrl,
               keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Color.fromARGB(255, 99, 81, 59)),
               decoration: InputDecoration(
                 hintText: l10n.enterEmail,
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+                hintStyle: TextStyle(color: const Color.fromARGB(255, 99, 81, 59).withValues(alpha: 0.45)),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.08),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -85,11 +85,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel, style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+            child: Text(l10n.cancel, style: TextStyle(color: Color.fromARGB(255, 65, 53, 39).withValues(alpha: 0.6))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.sendResetLink, style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
+            child: Text(l10n.sendResetLink, style: const TextStyle(color: Color.fromARGB(255, 99, 81, 59), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
