@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/navigation/confidence_engine.dart';
+import 'package:bahaar/navigation/confidence_engine.dart';
 
 /// A computed celestial position fix produced by the DS-1 screen.
 class CelestialFix {

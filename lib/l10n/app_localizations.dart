@@ -122,38 +122,56 @@ abstract class AppLocalizations {
   /// **'English'**
   String get english;
 
+  /// No description provided for @arabic.
+  ///
   /// In en, this message translates to:
   /// **'العربية'**
   String get arabic;
 
+  /// No description provided for @cancel.
+  ///
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @confirm.
+  ///
   /// In en, this message translates to:
   /// **'Confirm'**
   String get confirm;
 
+  /// No description provided for @tryAgain.
+  ///
   /// In en, this message translates to:
   /// **'Try Again'**
   String get tryAgain;
 
+  /// No description provided for @loading.
+  ///
   /// In en, this message translates to:
   /// **'Loading...'**
   String get loading;
 
+  /// No description provided for @error.
+  ///
   /// In en, this message translates to:
   /// **'Error'**
   String get error;
 
+  /// No description provided for @success.
+  ///
   /// In en, this message translates to:
   /// **'Success'**
   String get success;
 
+  /// No description provided for @noDataAvailable.
+  ///
   /// In en, this message translates to:
   /// **'No data available'**
   String get noDataAvailable;
 
+  /// No description provided for @close.
+  ///
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
@@ -1574,340 +1592,574 @@ abstract class AppLocalizations {
   /// **'days ago'**
   String get daysAgo;
 
-  String get fishingLog;
-
-  String get emergency;
-
-  String get emergencyComingSoon;
-
-  String get profile;
-
-  String get editProfile;
-
-  String get firstName;
-
-  String get lastName;
-
-  String get contactInformation;
-
-  String get username;
-
-  String get saveChanges;
-
-  String get tripAlreadyActive;
-
-  String get endActiveTripFirst;
-
-  String get tripResumed;
-
-  String get endTrip;
-
-  String get endCurrentTrip;
-
-  String get endButtonLabel;
-
-  String get tripEndedAndSaved;
-
-  String get logCatch;
-
-  String get deleteTrip;
-
-  String deleteTripConfirmFinished(String tripName);
-
-  String get delete;
-
-  String get deleteActiveTrip;
-
-  String get deleteTripConfirm;
-
-  String get tripDeleted;
-
-  String get editTripTitle;
-
-  String get tripNameHint;
-
-  String get signInToSell;
-
-  String get logIn;
-
-  String get resumeTrip;
-
-  String get startTrip;
-
-  String get tripInProgress;
-
-  String get catchWord;
-
-  String get catches;
-
-  String get editTitleTooltip;
-
-  String get deleteTripTooltip;
-
-  String get noTripsYet;
-
-  String get tapStartTrip;
-
-  String get outsideTerritorialWaters;
-
-  String get tapOnSea;
-
-  String get departureSet;
-
-  String get seaDepartureSet;
-
-  String get customOriginSet;
-
-  String get stepTapPort;
-
-  String get currentLocationOnLandRequired;
-
-  String get chooseNavType;
-
-  String get landToSea;
-
-  String get landToSeaSubtitle;
-
-  String get seaToSea;
-
-  String get seaToSeaSubtitle;
-
-  String get returnSeaToLand;
-
-  String get returnSeaToLandSubtitle;
-
-  String get tapSeaDeparture;
-
-  String get stepTapSeaDeparture;
-
-  String get stepTapSeaDestination;
-
-  String get stepTapPortDock;
-
-  String get stepTapLandDestination;
-
-  String get portLabel;
-
-  String get lastPort;
-
-  String get landDestinationSet;
-
-  String get offlineMapCached;
-
-  String get pleaseLoginToOrder;
-
-  String get orderPlacedTitle;
-
-  String youHaveOrderedFish(String fish);
-
-  String get kgUnit;
-
-  String get bdUnit;
-
-  String get waitingForSellerToAccept;
-
-  String get done;
-
-  String get listingDeleted;
-
-  String get depthVisualization;
-
-  String get protectedExclusionZones;
-
-  String get fishingSpotSuggestions;
-
-  String get mapLayers;
-
-  String get showDepthLayer;
-
-  String get visualizationType;
-
-  String get opacityLabel;
-
-  String get protectedZones;
-
-  String featuresLoaded(int count);
-
-  String get marineReservesReefs;
-
-  String get selectLocationFirst;
-
-  String get unexpectedError;
-
-  String get probExcellent;
-
-  String get probVeryGood;
-
-  String get probModerate;
-
-  String get probWeak;
-
-  String get probNotSuitable;
-
-  String get predictionTitle;
-
-  String get hideMap;
-
-  String get selectFromMap;
-
-  String get tapMapToSelect;
-
-  String get chooseSpecies;
-
-  String get getPrediction;
-
-  String get retry;
-
-  String get insideProtectedZone;
-
-  String get factorSeason;
-
-  String get factorWeather;
-
-  String get factorReports;
-
-  String get factorProximity;
-
-  String get nearbyFishingSpots;
-
-  String get pickCatchTime;
-
-  String get deleteCatch;
-
-  String removeCatchConfirm(String species);
-
-  String get ongoing;
-
-  String get addCatch;
-
-  String get tripStart;
-
-  String get tripEnd;
-
-  String get totalWeight;
-
-  String get noCatchesLogged;
-
-  String get quickSpeciesHamour;
-
-  String get weatherDewPoint;
-
+  /// No description provided for @weatherNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
   String get weatherNow;
 
+  /// No description provided for @weatherToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
   String get weatherToday;
 
+  /// No description provided for @weatherGusts.
+  ///
+  /// In en, this message translates to:
+  /// **'Gusts up to'**
   String get weatherGusts;
 
-  String get illuminated;
+  /// No description provided for @weatherDewPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dew'**
+  String get weatherDewPoint;
 
+  /// No description provided for @weatherTodayTides.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Tides'**
   String get weatherTodayTides;
 
+  /// No description provided for @weatherTideUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Tide data unavailable'**
   String get weatherTideUnavailable;
 
+  /// No description provided for @weatherHighTide.
+  ///
+  /// In en, this message translates to:
+  /// **'High Tide'**
   String get weatherHighTide;
 
+  /// No description provided for @weatherLowTide.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Tide'**
   String get weatherLowTide;
 
-  String get dayMon;
+  /// No description provided for @moonrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonrise'**
+  String get moonrise;
 
-  String get quickSpeciesSafi;
+  /// No description provided for @moonset.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonset'**
+  String get moonset;
 
-  String get quickSpeciesSobaity;
+  /// No description provided for @illuminated.
+  ///
+  /// In en, this message translates to:
+  /// **'% illuminated'**
+  String get illuminated;
 
-  String get quickSpeciesChanad;
-
-  String get quickSpeciesZubaidi;
-
-  String get quickSpeciesShrimp;
-
-  String get quickSpeciesCrab;
-
-  String get editCatch;
-
-  String get speciesName;
-
-  String get notesOptional;
-
-  String get pinOnMap;
-
-  String get privacyPolicy;
-
-  String get policyDataCollection;
-
-  String get policyDataCollectionBody;
-
-  String get policyLocation;
-
-  String get policyLocationBody;
-
-  String get policyFishRecognition;
-
-  String get policyFishRecognitionBody;
-
-  String get policyAuthentication;
-
-  String get policyAuthenticationBody;
-
-  String get dayTue;
-
-  String get dayWed;
-
-  String get dayThu;
-
-  String get dayFri;
-
-  String get daySat;
-
-  String get daySun;
-
+  /// No description provided for @uvLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
   String get uvLow;
 
+  /// No description provided for @uvModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
   String get uvModerate;
 
+  /// No description provided for @uvHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
   String get uvHigh;
 
+  /// No description provided for @uvVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Very High'**
   String get uvVeryHigh;
 
-  String get logCatchTitle;
-
-  String get catchDetails;
-
-  String get speciesNameLabel;
-
-  String get speciesRequired;
-
-  String get notesOptionalLabel;
-
-  String get catchLocationLabel;
-
-  String get pinnedOnMap;
-
-  String get gpsLocationLabel;
-
-  String get locationNotSet;
-
-  String get mapLabel;
-
+  /// No description provided for @uvExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme'**
   String get uvExtreme;
 
-  String get feelsLikeSimilar;
-
-  String get feelsLikeWarmer;
-
-  String get feelsLikeCooler;
-
+  /// No description provided for @visibilityClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
   String get visibilityClear;
 
+  /// No description provided for @visibilityGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
   String get visibilityGood;
 
+  /// No description provided for @visibilityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
   String get visibilityLow;
 
+  /// No description provided for @feelsLikeSimilar.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar to actual'**
+  String get feelsLikeSimilar;
+
+  /// No description provided for @feelsLikeWarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels warmer'**
+  String get feelsLikeWarmer;
+
+  /// No description provided for @feelsLikeCooler.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels cooler'**
+  String get feelsLikeCooler;
+
+  /// No description provided for @dayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get dayMon;
+
+  /// No description provided for @dayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get dayTue;
+
+  /// No description provided for @dayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get dayWed;
+
+  /// No description provided for @dayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get dayThu;
+
+  /// No description provided for @dayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get dayFri;
+
+  /// No description provided for @daySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get daySat;
+
+  /// No description provided for @daySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get daySun;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to continue your journey?\nYour path is right here.'**
+  String get loginSubtitle;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter email'**
+  String get enterEmail;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password'**
+  String get enterPassword;
+
+  /// No description provided for @passwordResetComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset coming soon'**
+  String get passwordResetComingSoon;
+
+  /// No description provided for @logIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Log In'**
+  String get logIn;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orDivider;
+
+  /// No description provided for @dontHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? '**
+  String get dontHaveAccount;
+
+  /// No description provided for @backButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backButton;
+
+  /// No description provided for @createYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your Account'**
+  String get createYourAccount;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re here to help you reach the peaks\nof fishing. Are you ready?'**
+  String get signupSubtitle;
+
+  /// No description provided for @firstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get firstName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get lastName;
+
+  /// No description provided for @usernameField.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get usernameField;
+
+  /// No description provided for @confirmPasswordField.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordField;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @registrationSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful!'**
+  String get registrationSuccessful;
+
+  /// No description provided for @validationEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get validationEnterName;
+
+  /// No description provided for @validationNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be at least 2 characters'**
+  String get validationNameTooShort;
+
+  /// No description provided for @validationEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email'**
+  String get validationEnterEmail;
+
+  /// No description provided for @validationInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get validationInvalidEmail;
+
+  /// No description provided for @validationEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a password'**
+  String get validationEnterPassword;
+
+  /// No description provided for @validationPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get validationPasswordTooShort;
+
+  /// No description provided for @validationEnterUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a username'**
+  String get validationEnterUsername;
+
+  /// No description provided for @validationUsernameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be at least 3 characters'**
+  String get validationUsernameTooShort;
+
+  /// No description provided for @validationUsernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be less than 20 characters'**
+  String get validationUsernameTooLong;
+
+  /// No description provided for @validationUsernameInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Username can only contain letters, numbers, and underscores'**
+  String get validationUsernameInvalidChars;
+
+  /// No description provided for @validationConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get validationConfirmPassword;
+
+  /// No description provided for @validationPasswordsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get validationPasswordsNoMatch;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest User'**
+  String get guestUser;
+
+  /// No description provided for @guestAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest Account'**
+  String get guestAccount;
+
+  /// No description provided for @contactInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get contactInformation;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @accountStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Status'**
+  String get accountStatus;
+
+  /// No description provided for @guestBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access your full profile and seller features.'**
+  String get guestBannerMessage;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
+
+  /// No description provided for @policyDataCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Collection'**
+  String get policyDataCollection;
+
+  /// No description provided for @policyDataCollectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bahaar collects location data, catch logs, and account information solely to provide fishing assistance services. We do not sell your data to third parties.'**
+  String get policyDataCollectionBody;
+
+  /// No description provided for @policyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Usage'**
+  String get policyLocation;
+
+  /// No description provided for @policyLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Location data is used for weather forecasts, fishing maps, and navigation features. Location is never stored beyond your active session unless you explicitly save a log.'**
+  String get policyLocationBody;
+
+  /// No description provided for @policyFishRecognition.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish Recognition'**
+  String get policyFishRecognition;
+
+  /// No description provided for @policyFishRecognitionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Images submitted for fish identification are processed locally on-device using TensorFlow Lite. Images are not uploaded to any server.'**
+  String get policyFishRecognitionBody;
+
+  /// No description provided for @policyAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Authentication'**
+  String get policyAuthentication;
+
+  /// No description provided for @policyAuthenticationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication is handled securely through Firebase. Passwords are never stored in plain text. Guest sessions are anonymous and contain no personally identifiable information.'**
+  String get policyAuthenticationBody;
+
+  /// No description provided for @policyRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Retention'**
+  String get policyRetention;
+
+  /// No description provided for @policyRetentionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fishing logs and account data are stored in your personal Firebase account. You may delete your data at any time by contacting support or deleting your account.'**
+  String get policyRetentionBody;
+
+  /// No description provided for @policyContactSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get policyContactSection;
+
+  /// No description provided for @policyContactSectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For privacy-related inquiries, please contact the Bahaar development team through the app support channel.'**
+  String get policyContactSectionBody;
+
+  /// No description provided for @loginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Required'**
+  String get loginRequired;
+
+  /// No description provided for @guestAccountLoginMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to sign in to place an order.\nGuest accounts cannot buy or sell fish.'**
+  String get guestAccountLoginMessage;
+
+  /// No description provided for @guestAccountSellMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to sign in to post a listing.\nGuest accounts cannot sell fish.'**
+  String get guestAccountSellMessage;
+
+  /// No description provided for @phoneNumberCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number copied'**
+  String get phoneNumberCopied;
+
+  /// No description provided for @sellingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling ({count})'**
+  String sellingTab(int count);
+
+  /// No description provided for @purchasesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases ({count})'**
+  String purchasesTab(int count);
+
+  /// No description provided for @pleaseLoginToViewOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Please login to view orders'**
+  String get pleaseLoginToViewOrders;
+
+  /// No description provided for @noOrdersForListings.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders for your listings yet'**
+  String get noOrdersForListings;
+
+  /// No description provided for @noPurchasesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases yet'**
+  String get noPurchasesYet;
+
+  /// No description provided for @whenSomeoneOrdersYourFish.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone orders your fish, it will appear here'**
+  String get whenSomeoneOrdersYourFish;
+
+  /// No description provided for @yourPurchasesWillAppear.
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchases will appear here'**
+  String get yourPurchasesWillAppear;
+
+  /// No description provided for @fromYourFishingLog.
+  ///
+  /// In en, this message translates to:
+  /// **'From Your Fishing Log'**
   String get fromYourFishingLog;
 
+  /// No description provided for @tapRecentCatchToFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a recent catch to pre-fill the form'**
   String get tapRecentCatchToFill;
 
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
   String get today;
 
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
   String get yesterday;
 
   /// No description provided for @cleaned.
@@ -2527,6 +2779,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI catch probability'**
   String get aiCatchProbability;
+
+  /// No description provided for @celestialNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Celestial Nav'**
+  String get celestialNavigation;
 
   /// No description provided for @celestialAlmanac.
   ///

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/navigation/celestial_fix_notifier.dart';
-import 'package:Bahaar/navigation/confidence_engine.dart';
+import 'package:bahaar/navigation/celestial_fix_notifier.dart';
+import 'package:bahaar/navigation/confidence_engine.dart';
 
 // 1 NM ≈ 1852 m; 1 degree latitude ≈ 111 319 m
 const double _kMetresPerDeg = 111319.0;

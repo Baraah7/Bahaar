@@ -3,14 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/navigation/sidereal_time.dart';
-import 'package:Bahaar/navigation/corrections.dart';
-import 'package:Bahaar/navigation/confidence_engine.dart';
-import 'package:Bahaar/navigation/celestial_fix_notifier.dart';
-import 'package:Bahaar/navigation/camera_service.dart';
-import 'package:Bahaar/navigation/star_identifier.dart';
-import 'package:Bahaar/screens/sky_scanner_view.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/navigation/sidereal_time.dart';
+import 'package:bahaar/navigation/corrections.dart';
+import 'package:bahaar/navigation/confidence_engine.dart';
+import 'package:bahaar/navigation/celestial_fix_notifier.dart';
+import 'package:bahaar/navigation/camera_service.dart';
+import 'package:bahaar/navigation/star_identifier.dart';
+import 'package:bahaar/screens/celestial navigation/sky_scanner_view.dart';
 
 class CelestialNavigationScreen extends StatefulWidget {
   const CelestialNavigationScreen({super.key});

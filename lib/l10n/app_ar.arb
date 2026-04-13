@@ -29,7 +29,6 @@
   "marinerHarvestSubtitle": "شراء وبيع الأسماك الطازجة",
   "signOut": "تسجيل الخروج",
 
-// Fish Recognition
 
   "loadingRecognitionModel": "جاري تحميل نموذج التعرف...",
   "takePhotoOfFish": "التقط صورة للسمكة أو الروبيان",
@@ -47,7 +46,6 @@
   "modelNotReady": "النموذج غير جاهز",
   "classificationFailed": "فشل التصنيف",
 
-// weather
 
   "hourlyForecast": "الـ 24 ساعة القادمة",
   "dailyForecast": "توقعات الأيام",
@@ -60,7 +58,6 @@
   "sunset": "الغروب",
   "unableToLoadWeather": "تعذر تحميل الطقس",
 
-// Settings 
 
   "changeLanguage": "تغيير اللغة",
   "selectLanguage": "اختر اللغة",
@@ -69,7 +66,6 @@
   "about": "حول التطبيق",
   "version": "الإصدار",
 
-// Sign in 
   "signIn": "تسجيل الدخول",
   "signUp": "إنشاء حساب",
   "email": "البريد الإلكتروني",
@@ -77,7 +73,6 @@
   "forgotPassword": "نسيت كلمة المرور؟",
   "continueAsGuest": "المتابعة كضيف",
 
-// Map
 
   "navigationReady": "الملاحة جاهزة",
   "calculatingRoute": "جاري حساب المسار...",
@@ -128,7 +123,6 @@
   "tapOnSea": "انقر في البحر وليس على البر",
   "currentLocationOnLandRequired": "الموقع الحالي غير متاح أو أنت في البحر. انقر على الخريطة لتحديد نقطة انطلاق برية.",
   
-// Fishing Log 
 
   "tripDetailTitle": "تفاصيل الرحلة",
   "tripStart": "البداية",
@@ -175,7 +169,6 @@
   "resetLinkFailed": "فشل إرسال رابط الإعادة.",
   "signInToSell": "سجّل الدخول لبيع صيدك.",
 
-// Marcketplace
 
   "marketplace": "السوق",
   "sellFish": "بيع سمك",
@@ -518,6 +511,7 @@
   "fishingPrediction": "توقع الصيد",
   "aiCatchProbability": "احتمالية الصيد بالذكاء الاصطناعي",
 
+  "celestialNavigation": "الملاحة الفلكية",
   "celestialAlmanac": "التقويم الفلكي",
   "solarNoon": "الذروة الشمسية",
 

@@ -136,7 +136,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     child: widgets.AuthField(
                                       controller: _firstNameCtrl,
                                       label: l10n.firstName,
-                                      validator: (val) => AuthenticationValidation.validateName(val, l10n),
+                                      validator: AuthenticationValidation.validateName,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -144,7 +144,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     child: widgets.AuthField(
                                       controller: _lastNameCtrl,
                                       label: l10n.lastName,
-                                      validator: (val) => AuthenticationValidation.validateName(val, l10n),
+                                      validator: AuthenticationValidation.validateName,
                                     ),
                                   ),
                                 ],
@@ -153,21 +153,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               widgets.AuthField(
                                 controller: _usernameCtrl,
                                 label: l10n.usernameField,
-                                validator: (val) => AuthenticationValidation.validateUsername(val, l10n),
+                                validator: AuthenticationValidation.validateUsername,
                               ),
                               const SizedBox(height: 14),
                               widgets.AuthField(
                                 controller: _emailCtrl,
                                 label: l10n.enterEmail,
                                 keyboardType: TextInputType.emailAddress,
-                                validator: (val) => AuthenticationValidation.validateEmail(val, l10n),
+                                validator: AuthenticationValidation.validateEmail,
                               ),
                               const SizedBox(height: 14),
                               widgets.AuthField(
                                 controller: _passCtrl,
                                 label: l10n.enterPassword,
                                 obscure: _obscurePass,
-                                validator: (val) => AuthenticationValidation.validatePassword(val, l10n),
+                                validator: AuthenticationValidation.validatePassword,
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePass
@@ -186,7 +186,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 label: l10n.confirmPasswordField,
                                 obscure: _obscureConfirm,
                                 validator: AuthenticationValidation.validateConfirmPassword(
-                                    _passCtrl.text, l10n),
+                                    _passCtrl.text),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureConfirm

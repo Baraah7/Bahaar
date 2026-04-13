@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -231,6 +232,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.anchor),
             label: l10n.fishingLog,
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.explore),
+            label: l10n.celestialNavigation,
             backgroundColor: AppColors.primary,
           ),
         ],
