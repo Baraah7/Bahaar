@@ -3,7 +3,7 @@ import 'package:bahaar/l10n/app_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/models/marketplace/fish_listing.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
-import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/services/marketplace/fish_marketplace_service.dart';
 import 'package:bahaar/widgets/marketplace/fish_details_sheet.dart';
 import 'package:bahaar/widgets/marketplace/marketplace_tab.dart';

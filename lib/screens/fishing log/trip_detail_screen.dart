@@ -2,7 +2,7 @@ import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/app_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
-import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
