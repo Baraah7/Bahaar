@@ -31,12 +31,12 @@ class TripCard extends StatelessWidget {
       final m = d.inMinutes.remainder(60);
       final hStr = _n('$h', lang);
       final mStr = _n('$m', lang);
-      if (isAr) return m == 0 ? '${hStr}س' : '${hStr}س ${mStr}د';
+      if (isAr) return m == 0 ? '$hStrس' : '$hStrس $mStrد';
       return m == 0 ? '${hStr}h' : '${hStr}h ${mStr}m';
     }
     final m = d.inMinutes;
     final mStr = _n('$m', lang);
-    return isAr ? '${mStr}د' : '${mStr}m';
+    return isAr ? '$mStrد' : '${mStr}m';
   }
 
   @override
