@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../l10n/app_localizations.dart';
-import 'package:Bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
 
 class OrderCard extends StatelessWidget {
   final Order order;

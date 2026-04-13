@@ -1,11 +1,11 @@
 import 'dart:developer';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/services/offline/connectivity_service.dart';
+import 'package:bahaar/services/offline/database_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/services/offline/database_service.dart';
-import 'package:Bahaar/services/offline/connectivity_service.dart';
 
 /// Manages trips and catches via SQLite (offline-first) with Firestore sync.
 /// All data is scoped to the currently authenticated user.

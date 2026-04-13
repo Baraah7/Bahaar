@@ -1,21 +1,22 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:Bahaar/screens/weather/weather.dart';
-import 'package:Bahaar/screens/map/integrated_map.dart';
-import 'package:Bahaar/screens/marketplace/mariner_harvest.dart';
-import 'package:Bahaar/screens/settings/settings_screen.dart';
-import 'package:Bahaar/screens/authentication/profile_screen.dart';
-import 'package:Bahaar/providers/authentication/authentication_provider.dart';
-import 'package:Bahaar/screens/fishing log/fishing_log_screen.dart';
-import 'package:Bahaar/screens/fish recognition/fish_recognition_screen.dart';
-import 'package:Bahaar/providers/language/language_provider.dart';
-import 'package:Bahaar/services/offline/connectivity_service.dart';
-import 'package:Bahaar/services/offline/database_service.dart';
-import 'package:Bahaar/services/notifications/notification_service.dart';
-import 'package:Bahaar/services/notifications/weather_monitor.dart';
+import 'package:bahaar/screens/weather/weather.dart';
+import 'package:bahaar/screens/map/integrated_map.dart';
+import 'package:bahaar/screens/marketplace/mariner_harvest.dart';
+import 'package:bahaar/screens/settings/settings_screen.dart';
+import 'package:bahaar/screens/settings/emergency_screen.dart';
+import 'package:bahaar/screens/authentication/profile_screen.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/screens/fishing log/fishing_log_screen.dart';
+import 'package:bahaar/screens/fish recognition/fish_recognition_screen.dart';
+import 'package:bahaar/providers/language/language_provider.dart';
+import 'package:bahaar/services/offline/connectivity_service.dart';
+import 'package:bahaar/services/offline/database_service.dart';
+import 'package:bahaar/services/notifications/notification_service.dart';
+import 'package:bahaar/services/notifications/weather_monitor.dart';
 import 'l10n/app_localizations.dart';
 import 'app_start.dart';
 
@@ -125,29 +126,8 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             elevation: 8,
             onSelected: (value) {
               if (value == 'emergency') {
-                showDialog(
-                  context: context,
-                  builder: (ctx) {
-                    final dl10n = AppLocalizations.of(ctx)!;
-                    return AlertDialog(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      title: Text(dl10n.emergency,
-                          style: const TextStyle(color: AppColors.cream)),
-                      content: Text(
-                          dl10n.emergencyComingSoon,
-                          style: const TextStyle(color: AppColors.cream)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: Text(dl10n.ok,
-                              style: const TextStyle(color: AppColors.accent)),
-                        ),
-                      ],
-                    );
-                  },
-                );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const EmergencyScreen()));
               } else if (value == 'settings') {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SettingsScreen()));
@@ -225,30 +205,30 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             curve: Curves.easeInOut,
           );
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.sailing),
-            label: 'Marketplace',
+            icon: const Icon(Icons.sailing),
+            label: l10n.marketplace,
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
+            icon: const Icon(Icons.map),
+            label: l10n.fishingMap,
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.cloud),
-            label: 'Weather',
+            icon: const Icon(Icons.cloud),
+            label: l10n.weather,
             backgroundColor: AppColors.accent,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Fish ID',
+            icon: const Icon(Icons.camera_alt),
+            label: l10n.fishRecognition,
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.anchor),
-            label: 'Fishing Log',
+            icon: const Icon(Icons.anchor),
+            label: l10n.fishingLog,
             backgroundColor: AppColors.primary,
           ),
         ],

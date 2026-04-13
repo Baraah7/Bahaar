@@ -1,18 +1,18 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/marketplace/fish_listing.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/services/marketplace/fish_marketplace_service.dart';
+import 'package:bahaar/widgets/marketplace/fish_details_sheet.dart';
+import 'package:bahaar/widgets/marketplace/marketplace_tab.dart';
+import 'package:bahaar/widgets/marketplace/orders_tab.dart';
+import 'package:bahaar/widgets/marketplace/sell_fish_form.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-import 'package:Bahaar/models/marketplace/fish_listing.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/services/marketplace/fish_marketplace_service.dart';
-import 'package:Bahaar/services/fishing/trip_service.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/widgets/marketplace/marketplace_tab.dart';
-import 'package:Bahaar/widgets/marketplace/sell_fish_form.dart';
-import 'package:Bahaar/widgets/marketplace/fish_details_sheet.dart';
-import 'package:Bahaar/widgets/marketplace/orders_tab.dart';
-import 'package:Bahaar/providers/authentication/authentication_provider.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
 
 class MarinerHarvestPage extends ConsumerStatefulWidget {
   const MarinerHarvestPage({super.key});

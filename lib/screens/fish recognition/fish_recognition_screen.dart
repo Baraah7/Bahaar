@@ -1,16 +1,15 @@
 ﻿import 'dart:io';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/providers/fish%20recognition/fish_classification_provider.dart';
+import 'package:bahaar/providers/language/language_provider.dart';
+import 'package:bahaar/widgets/common/app_empty_state.dart';
+import 'package:bahaar/widgets/common/app_loading_view.dart';
+import 'package:bahaar/widgets/common/app_snackbar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:Bahaar/providers/fish recognition/fish_classification_provider.dart';
-import 'package:Bahaar/providers/language/language_provider.dart';
-import 'package:Bahaar/models/fishing/fish_probability_model.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/widgets/common/app_snackbar.dart';
-import 'package:Bahaar/widgets/common/app_loading_view.dart';
-import 'package:Bahaar/widgets/common/app_empty_state.dart';
 
 class FishRecognitionScreen extends ConsumerStatefulWidget {
   const FishRecognitionScreen({super.key});

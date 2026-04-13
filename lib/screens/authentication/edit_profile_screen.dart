@@ -1,12 +1,12 @@
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/widgets/common/app_card.dart';
+import 'package:bahaar/widgets/common/card_divider.dart';
+import 'package:bahaar/widgets/common/gradient_screen.dart';
+import 'package:bahaar/widgets/common/section_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:Bahaar/providers/authentication/authentication_provider.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/widgets/common/app_card.dart';
-import 'package:Bahaar/widgets/common/section_label.dart';
-import 'package:Bahaar/widgets/common/card_divider.dart';
-import 'package:Bahaar/widgets/common/gradient_screen.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});

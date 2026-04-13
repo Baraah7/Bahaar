@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 import 'package:flutter/material.dart';
 
 /// Symmetric wave clipper — both edges at the same y so the wave appears
@@ -20,3 +21,4 @@ class WaveClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> _) => false;
 }
+*/

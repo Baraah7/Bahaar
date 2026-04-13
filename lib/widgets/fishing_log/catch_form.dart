@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/screens/fishing log/location_picker_screen.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/widgets/common/app_card.dart';
-import 'package:Bahaar/widgets/common/section_label.dart';
-import 'package:Bahaar/widgets/common/card_divider.dart';
+import 'package:bahaar/screens/fishing log/location_picker_screen.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/widgets/common/app_card.dart';
+import 'package:bahaar/widgets/common/section_label.dart';
+import 'package:bahaar/widgets/common/card_divider.dart';
 
 class CatchForm extends StatefulWidget {
   const CatchForm({super.key});

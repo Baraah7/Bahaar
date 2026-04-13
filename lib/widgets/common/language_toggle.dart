@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:Bahaar/providers/language/language_provider.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/providers/language/language_provider.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 
 class LanguageToggle extends ConsumerWidget {
   const LanguageToggle({super.key});

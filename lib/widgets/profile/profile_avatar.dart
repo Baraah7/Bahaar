@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 import 'package:flutter/material.dart';
 import '../../models/registration/user.dart';
 
@@ -40,3 +41,4 @@ class ProfileAvatar extends StatelessWidget {
     );
   }
 }
+*/

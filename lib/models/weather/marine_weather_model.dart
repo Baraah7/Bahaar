@@ -1,4 +1,4 @@
-import 'package:Bahaar/utilities/map/navigation_constants.dart';
+import 'package:bahaar/utilities/map/navigation_constants.dart';
 
 /// Safety level for marine weather conditions
 enum SafetyLevel {

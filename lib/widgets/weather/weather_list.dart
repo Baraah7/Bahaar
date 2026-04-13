@@ -4,7 +4,7 @@ import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
 import '../../models/weather/tide_model.dart';
-import 'package:Bahaar/utilities/cn/celestial_calculator.dart';
+import 'package:bahaar/utilities/cn/celestial_calculator.dart';
 import '../../l10n/app_localizations.dart';
 import 'celestial_almanac_card.dart';
 
@@ -31,7 +31,7 @@ class _WeatherStyles {
 }
 
 class WeatherList extends StatelessWidget {
-  final weather_response_model weatherData;
+  final WeatherResponseModel weatherData;
   final List<TideEntry> tides;
   final AppLocalizations l10n;
 
@@ -290,7 +290,7 @@ class WeatherList extends StatelessWidget {
                     Expanded(child: _buildCompactCard(
                       icon: Icons.thermostat_outlined,
                       title: l10n.feelsLike,
-                      value: '${_n(weatherData.currentWeather.feelslike_c.round())}°',
+                      value: '${_n(weatherData.currentWeather.feelslikeC.round())}°',
                       subtitle: _getFeelsLikeDescription(),
                       accentColor: const Color(0xFF64B5F6),
                     )),
@@ -303,14 +303,14 @@ class WeatherList extends StatelessWidget {
                       icon: Icons.water_drop,
                       title: l10n.humidity,
                       value: '${_n(weatherData.currentWeather.humidity)}%',
-                      subtitle: '${l10n.weatherDewPoint} ${_n(weatherData.currentWeather.dewpoint_c.round())}°',
+                      subtitle: '${l10n.weatherDewPoint} ${_n(weatherData.currentWeather.dewpointC?.round() ?? 0)}°',
                       accentColor: _WeatherStyles.accent,
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildCompactCard(
                       icon: Icons.visibility_outlined,
                       title: l10n.visibility,
-                      value: '${_n(weatherData.currentWeather.vis_km.round())} $_km',
+                      value: '${_n(weatherData.currentWeather.visKm.round())} $_km',
                       subtitle: _getVisibilityDescription(),
                       accentColor: const Color(0xFF81C784),
                     )),
@@ -396,7 +396,7 @@ class WeatherList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _n(weatherData.currentWeather.temp_c.round()),
+                    _n(weatherData.currentWeather.tempC.round()),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 72,
@@ -452,12 +452,12 @@ class WeatherList extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _tempIndicator(weatherData.forecast!.forecastDay.day.maxtemp_c.round(), Icons.arrow_upward, _WeatherStyles.orange),
+                _tempIndicator(weatherData.forecast!.forecastDay.day.maxtempC.round(), Icons.arrow_upward, _WeatherStyles.orange),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: SizedBox(width: 40, height: 2, child: _gradientDivider()),
                 ),
-                _tempIndicator(weatherData.forecast!.forecastDay.day.mintemp_c.round(), Icons.arrow_downward, const Color(0xFF64B5F6)),
+                _tempIndicator(weatherData.forecast!.forecastDay.day.mintempC.round(), Icons.arrow_downward, const Color(0xFF64B5F6)),
               ],
             ),
         ],
@@ -479,7 +479,7 @@ class WeatherList extends StatelessWidget {
     if (weatherData.forecast == null) return const SizedBox.shrink();
 
     final now = DateTime.now();
-    final hours = weatherData.forecast!.forecastday
+    final hours = weatherData.forecast!.forecastDays
         .expand((day) => day.hour)
         .where((h) => DateTime.parse(h.time).isAfter(now.subtract(const Duration(hours: 1))))
         .take(24)
@@ -507,7 +507,7 @@ class WeatherList extends StatelessWidget {
     );
   }
 
-  Widget _hourItem(hour_model hour, bool isNow) {
+  Widget _hourItem(HourModel hour, bool isNow) {
     final hourTime = DateTime.parse(hour.time);
     return Container(
       width: 70,
@@ -533,9 +533,9 @@ class WeatherList extends StatelessWidget {
               fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
-          _weatherIcon(hour.condition_icon, size: 36),
+          _weatherIcon(hour.conditionIcon, size: 36),
           Text(
-            '${_n(hour.temp_c.round())}°',
+            '${_n(hour.tempC.round())}°',
             style: TextStyle(
               color: isNow ? Colors.white : _WeatherStyles.white(0.9),
               fontSize: 18,
@@ -550,9 +550,9 @@ class WeatherList extends StatelessWidget {
   Widget _buildDailyForecast() {
     if (weatherData.forecast == null) return const SizedBox.shrink();
 
-    final days = weatherData.forecast!.forecastday;
-    final weekMin = days.map((d) => d.day.mintemp_c).reduce(math.min);
-    final weekMax = days.map((d) => d.day.maxtemp_c).reduce(math.max);
+    final days = weatherData.forecast!.forecastDays;
+    final weekMin = days.map((d) => d.day.mintempC).reduce(math.min);
+    final weekMax = days.map((d) => d.day.maxtempC).reduce(math.max);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -567,7 +567,7 @@ class WeatherList extends StatelessWidget {
     );
   }
 
-  Widget _dayRow(forecast_day day, bool isToday, double weekMin, double weekMax) {
+  Widget _dayRow(ForecastDay day, bool isToday, double weekMin, double weekMax) {
     final date = DateTime.parse(day.date);
     final dayName = isToday ? l10n.weatherToday : _getDayName(date.weekday);
 
@@ -587,17 +587,17 @@ class WeatherList extends StatelessWidget {
               ),
             ),
           ),
-          _weatherIcon(day.day.condition_icon),
+          _weatherIcon(day.day.conditionIcon),
           const SizedBox(width: 8),
           SizedBox(
             width: 42,
-            child: day.day.daily_chance_of_rain > 0
+            child: day.day.dailyChanceOfRain > 0
                 ? Row(
                     children: [
                       const Icon(Icons.water_drop, color: _WeatherStyles.accent, size: 12),
                       const SizedBox(width: 2),
                       Text(
-                        '${_n(day.day.daily_chance_of_rain)}%',
+                        '${_n(day.day.dailyChanceOfRain)}%',
                         style: const TextStyle(color: _WeatherStyles.accent, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -605,11 +605,11 @@ class WeatherList extends StatelessWidget {
                 : null,
           ),
           const Spacer(),
-          Text('${_n(day.day.mintemp_c.round())}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.mintempC.round())}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(width: 8),
-          SizedBox(width: 80, child: _temperatureBar(day.day.mintemp_c, day.day.maxtemp_c, weekMin, weekMax, isToday)),
+          SizedBox(width: 80, child: _temperatureBar(day.day.mintempC, day.day.maxtempC, weekMin, weekMax, isToday)),
           const SizedBox(width: 8),
-          Text('${_n(day.day.maxtemp_c.round())}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.maxtempC.round())}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -619,7 +619,7 @@ class WeatherList extends StatelessWidget {
     final range = weekMax - weekMin;
     final startPercent = (min - weekMin) / range;
     final endPercent = (max - weekMin) / range;
-    final currentPercent = isToday ? (weatherData.currentWeather.temp_c - weekMin) / range : null;
+    final currentPercent = isToday ? (weatherData.currentWeather.tempC - weekMin) / range : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -674,7 +674,7 @@ class WeatherList extends StatelessWidget {
           SizedBox(
             width: 100,
             height: 100,
-            child: CustomPaint(painter: _ModernCompassPainter(wind.wind_degree.toDouble())),
+            child: CustomPaint(painter: _ModernCompassPainter(wind.windDegree.toDouble())),
           ),
           const SizedBox(width: 24),
           Expanded(
@@ -692,7 +692,7 @@ class WeatherList extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(_n(wind.wind_kph.round()), style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
+                    Text(_n(wind.windKph.round()), style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -707,7 +707,7 @@ class WeatherList extends StatelessWidget {
                           color: _WeatherStyles.accent.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(wind.wind_dir, style: const TextStyle(color: _WeatherStyles.accent, fontSize: 14, fontWeight: FontWeight.w600)),
+                        child: Text(wind.windDir, style: const TextStyle(color: _WeatherStyles.accent, fontSize: 14, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -717,7 +717,7 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.waves, color: _WeatherStyles.white(0.5), size: 14),
                     const SizedBox(width: 6),
-                    Text('${l10n.weatherGusts} ${_n(wind.gust_kph.round())} $_kmh', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
+                    Text('${l10n.weatherGusts} ${_n(wind.gustKph.round())} $_kmh', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
                   ],
                 ),
               ],
@@ -780,14 +780,14 @@ class WeatherList extends StatelessWidget {
           ),
           Row(
             children: [
-              Icon(_getMoonIcon(astro.moon_phase), color: _WeatherStyles.white(0.9), size: 36),
+              Icon(_getMoonIcon(astro.moonPhase), color: _WeatherStyles.white(0.9), size: 36),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_moonPhase(astro.moon_phase), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
-                    Text('${_n(astro.moon_illumination)}${l10n.illuminated}', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
+                    Text(_moonPhase(astro.moonPhase), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
+                    Text('${_n(astro.moonIllumination)}${l10n.illuminated}', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
                   ],
                 ),
               ),
@@ -907,7 +907,7 @@ class WeatherList extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          entry.formattedTime,
+                          _formatTime(entry.formattedTime),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -964,13 +964,13 @@ class WeatherList extends StatelessWidget {
   }
 
   String _getFeelsLikeDescription() {
-    final diff = weatherData.currentWeather.feelslike_c - weatherData.currentWeather.temp_c;
+    final diff = weatherData.currentWeather.feelslikeC - weatherData.currentWeather.tempC;
     if (diff.abs() < 2) return l10n.feelsLikeSimilar;
     return diff > 0 ? l10n.feelsLikeWarmer : l10n.feelsLikeCooler;
   }
 
   String _getVisibilityDescription() {
-    final vis = weatherData.currentWeather.vis_km;
+    final vis = weatherData.currentWeather.visKm;
     if (vis >= 10) return l10n.visibilityClear;
     if (vis >= 5) return l10n.visibilityGood;
     if (vis >= 2) return l10n.uvModerate;

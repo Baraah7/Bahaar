@@ -1,4 +1,4 @@
-import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 
 class AuthenticationValidation {
   static String? validateName(String? value, AppLocalizations l10n) {

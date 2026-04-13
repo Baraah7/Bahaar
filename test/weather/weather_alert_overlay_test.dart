@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:Bahaar/widgets/navigation/weather_alert_overlay.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/widgets/navigation/weather_alert_overlay.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
 
 /// Helper to create a WeatherSafetyAssessment for testing
 WeatherSafetyAssessment makeAssessment({

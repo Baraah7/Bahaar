@@ -1,4 +1,4 @@
-import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AuthField extends StatelessWidget {

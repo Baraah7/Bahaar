@@ -14,7 +14,7 @@ class AuthenticationService {
       );
       return userCredential.user;
     } catch (e) {
-      print('Error signing in: $e');
+      // print('Error signing in: $e');
       return null;
     }
   }
@@ -50,7 +50,7 @@ class AuthenticationService {
       UserCredential userCredential = await _firebaseAuth.signInAnonymously();
       return userCredential.user;
     } catch (e) {
-      print('Error signing in as guest: $e');
+      // print('Error signing in as guest: $e');
       return null;
     }
   }

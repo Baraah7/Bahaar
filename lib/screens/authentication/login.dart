@@ -1,14 +1,14 @@
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/utilities/authentication/authentication_validation.dart';
+import 'package:bahaar/widgets/common/app_snackbar.dart';
+import 'package:bahaar/widgets/common/language_toggle.dart';
+import 'package:bahaar/widgets/profile/auth_background.dart';
+import 'package:bahaar/widgets/profile/auth_background.dart' as widgets;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:Bahaar/providers/authentication/authentication_provider.dart';
-import 'package:Bahaar/utilities/authentication/authentication_validation.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/widgets/profile/auth_background.dart';
-import 'package:Bahaar/widgets/profile/auth_widgets.dart' as widgets;
 import 'signup.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/widgets/common/app_snackbar.dart';
-import 'package:Bahaar/widgets/common/language_toggle.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

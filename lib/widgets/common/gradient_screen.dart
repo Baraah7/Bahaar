@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 
 class GradientScreen extends StatelessWidget {
   final double expandedHeight;

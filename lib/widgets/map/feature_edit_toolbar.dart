@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
-import 'package:Bahaar/models/map/feature_edit_state.dart';
+import 'package:bahaar/models/map/editable_map_feature.dart';
+import 'package:bahaar/models/map/feature_edit_state.dart';
 
 /// Floating toolbar for feature editing controls.
 /// Follows the same visual pattern as AdminEditToolbar.

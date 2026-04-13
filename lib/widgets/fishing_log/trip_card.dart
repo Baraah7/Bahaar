@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
-import 'package:Bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
 
 class TripCard extends StatelessWidget {
   final Trip trip;
@@ -41,7 +41,7 @@ class TripCard extends StatelessWidget {
     final lang = l10n.localeName;
     final locale = lang == 'ar' ? 'ar' : 'en';
     final dateStr = DateFormat('EEE d MMM yyyy', locale).format(trip.startTime.toLocal());
-    final timeStr = DateFormat('HH:mm').format(trip.startTime.toLocal());
+    final timeStr = _n(DateFormat('HH:mm').format(trip.startTime.toLocal()), lang);
     final duration = trip.duration;
     final durationStr = _formatDurationLocale(duration, lang);
     final totalWeight = trip.totalWeightKg;

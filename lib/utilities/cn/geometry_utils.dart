@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/fishing/fishing_activity_model.dart';
+import 'package:bahaar/models/fishing/fishing_activity_model.dart';
 
 /// Geometry utilities for track simplification and spatial aggregation
 class GeometryUtils {

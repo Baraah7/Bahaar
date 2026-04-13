@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/registration/user.dart';
 class UserService {
@@ -8,3 +9,4 @@ class UserService {
     return User.fromMap(doc.data()!);
   }
 }
+*/

@@ -1,4 +1,4 @@
-name: Bahaar
+name: bahaar
 description: "A new Flutter project."
 publish_to: 'none' 
 
@@ -37,6 +37,7 @@ dependencies:
   connectivity_plus: ^6.1.1
   uuid: ^4.5.2
   path_provider: ^2.1.5
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

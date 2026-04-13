@@ -1,5 +1,5 @@
+import 'package:bahaar/models/fishing/fish_probability_model.dart';
 import 'package:flutter/foundation.dart';
-import 'package:Bahaar/models/fishing/fish_probability_model.dart';
 
 /// Manages the state and configuration of all map layers
 /// Provides a centralized way to control layer visibility, opacity, and settings

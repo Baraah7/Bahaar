@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:Bahaar/models/navigation/route_model.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
 
 void main() {
   group('RouteMetrics weather fields', () {

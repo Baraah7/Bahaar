@@ -1,55 +1,57 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:Bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/ais_model.dart';
+import 'package:bahaar/models/map/editable_map_feature.dart';
+import 'package:bahaar/models/map/feature_edit_state.dart';
+import 'package:bahaar/models/navigation/marina_model.dart';
+import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/screens/fish%20recognition/prediction_screen.dart';
+import 'package:bahaar/services/ais_service.dart';
+import 'package:bahaar/services/fish_probability_service.dart';
+import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/services/map/exclusion_zone_service.dart';
+import 'package:bahaar/services/map/feature_edit_service.dart';
+import 'package:bahaar/services/map/hybrid_route_coordinator.dart';
+import 'package:bahaar/services/map/map_layer_manager.dart';
+import 'package:bahaar/services/map/marina_data_service.dart';
+import 'package:bahaar/services/map/marine_pathfinding_service.dart';
+import 'package:bahaar/services/map/navigation_mask.dart';
+import 'package:bahaar/services/map/navigation_session_manager.dart';
+import 'package:bahaar/services/map/osrm_routing_service.dart';
+import 'package:bahaar/services/map/outline_edit_service.dart';
+import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/services/offline/connectivity_service.dart';
+import 'package:bahaar/services/sos_service.dart';
+import 'package:bahaar/utilities/cn/geometry_utils.dart';
+import 'package:bahaar/utilities/map/map_constants.dart';
+import 'package:bahaar/widgets/fishing_log/catch_form.dart';
+import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
+import 'package:bahaar/widgets/map/ais_vessel_layer.dart';
+import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
+import 'package:bahaar/widgets/map/depth_soundings_layer.dart';
+import 'package:bahaar/widgets/map/enhanced_depth_layer.dart';
+import 'package:bahaar/widgets/map/exclusion_zone_layer.dart';
+import 'package:bahaar/widgets/map/feature_drawing_layer.dart';
+import 'package:bahaar/widgets/map/feature_edit_toolbar.dart';
+import 'package:bahaar/widgets/map/fish_probability_layer.dart';
+import 'package:bahaar/widgets/map/geojson_layers.dart';
+import 'package:bahaar/widgets/map/layer_control_panel.dart';
+import 'package:bahaar/widgets/map/sos_button.dart';
+import 'package:bahaar/widgets/map/territorial_mask_layer.dart';
+import 'package:bahaar/widgets/map/territorial_outline_editor.dart';
+import 'package:bahaar/widgets/navigation/active_navigation_overlay.dart';
+import 'package:bahaar/widgets/navigation/marina_marker_layer.dart';
+import 'package:bahaar/widgets/navigation/route_polyline_layer.dart';
+import 'package:bahaar/widgets/navigation/weather_alert_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/services/map/navigation_mask.dart';
-import 'package:Bahaar/services/map/map_layer_manager.dart';
-import 'package:Bahaar/services/map/marina_data_service.dart';
-import 'package:Bahaar/services/map/osrm_routing_service.dart';
-import 'package:Bahaar/services/map/marine_pathfinding_service.dart';
-import 'package:Bahaar/services/map/hybrid_route_coordinator.dart';
-import 'package:Bahaar/services/map/navigation_session_manager.dart';
-import 'package:Bahaar/models/navigation/marina_model.dart';
-import 'package:Bahaar/models/navigation/route_model.dart';
-import 'package:Bahaar/widgets/map/enhanced_depth_layer.dart';
-import 'package:Bahaar/widgets/map/territorial_mask_layer.dart';
-import 'package:Bahaar/widgets/map/geojson_layers.dart';
-import 'package:Bahaar/widgets/map/layer_control_panel.dart';
-import 'package:Bahaar/widgets/navigation/marina_marker_layer.dart';
-import 'package:Bahaar/widgets/navigation/route_polyline_layer.dart';
-import 'package:Bahaar/widgets/navigation/active_navigation_overlay.dart';
-import 'package:Bahaar/widgets/navigation/weather_alert_overlay.dart';
-import 'package:Bahaar/services/fish_probability_service.dart';
-import 'package:Bahaar/widgets/map/fish_probability_layer.dart';
-import 'package:Bahaar/services/marine_weather_service.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
-import 'package:Bahaar/utilities/map/map_constants.dart';
-import 'package:Bahaar/widgets/map/admin_edit_toolbar.dart';
-import 'package:Bahaar/widgets/map/feature_edit_toolbar.dart';
-import 'package:Bahaar/widgets/map/feature_drawing_layer.dart';
-import 'package:Bahaar/services/map/feature_edit_service.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
-import 'package:Bahaar/models/map/feature_edit_state.dart';
-import 'package:Bahaar/utilities/cn/geometry_utils.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/services/map/exclusion_zone_service.dart';
-import 'package:Bahaar/widgets/map/exclusion_zone_layer.dart';
-import 'package:Bahaar/services/map/outline_edit_service.dart';
-import 'package:Bahaar/widgets/map/territorial_outline_editor.dart';
-import 'package:Bahaar/services/ais_service.dart';
-import 'package:Bahaar/models/ais_model.dart';
-import 'package:Bahaar/widgets/map/ais_vessel_layer.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:Bahaar/widgets/map/depth_soundings_layer.dart';
-import 'package:Bahaar/services/offline/connectivity_service.dart';
-import 'package:Bahaar/services/fishing/trip_service.dart';
-import 'package:Bahaar/widgets/map/bahaar_overlay_layer.dart';
-import 'package:Bahaar/screens/fish recognition/prediction_screen.dart';
-import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -1897,7 +1899,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
               Polyline(
                 points: _navigationManager!.session!.breadcrumbs,
                 strokeWidth: 3.0,
-                color: Colors.purple.withValues(alpha: 0.6),
+                color: Colors.teal.withValues(alpha: 0.6),
               ),
             ],
           ),
@@ -1957,51 +1959,51 @@ class _IntegratedMapState extends State<IntegratedMap> {
               final isSelected = _selectedPort?.id == port.id;
               return Marker(
                 point: port.location,
-                width: 52,
-                height: 68,
+                width: 36,
+                height: 48,
                 child: GestureDetector(
                   onTap: () => _handlePortSelected(port),
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(9),
+                        padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: isSelected ? Colors.green : AppColors.red,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: Colors.white,
-                            width: isSelected ? 3 : 2,
+                            width: isSelected ? 2.5 : 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 6,
+                              blurRadius: 4,
                             ),
                           ],
                         ),
                         child: const Icon(
                           Icons.anchor,
                           color: Colors.white,
-                          size: 20,
+                          size: 14,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(3),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 4,
+                              blurRadius: 3,
                             ),
                           ],
                         ),
                         child: Text(
-                          port.name.split(' ').first, // Show first word
+                          port.name.split(' ').first,
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 8,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -2602,7 +2604,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     editState: _featureEditState,
                     onClose: _exitFeatureEditMode,
                     onStartAdd: (type) {
-                      _featureEditState.startAddFeature(type);
+                      _featureEditState.startAddFeature(type as MapFeatureType);
                     },
                     onStartSelect: () {
                       _featureEditState.startSelectMode();
@@ -2945,6 +2947,20 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 label: Text(l10n.logCatch),
               ),
             ),
+
+          // SOS button (bottom left)
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: SosButton(
+              onSosConfirmed: () => SosService().sendSos(
+                position: _locationData?.latitude != null && _locationData?.longitude != null
+                    ? LatLng(_locationData!.latitude!, _locationData!.longitude!)
+                    : const LatLng(26.2235, 50.5876),
+                heading: _locationData?.heading?.toDouble(),
+              ),
+            ),
+          ),
 
           // Zoom controls (bottom right)
           Positioned(

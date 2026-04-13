@@ -1,12 +1,13 @@
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
+import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/services/fishing/trip_service.dart';
-import 'package:Bahaar/screens/fishing log/location_picker_screen.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
 
 /// Full-screen view of a single trip. Allows editing and deleting each catch.
 class TripDetailScreen extends StatefulWidget {
@@ -91,11 +92,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     return candidate;
   }
 
-  String _fmt(DateTime dt) {
+  String _fmt(DateTime dt, String locale) {
     final t = dt.toLocal();
     final h = t.hour.toString().padLeft(2, '0');
     final m = t.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return arabicN('$h:$m', locale);
   }
 
   Future<void> _editCatch(CatchEntry entry) async {
@@ -164,10 +165,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final dateStr = DateFormat('EEE d MMM yyyy').format(widget.trip.startTime.toLocal());
-    final startStr = _fmt(widget.trip.startTime);
+    final locale = l10n.localeName;
+    final dateStr = DateFormat('EEE d MMM yyyy', locale == 'ar' ? 'ar' : 'en').format(widget.trip.startTime.toLocal());
+    final startStr = _fmt(widget.trip.startTime, locale);
     final endStr = widget.trip.endTime != null
-        ? _fmt(widget.trip.endTime!)
+        ? _fmt(widget.trip.endTime!, locale)
         : l10n.ongoing;
     final totalKg = _catches.fold<double>(0, (s, c) => s + (c.weightKg ?? 0));
 
@@ -208,14 +210,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   _StatPill(
                     icon: Icons.set_meal_rounded,
                     label: l10n.catchWord,
-                    value: '${_catches.length}',
+                    value: arabicN('${_catches.length}', locale),
                   ),
                   if (totalKg > 0) ...[
                     const SizedBox(width: 12),
                     _StatPill(
                       icon: Icons.scale_rounded,
                       label: l10n.totalWeight,
-                      value: '${totalKg.toStringAsFixed(1)} kg',
+                      value: '${arabicN(totalKg.toStringAsFixed(1), locale)} ${l10n.kgUnit}',
                     ),
                   ],
                 ],
@@ -298,7 +300,9 @@ class _CatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeStr = DateFormat('HH:mm').format(entry.timestamp.toLocal());
+    final l10n = AppLocalizations.of(context)!;
+    final locale = l10n.localeName;
+    final timeStr = arabicN(DateFormat('HH:mm').format(entry.timestamp.toLocal()), locale);
 
     return Container(
       decoration: BoxDecoration(
@@ -345,7 +349,7 @@ class _CatchCard extends StatelessWidget {
                       if (entry.weightKg != null)
                         _InfoChip(
                           icon: Icons.scale_rounded,
-                          label: '${entry.weightKg!.toStringAsFixed(1)} kg',
+                          label: '${arabicN(entry.weightKg!.toStringAsFixed(1), locale)} ${l10n.kgUnit}',
                         ),
                       _InfoChip(icon: Icons.access_time_rounded, label: timeStr),
                     ],

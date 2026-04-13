@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:bahaar/models/fishing/fish_probability_model.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:Bahaar/models/fishing/fish_probability_model.dart';
 
 /// Service for fetching and managing fish probability heatmap data.
 /// Fetches SST and chlorophyll from Copernicus Marine (CMEMS), computes

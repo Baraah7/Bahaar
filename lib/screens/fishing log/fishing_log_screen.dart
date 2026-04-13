@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
+import 'package:bahaar/services/fishing/trip_service.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/widgets/common/app_empty_state.dart';
+import 'package:bahaar/widgets/common/app_snackbar.dart';
+import 'package:bahaar/widgets/fishing_log/catch_form.dart';
+import 'package:bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/fishing/trip_model.dart';
-import 'package:Bahaar/services/fishing/trip_service.dart';
-import 'package:Bahaar/widgets/fishing_log/trip_card.dart';
-import 'package:Bahaar/widgets/fishing_log/catch_form.dart';
-import 'package:Bahaar/screens/fishing log/trip_detail_screen.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:Bahaar/providers/authentication/authentication_provider.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/widgets/common/app_snackbar.dart';
-import 'package:Bahaar/widgets/common/app_empty_state.dart';
-import 'package:Bahaar/utilities/cn/localization_helper.dart';
 
 class FishingLogScreen extends ConsumerStatefulWidget {
   const FishingLogScreen({super.key});

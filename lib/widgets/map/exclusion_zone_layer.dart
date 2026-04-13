@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/services/map/exclusion_zone_service.dart';
+import 'package:bahaar/services/map/exclusion_zone_service.dart';
 
 /// Map layer that renders oil/gas platform exclusion zones as red circles
 /// with a platform icon at the center.

@@ -1,16 +1,16 @@
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/core/constants/species_data.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/services/bahaar_ai_service.dart';
+import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/widgets/common/app_card.dart';
+import 'package:bahaar/widgets/common/app_loading_view.dart';
+import 'package:bahaar/widgets/common/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
-import 'package:Bahaar/core/constants/species_data.dart';
-import 'package:Bahaar/core/constants/app_colors.dart';
-import 'package:Bahaar/services/bahaar_ai_service.dart';
-import 'package:Bahaar/l10n/app_localizations.dart';
-import 'package:Bahaar/widgets/common/app_card.dart';
-import 'package:Bahaar/widgets/common/app_snackbar.dart';
-import 'package:Bahaar/widgets/common/app_loading_view.dart';
-import 'package:Bahaar/utilities/cn/localization_helper.dart';
 
 class PredictionScreen extends StatefulWidget {
   final LatLng? initialLatLng;

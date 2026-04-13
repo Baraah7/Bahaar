@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/models/navigation/marina_model.dart';
+import 'package:bahaar/models/navigation/marina_model.dart';
 
 /// Widget for displaying marina markers on the map
 class MarinaMarkerLayer extends StatelessWidget {

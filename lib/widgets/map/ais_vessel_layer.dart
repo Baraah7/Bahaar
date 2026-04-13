@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/ais_model.dart';
-import 'package:Bahaar/services/ais_service.dart';
+import 'package:bahaar/models/ais_model.dart';
+import 'package:bahaar/services/ais_service.dart';
 
 /// Map layer that draws AIS vessels with:
 /// - A directional arrow icon coloured by collision risk

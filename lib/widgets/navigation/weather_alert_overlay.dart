@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
 
 /// Overlay banner displaying active weather warnings on the map.
 ///

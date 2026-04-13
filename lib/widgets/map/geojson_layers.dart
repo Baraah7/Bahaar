@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
+import 'package:bahaar/models/map/editable_map_feature.dart';
 
 /// Service for parsing and managing GeoJSON data on the map
 class GeoJsonLayerBuilder {

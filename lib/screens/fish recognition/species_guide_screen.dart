@@ -1,3 +1,4 @@
+/* UNUSED FILE - commented out
 ﻿// lib/screens/species_guide_screen.dart
 // Searchable species grid + tappable detail screen (nested in the same file).
 
@@ -571,3 +572,4 @@ class _DetailRow extends StatelessWidget {
         ),
       );
 }
+*/

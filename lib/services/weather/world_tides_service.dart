@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:bahaar/models/weather/tide_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:Bahaar/models/weather/tide_model.dart';
 
 /// Fetches tide predictions from the WorldTides API v3 (worldtides.info).
 /// Free plan: 10 requests/day.

@@ -1,13 +1,13 @@
 import 'dart:developer';
 import 'dart:math' as math;
+import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/services/map/navigation_mask.dart';
+import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:collection/collection.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:Bahaar/services/map/navigation_mask.dart';
-import 'package:Bahaar/services/marine_weather_service.dart';
-import 'package:Bahaar/models/navigation/route_model.dart';
-import 'package:Bahaar/models/weather/marine_weather_model.dart';
-import 'package:Bahaar/utilities/map/navigation_constants.dart';
 
 /// Service for marine pathfinding using A* algorithm on water grid
 class MarinePathfindingService {
@@ -18,8 +18,6 @@ class MarinePathfindingService {
   late double _resolution;
   late double _minLon;
   late double _minLat;
-  late double _maxLon;
-  late double _maxLat;
 
   MarinePathfindingService(this._navigationMask, {MarineWeatherService? weatherService})
       : _weatherService = weatherService {
@@ -38,8 +36,6 @@ class MarinePathfindingService {
 
     _minLon = bbox['min_lon'] as double;
     _minLat = bbox['min_lat'] as double;
-    _maxLon = bbox['max_lon'] as double;
-    _maxLat = bbox['max_lat'] as double;
 
     log('Marine pathfinding initialized: ${_gridWidth}x$_gridHeight grid');
   }

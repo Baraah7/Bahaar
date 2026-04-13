@@ -1,7 +1,7 @@
 import 'dart:developer';
+import 'package:bahaar/models/fishing/fishing_activity_model.dart';
+import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:Bahaar/models/map/editable_map_feature.dart';
-import 'package:Bahaar/models/fishing/fishing_activity_model.dart';
 
 /// Firestore CRUD service for editable map features and fishing activities
 class FeatureEditService {
