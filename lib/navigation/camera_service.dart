@@ -87,6 +87,10 @@ class CameraService {
   bool get isCapturing    => _capturing;
   String? get initError   => _initError;
 
+  /// Exposes the underlying [CameraController] so the UI can show a preview.
+  /// Returns `null` before [initialize] completes successfully.
+  CameraController? get controller => _cameraCtrl;
+
   final _resultsController =
       StreamController<CameraFrameResult>.broadcast();
 
