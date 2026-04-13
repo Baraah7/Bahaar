@@ -1,15 +1,22 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:Bahaar/screens/weather.dart';
-import 'package:Bahaar/screens/integrated_map.dart';
-import 'package:Bahaar/screens/mariner_harvest.dart';
-import 'package:Bahaar/screens/settings_screen.dart';
-import 'package:Bahaar/widgets/main_page_cards.dart';
-import 'package:Bahaar/widgets/language_switcher.dart';
-import 'package:Bahaar/screens/fish_recognition_screen.dart';
-import 'package:Bahaar/providers/language_provider.dart';
+import 'package:bahaar/screens/weather/weather.dart';
+import 'package:bahaar/screens/map/integrated_map.dart';
+import 'package:bahaar/screens/marketplace/mariner_harvest.dart';
+import 'package:bahaar/screens/settings/settings_screen.dart';
+import 'package:bahaar/screens/settings/emergency_screen.dart';
+import 'package:bahaar/screens/authentication/profile_screen.dart';
+import 'package:bahaar/providers/authentication/authentication_provider.dart';
+import 'package:bahaar/screens/fishing log/fishing_log_screen.dart';
+import 'package:bahaar/screens/fish recognition/fish_recognition_screen.dart';
+import 'package:bahaar/providers/language/language_provider.dart';
+import 'package:bahaar/services/offline/connectivity_service.dart';
+import 'package:bahaar/services/offline/database_service.dart';
+import 'package:bahaar/services/notifications/notification_service.dart';
+import 'package:bahaar/services/notifications/weather_monitor.dart';
 import 'l10n/app_localizations.dart';
 import 'app_start.dart';
 
@@ -17,6 +24,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: "secrets.env");
+
+  // Offline services
+  await DatabaseService.instance.database;
+  await ConnectivityService.instance.initialize();
+
+  // Notifications + weather monitor
+  await NotificationService.instance.initialize();
+  WeatherMonitor.instance.start();
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -34,7 +50,10 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     return MaterialApp(
       title: 'Bahaar',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: 'Zain',
+      ),
       home: const AppStart(),
       debugShowCheckedModeBanner: false,
       locale: locale,
@@ -53,35 +72,106 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
-  int _index = 1;
+  int _index = 2;
   late final PageController _controller = PageController(initialPage: _index);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authProviderProvider).initializeAuthState();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final pageTitles = [
+      l10n.marketplace,
+      l10n.fishingMap,
+      l10n.weather,
+      l10n.fishRecognition,
+      l10n.fishingLog,
+    ];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.cream,
       appBar: AppBar(
-        title: Text(
-          l10n.appName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        leading: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Image.asset(
+            'assets/logo/appIcon.png',
+            width: 28,
+            height: 28,
+            fit: BoxFit.contain,
+          ),
         ),
-        backgroundColor: const Color.fromARGB(255, 22, 62, 98),
-        foregroundColor: Colors.white,
+        title: Text(
+          pageTitles[_index],
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+        ),
         centerTitle: true,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.cream,
         elevation: 0,
         actions: [
-          const LanguageSwitcher(),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.cream),
+            color: AppColors.cream.withValues(alpha: 0.95),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.accent.withValues(alpha: 0.4)),
+            ),
+            elevation: 8,
+            onSelected: (value) {
+              if (value == 'emergency') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const EmergencyScreen()));
+              } else if (value == 'settings') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()));
+              } else if (value == 'profile') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              }
             },
-            tooltip: l10n.settings,
+            itemBuilder: (ctx) {
+              final ml10n = AppLocalizations.of(ctx)!;
+              return [
+                PopupMenuItem(
+                  value: 'emergency',
+                  child: Row(children: [
+                    const Icon(Icons.sos_rounded, color: AppColors.red, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.emergency,
+                        style: const TextStyle(
+                            color: AppColors.red,
+                            fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: Row(children: [
+                    const Icon(Icons.settings_outlined,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.settings,
+                        style: const TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'profile',
+                  child: Row(children: [
+                    const Icon(Icons.person_outline,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.profile,
+                        style: const TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+              ];
+            },
           ),
         ],
       ),
@@ -94,15 +184,20 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         },
 
         children: const [
+          MarinerHarvestPage(),
           IntegratedMap(),
           Weather(),
           FishRecognitionScreen(),
-          MarinerHarvestPage(),
+          FishingLogScreen(),
         ]
       ),
       
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.primary,
+        selectedItemColor: const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.85),
+        unselectedItemColor: AppColors.cream.withValues(alpha: 0.55),
         onTap: (index) {
           _controller.animateToPage(
             index,
@@ -111,25 +206,30 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           );
         },
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',  
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.sailing),
+            label: l10n.marketplace,
+            backgroundColor: AppColors.primary,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.cloud),
-            label: 'Weather',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.map),
+            label: l10n.fishingMap,
+            backgroundColor: AppColors.primary,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Fish ID',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.cloud),
+            label: l10n.weather,
+            backgroundColor: AppColors.accent,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.sailing),
-            label: 'Mariner Harvest',
-            backgroundColor: Color.fromARGB(255, 19, 8, 79)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.camera_alt),
+            label: l10n.fishRecognition,
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.anchor),
+            label: l10n.fishingLog,
+            backgroundColor: AppColors.primary,
           ),
         ],
       ),

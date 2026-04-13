@@ -1,7 +1,7 @@
 // Used for geographic coordinates (latitude & longitude)
+import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/navigation/route_model.dart';
-import 'package:Bahaar/models/navigation/waypoint_model.dart';
 
 // Active navigation session tracking user progress along a route
 // It stores the route, current location, progress, metrics, and state.

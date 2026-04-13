@@ -1,7 +1,8 @@
+import 'package:bahaar/models/navigation/marina_model.dart';
+import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/models/weather/marine_weather_model.dart';
+import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:Bahaar/models/navigation/waypoint_model.dart';
-import 'package:Bahaar/models/navigation/marina_model.dart';
-import 'package:Bahaar/services/navigation_mask.dart';
 
 // Complete navigation route with segments, waypoints, and validation
 class NavigationRoute {
@@ -177,6 +178,8 @@ class RouteMetrics {
   final int marineDuration;
   final int numRestrictedAreaViolations;
   final double? averageDepth;
+  final SafetyLevel? weatherSafetyLevel;
+  final List<String>? weatherWarnings;
 
   const RouteMetrics({
     required this.landDistance,
@@ -185,6 +188,8 @@ class RouteMetrics {
     required this.marineDuration,
     this.numRestrictedAreaViolations = 0,
     this.averageDepth,
+    this.weatherSafetyLevel,
+    this.weatherWarnings,
   });
 
   // Total distance (land + marine)
@@ -211,6 +216,11 @@ class RouteMetrics {
       numRestrictedAreaViolations:
           json['num_restricted_area_violations'] as int? ?? 0,
       averageDepth: json['average_depth'] as double?,
+      weatherSafetyLevel: json['weather_safety_level'] != null
+          ? SafetyLevel.values[json['weather_safety_level'] as int]
+          : null,
+      weatherWarnings: (json['weather_warnings'] as List<dynamic>?)
+          ?.cast<String>(),
     );
   }
 
@@ -223,6 +233,8 @@ class RouteMetrics {
       'marine_duration': marineDuration,
       'num_restricted_area_violations': numRestrictedAreaViolations,
       if (averageDepth != null) 'average_depth': averageDepth,
+      if (weatherSafetyLevel != null) 'weather_safety_level': weatherSafetyLevel!.index,
+      if (weatherWarnings != null) 'weather_warnings': weatherWarnings,
     };
   }
 
@@ -234,6 +246,8 @@ class RouteMetrics {
     int? marineDuration,
     int? numRestrictedAreaViolations,
     double? averageDepth,
+    SafetyLevel? weatherSafetyLevel,
+    List<String>? weatherWarnings,
   }) {
     return RouteMetrics(
       landDistance: landDistance ?? this.landDistance,
@@ -243,6 +257,8 @@ class RouteMetrics {
       numRestrictedAreaViolations:
           numRestrictedAreaViolations ?? this.numRestrictedAreaViolations,
       averageDepth: averageDepth ?? this.averageDepth,
+      weatherSafetyLevel: weatherSafetyLevel ?? this.weatherSafetyLevel,
+      weatherWarnings: weatherWarnings ?? this.weatherWarnings,
     );
   }
 

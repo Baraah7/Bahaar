@@ -1,8 +1,136 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:Bahaar/models/marketplace/listing_model.dart';
-import 'package:Bahaar/models/marketplace/seller_information.dart';
+enum FishType {
+  hamour,
+  shaari,
+  safi,
+  kingfish,
+  shrimp,
+  crab,
+  other;
 
-// Represents a single fish listing in the marketplace
+  String get displayName {
+    switch (this) {
+      case FishType.hamour:
+        return 'Hamour (Grouper)';
+      case FishType.shaari:
+        return 'Shaari (Emperor)';
+      case FishType.safi:
+        return 'Safi (Rabbitfish)';
+      case FishType.kingfish:
+        return 'Kingfish';
+      case FishType.shrimp:
+        return 'Shrimp';
+      case FishType.crab:
+        return 'Crab';
+      case FishType.other:
+        return 'Other';
+    }
+  }
+
+  String get arabicName {
+    switch (this) {
+      case FishType.hamour:
+        return 'هامور';
+      case FishType.shaari:
+        return 'شعري';
+      case FishType.safi:
+        return 'صافي';
+      case FishType.kingfish:
+        return 'كنعد';
+      case FishType.shrimp:
+        return 'ربيان';
+      case FishType.crab:
+        return 'قبقب';
+      case FishType.other:
+        return 'أخرى';
+    }
+  }
+
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
+}
+
+enum FishCondition {
+  fresh,
+  frozen,
+  cleaned,
+  filleted;
+
+  String get displayName {
+    switch (this) {
+      case FishCondition.fresh:
+        return 'Fresh';
+      case FishCondition.frozen:
+        return 'Frozen';
+      case FishCondition.cleaned:
+        return 'Cleaned';
+      case FishCondition.filleted:
+        return 'Filleted';
+    }
+  }
+
+  String get arabicName {
+    switch (this) {
+      case FishCondition.fresh:
+        return 'طازج';
+      case FishCondition.frozen:
+        return 'مثلج';
+      case FishCondition.cleaned:
+        return 'نظيف';
+      case FishCondition.filleted:
+        return 'شرائح';
+    }
+  }
+
+  /// Returns locale-aware display name.
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
+}
+
+enum PaymentMethod {
+  cash,
+  benefitPay;
+
+  String get displayName {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.benefitPay:
+        return 'Benefit Pay';
+    }
+  }
+
+  String get arabicName {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'نقداً';
+      case PaymentMethod.benefitPay:
+        return 'بنفت باي';
+    }
+  }
+
+  String localizedName(String languageCode) =>
+      languageCode == 'ar' ? arabicName : displayName;
+}
+
+enum ListingStatus {
+  available,
+  reserved,
+  sold;
+
+  String get displayName {
+    switch (this) {
+      case ListingStatus.available:
+        return 'Available';
+      case ListingStatus.reserved:
+        return 'Reserved';
+      case ListingStatus.sold:
+        return 'Sold';
+    }
+  }
+}
+
 class FishListing {
   final String id;
   final FishType fishType;
@@ -17,7 +145,13 @@ class FishListing {
   final String? description;
   final List<String> imageUrls;
   final String? benefitPayImageUrl;
-  final SellerInfo seller;
+  final String? benefitPayIban;
+  /// ID of the CatchEntry this listing was created from (for suggestion filtering).
+  final String? fromCatchId;
+  final String sellerId;
+  final String sellerName;
+  final String sellerPhone;
+  final String? sellerLocation;
   final DateTime listedAt;
   final ListingStatus status;
   final String? catchLocation;
@@ -34,7 +168,12 @@ class FishListing {
     this.description,
     this.imageUrls = const [],
     this.benefitPayImageUrl,
-    required this.seller,
+    this.benefitPayIban,
+    this.fromCatchId,
+    required this.sellerId,
+    required this.sellerName,
+    required this.sellerPhone,
+    this.sellerLocation,
     required this.listedAt,
     this.status = ListingStatus.available,
     this.catchLocation,
@@ -52,50 +191,55 @@ class FishListing {
           ? customFishName!
           : fishType.displayName;
 
-  // Creates a FishListing object from JSON data
-  factory FishListing.fromJson(Map<String, dynamic> json) {
+  /// Creates a FishListing from a Firestore document
+  factory FishListing.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return FishListing(
-      id: json['id'] as String,
+      id: doc.id,
       fishType: FishType.values.firstWhere(
-        (e) => e.name == json['fishType'],
+        (e) => e.name == data['fishType'],
         orElse: () => FishType.other,
       ),
-      customFishName: json['customFishName'] as String?,
-      weight: (json['weight'] as num).toDouble(),
-      pricePerKg: (json['pricePerKg'] as num).toDouble(),
+      customFishName: data['customFishName'] as String?,
+      weight: (data['weight'] as num).toDouble(),
+      pricePerKg: (data['pricePerKg'] as num).toDouble(),
       condition: FishCondition.values.firstWhere(
-        (e) => e.name == json['condition'],
+        (e) => e.name == data['condition'],
         orElse: () => FishCondition.fresh,
       ),
-      acceptedPayments: (json['acceptedPayments'] as List<dynamic>)
+      acceptedPayments: (data['acceptedPayments'] as List<dynamic>)
           .map((e) => PaymentMethod.values.firstWhere(
                 (p) => p.name == e,
                 orElse: () => PaymentMethod.cash,
               ))
           .toList(),
-      description: json['description'] as String?,
-      imageUrls: (json['imageUrls'] as List<dynamic>?)
+      description: data['description'] as String?,
+      imageUrls: (data['imageUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
-      benefitPayImageUrl: json['benefitPayImageUrl'] as String?,
-      seller: SellerInfo.fromJson(json['seller'] as Map<String, dynamic>),
-      listedAt: DateTime.parse(json['listedAt'] as String),
+      benefitPayImageUrl: data['benefitPayImageUrl'] as String?,
+      benefitPayIban: data['benefitPayIban'] as String?,
+      fromCatchId: data['fromCatchId'] as String?,
+      sellerId: data['sellerId'] as String,
+      sellerName: data['sellerName'] as String,
+      sellerPhone: data['sellerPhone'] as String,
+      sellerLocation: data['sellerLocation'] as String?,
+      listedAt: (data['listedAt'] as Timestamp).toDate(),
       status: ListingStatus.values.firstWhere(
-        (e) => e.name == json['status'],
+        (e) => e.name == data['status'],
         orElse: () => ListingStatus.available,
       ),
-      catchLocation: json['catchLocation'] as String?,
-      catchDate: json['catchDate'] != null
-          ? DateTime.parse(json['catchDate'] as String)
+      catchLocation: data['catchLocation'] as String?,
+      catchDate: data['catchDate'] != null
+          ? (data['catchDate'] as Timestamp).toDate()
           : null,
     );
   }
-  
-  // Converts the FishListing object to JSON
-  Map<String, dynamic> toJson() {
+
+  /// Converts this FishListing to a Map for Firestore
+  Map<String, dynamic> toFirestore() {
     return {
-      'id': id,
       'fishType': fishType.name,
       'customFishName': customFishName,
       'weight': weight,
@@ -105,11 +249,16 @@ class FishListing {
       'description': description,
       'imageUrls': imageUrls,
       'benefitPayImageUrl': benefitPayImageUrl,
-      'seller': seller.toJson(),
-      'listedAt': listedAt.toIso8601String(),
+      'benefitPayIban': benefitPayIban,
+      'fromCatchId': fromCatchId,
+      'sellerId': sellerId,
+      'sellerName': sellerName,
+      'sellerPhone': sellerPhone,
+      'sellerLocation': sellerLocation,
+      'listedAt': Timestamp.fromDate(listedAt),
       'status': status.name,
       'catchLocation': catchLocation,
-      'catchDate': catchDate?.toIso8601String(),
+      'catchDate': catchDate != null ? Timestamp.fromDate(catchDate!) : null,
     };
   }
   
@@ -125,7 +274,12 @@ class FishListing {
     String? description,
     List<String>? imageUrls,
     String? benefitPayImageUrl,
-    SellerInfo? seller,
+    String? benefitPayIban,
+    String? fromCatchId,
+    String? sellerId,
+    String? sellerName,
+    String? sellerPhone,
+    String? sellerLocation,
     DateTime? listedAt,
     ListingStatus? status,
     String? catchLocation,
@@ -142,7 +296,12 @@ class FishListing {
       description: description ?? this.description,
       imageUrls: imageUrls ?? this.imageUrls,
       benefitPayImageUrl: benefitPayImageUrl ?? this.benefitPayImageUrl,
-      seller: seller ?? this.seller,
+      benefitPayIban: benefitPayIban ?? this.benefitPayIban,
+      fromCatchId: fromCatchId ?? this.fromCatchId,
+      sellerId: sellerId ?? this.sellerId,
+      sellerName: sellerName ?? this.sellerName,
+      sellerPhone: sellerPhone ?? this.sellerPhone,
+      sellerLocation: sellerLocation ?? this.sellerLocation,
       listedAt: listedAt ?? this.listedAt,
       status: status ?? this.status,
       catchLocation: catchLocation ?? this.catchLocation,

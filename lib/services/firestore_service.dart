@@ -5,12 +5,12 @@ class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
   Future<void> createUser(User user) async {
-    print('FirestoreService: Creating user document for ${user.id}');
+    // print('FirestoreService: Creating user document for ${user.id}');
     try {
       await _db.collection('users').doc(user.id).set(user.toMap());
-      print('FirestoreService: Document created successfully');
+      // print('FirestoreService: Document created successfully');
     } catch (e) {
-      print('FirestoreService: Error creating document: $e');
+      // print('FirestoreService: Error creating document: $e');
       rethrow;
     }
   }
@@ -18,5 +18,9 @@ class FirestoreService {
   Future<bool> userExists(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     return doc.exists;
+  }
+
+  Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    await _db.collection('users').doc(uid).update(data);
   }
 }

@@ -7,14 +7,21 @@
       "properties": {
         "name": "Popular Fishing Spot - Hawar Islands",
         "type": "fishing_spot",
-        "fish_species": ["Hamour", "Safi", "Kan'ad"],
+        "fish_species": [
+          "Hamour",
+          "Safi",
+          "Kan'ad"
+        ],
         "depth_m": 15,
         "rating": 4.5,
         "description": "Excellent spot for grouper and kingfish"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [50.7833, 25.6667]
+        "coordinates": [
+          50.7833,
+          25.6667
+        ]
       }
     },
     {
@@ -23,14 +30,20 @@
       "properties": {
         "name": "Shallow Water Spot - Near Budaiya",
         "type": "fishing_spot",
-        "fish_species": ["Safi", "Sha'ari"],
+        "fish_species": [
+          "Safi",
+          "Sha'ari"
+        ],
         "depth_m": 8,
         "rating": 3.8,
         "description": "Good for rabbitfish and emperors"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [50.4500, 26.1500]
+        "coordinates": [
+          50.45,
+          26.15
+        ]
       }
     },
     {
@@ -39,14 +52,21 @@
       "properties": {
         "name": "Deep Water Spot - East of Muharraq",
         "type": "fishing_spot",
-        "fish_species": ["Kan'ad", "Nagroor", "Hamour"],
+        "fish_species": [
+          "Kan'ad",
+          "Nagroor",
+          "Hamour"
+        ],
         "depth_m": 25,
         "rating": 4.8,
         "description": "Prime location for kingfish and trevally"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [50.6500, 26.2500]
+        "coordinates": [
+          50.65,
+          26.25
+        ]
       }
     },
     {
@@ -62,10 +82,22 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [50.5000, 26.0000],
-          [50.5500, 26.0500],
-          [50.6000, 26.1000],
-          [50.6500, 26.1500]
+          [
+            50.5,
+            26.0
+          ],
+          [
+            50.55,
+            26.05
+          ],
+          [
+            50.6,
+            26.1
+          ],
+          [
+            50.65,
+            26.15
+          ]
         ]
       }
     },
@@ -81,33 +113,21 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [50.4000, 26.2000],
-          [50.5000, 26.2200],
-          [50.6000, 26.2000],
-          [50.7000, 26.1800]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "protected_area_1",
-      "properties": {
-        "name": "Marine Protected Area - Hawar",
-        "type": "protected_zone",
-        "status": "no_fishing",
-        "authority": "Bahrain Marine Authority",
-        "established": "2015",
-        "description": "Protected marine sanctuary - fishing prohibited"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
           [
-            [50.7500, 25.6000],
-            [50.8500, 25.6000],
-            [50.8500, 25.7000],
-            [50.7500, 25.7000],
-            [50.7500, 25.6000]
+            50.4,
+            26.2
+          ],
+          [
+            50.5,
+            26.22
+          ],
+          [
+            50.6,
+            26.2
+          ],
+          [
+            50.7,
+            26.18
           ]
         ]
       }
@@ -127,11 +147,26 @@
         "type": "Polygon",
         "coordinates": [
           [
-            [50.3500, 26.1000],
-            [50.5000, 26.1000],
-            [50.5000, 26.2500],
-            [50.3500, 26.2500],
-            [50.3500, 26.1000]
+            [
+              50.35,
+              26.1
+            ],
+            [
+              50.5,
+              26.1
+            ],
+            [
+              50.5,
+              26.25
+            ],
+            [
+              50.35,
+              26.25
+            ],
+            [
+              50.35,
+              26.1
+            ]
           ]
         ]
       }
@@ -151,87 +186,1993 @@
         "type": "Polygon",
         "coordinates": [
           [
-            [50.6000, 25.9000],
-            [50.6500, 25.9000],
-            [50.6500, 25.9500],
-            [50.6000, 25.9500],
-            [50.6000, 25.9000]
+            [
+              50.6,
+              25.9
+            ],
+            [
+              50.65,
+              25.9
+            ],
+            [
+              50.65,
+              25.95
+            ],
+            [
+              50.6,
+              25.95
+            ],
+            [
+              50.6,
+              25.9
+            ]
           ]
         ]
       }
     },
     {
       "type": "Feature",
-      "id": "restricted_area_1",
+      "id": "protected_mohamed_bin_zayed",
       "properties": {
-        "name": "Military Zone - East Coast",
-        "type": "restricted_area",
-        "reason": "Military operations",
-        "authority": "Bahrain Defense Force",
+        "name": "Mohamed bin Zayed Nature Reserve",
+        "arabic_name": "محمية محمد بن زايد الطبيعية",
+        "type": "protected_zone",
+        "protected_area_type": "Wilderness",
         "status": "no_entry",
-        "warning": "Entry strictly prohibited - military zone",
-        "description": "Active military training and operations area"
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "1976",
+        "area_km2": 8.86,
+        "source": "Bahrain Protected Areas Official Data",
+        "description": "Terrestrial nature reserve - entry restricted"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [50.7000, 26.0000],
-            [50.8000, 26.0000],
-            [50.8000, 26.1000],
-            [50.7000, 26.1000],
-            [50.7000, 26.0000]
+            [
+              50.49,
+              26.001
+            ],
+            [
+              50.52,
+              26.001
+            ],
+            [
+              50.52,
+              26.029
+            ],
+            [
+              50.49,
+              26.029
+            ],
+            [
+              50.49,
+              26.001
+            ]
           ]
         ]
       }
     },
     {
       "type": "Feature",
-      "id": "restricted_area_2",
+      "id": "protected_tubli_bay",
       "properties": {
-        "name": "Oil Platform Safety Zone",
-        "type": "restricted_area",
-        "reason": "Oil and gas operations",
-        "authority": "National Oil Authority",
-        "status": "no_entry",
-        "radius_m": 500,
-        "warning": "500m exclusion zone around platform",
-        "description": "Safety zone for offshore oil operations"
+        "name": "Tubli Bay Reserve",
+        "arabic_name": "محمية خليج توبلي",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "1995",
+        "area_km2": 16.03,
+        "ramsar_site": "921",
+        "source": "Ramsar Wetland Site - OpenStreetMap",
+        "description": "Marine protected area and Ramsar Wetland - largest natural mangrove area in Bahrain. Fishing prohibited."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [50.5500, 25.8000],
-            [50.6000, 25.8000],
-            [50.6000, 25.8500],
-            [50.5500, 25.8500],
-            [50.5500, 25.8000]
+            [
+              50.515,
+              26.15
+            ],
+            [
+              50.558,
+              26.148
+            ],
+            [
+              50.572,
+              26.158
+            ],
+            [
+              50.57,
+              26.172
+            ],
+            [
+              50.556,
+              26.18
+            ],
+            [
+              50.53,
+              26.181
+            ],
+            [
+              50.515,
+              26.175
+            ],
+            [
+              50.513,
+              26.162
+            ],
+            [
+              50.515,
+              26.15
+            ]
           ]
         ]
       }
     },
     {
       "type": "Feature",
-      "id": "restricted_area_3",
+      "id": "protected_hawar_islands",
       "properties": {
-        "name": "Port Authority Zone - Mina Salman",
-        "type": "restricted_area",
-        "reason": "Port operations",
-        "authority": "Bahrain Port Authority",
+        "name": "Hawar Islands Reserve and Territorial Sea Surrounding Them",
+        "arabic_name": "البحر الإقليمي المحيط بجزر حوار ومحميّة جزر حوار",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "1996",
+        "area_km2": 340.04,
+        "ramsar_site": "920",
+        "source": "Ramsar Site 920 - center 25°40N 50°50E - marine reserve boundary (340 km²)",
+        "description": "Marine protected archipelago - Ramsar Wetland, UNESCO World Heritage. Home to dugongs and Socotra cormorants. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.74,
+              25.57
+            ],
+            [
+              50.9,
+              25.57
+            ],
+            [
+              50.9,
+              25.762
+            ],
+            [
+              50.74,
+              25.762
+            ],
+            [
+              50.74,
+              25.57
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_mashtan_island",
+      "properties": {
+        "name": "Mashtan Island Reserve",
+        "arabic_name": "محمية جزيرة مشتان",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2002",
+        "area_km2": 18.63,
+        "source": "Bahrain Protected Areas Official Data - OpenStreetMap",
+        "description": "Marine island reserve in sea east of Bahrain main island - fishing prohibited"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.679,
+              26.031
+            ],
+            [
+              50.722,
+              26.031
+            ],
+            [
+              50.722,
+              26.069
+            ],
+            [
+              50.679,
+              26.069
+            ],
+            [
+              50.679,
+              26.031
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_arad_bay",
+      "properties": {
+        "name": "Arad Bay Reserve",
+        "arabic_name": "محمية دوحة عراد",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2003",
+        "area_km2": 0.49,
+        "source": "OpenStreetMap Nominatim - OSM way 605429581 (Dohat Arad Park, Al Muharraq, 97 nodes)",
+        "description": "Coastal mangrove and mudflat reserve in Muharraq - important habitat for migratory birds. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.6216186,
+              26.2630949
+            ],
+            [
+              50.6216575,
+              26.2628124
+            ],
+            [
+              50.6216681,
+              26.2622884
+            ],
+            [
+              50.6218274,
+              26.2608543
+            ],
+            [
+              50.6219831,
+              26.2599434
+            ],
+            [
+              50.622107,
+              26.2592444
+            ],
+            [
+              50.622245,
+              26.2588636
+            ],
+            [
+              50.6223759,
+              26.2586894
+            ],
+            [
+              50.6225034,
+              26.2585402
+            ],
+            [
+              50.6228219,
+              26.2583212
+            ],
+            [
+              50.623105,
+              26.2582038
+            ],
+            [
+              50.6233103,
+              26.258153
+            ],
+            [
+              50.6236147,
+              26.2581308
+            ],
+            [
+              50.6240181,
+              26.2581847
+            ],
+            [
+              50.6241739,
+              26.2582736
+            ],
+            [
+              50.6241349,
+              26.2583434
+            ],
+            [
+              50.6235987,
+              26.2582987
+            ],
+            [
+              50.6232702,
+              26.2583649
+            ],
+            [
+              50.6230213,
+              26.2584665
+            ],
+            [
+              50.6228208,
+              26.2585851
+            ],
+            [
+              50.6226672,
+              26.2587108
+            ],
+            [
+              50.6225493,
+              26.2588411
+            ],
+            [
+              50.6224078,
+              26.2590322
+            ],
+            [
+              50.6223618,
+              26.2591687
+            ],
+            [
+              50.6223618,
+              26.2592956
+            ],
+            [
+              50.6223689,
+              26.2593655
+            ],
+            [
+              50.6223122,
+              26.2594924
+            ],
+            [
+              50.622279,
+              26.259666
+            ],
+            [
+              50.6222352,
+              26.2599103
+            ],
+            [
+              50.6222149,
+              26.2601258
+            ],
+            [
+              50.6222194,
+              26.2603326
+            ],
+            [
+              50.6222532,
+              26.2604958
+            ],
+            [
+              50.6223584,
+              26.2607168
+            ],
+            [
+              50.6224412,
+              26.2608451
+            ],
+            [
+              50.6225175,
+              26.2609311
+            ],
+            [
+              50.6226857,
+              26.2609906
+            ],
+            [
+              50.6227529,
+              26.2610488
+            ],
+            [
+              50.6232231,
+              26.2616311
+            ],
+            [
+              50.6232703,
+              26.2616378
+            ],
+            [
+              50.623339,
+              26.26161
+            ],
+            [
+              50.6234556,
+              26.2615558
+            ],
+            [
+              50.6236032,
+              26.261518
+            ],
+            [
+              50.6237082,
+              26.2615024
+            ],
+            [
+              50.6237716,
+              26.2615451
+            ],
+            [
+              50.623765,
+              26.2615869
+            ],
+            [
+              50.6237334,
+              26.2616127
+            ],
+            [
+              50.6236925,
+              26.2616129
+            ],
+            [
+              50.6236517,
+              26.2615943
+            ],
+            [
+              50.6234754,
+              26.261642
+            ],
+            [
+              50.6233588,
+              26.2616935
+            ],
+            [
+              50.6233085,
+              26.2617405
+            ],
+            [
+              50.6232806,
+              26.2618041
+            ],
+            [
+              50.6232946,
+              26.2618928
+            ],
+            [
+              50.6233728,
+              26.2621227
+            ],
+            [
+              50.6234341,
+              26.262337
+            ],
+            [
+              50.6234688,
+              26.2624821
+            ],
+            [
+              50.6234839,
+              26.2626117
+            ],
+            [
+              50.6234784,
+              26.2627731
+            ],
+            [
+              50.6234649,
+              26.2628842
+            ],
+            [
+              50.6234928,
+              26.2629185
+            ],
+            [
+              50.6234724,
+              26.2630274
+            ],
+            [
+              50.6234312,
+              26.2631707
+            ],
+            [
+              50.6233451,
+              26.2633579
+            ],
+            [
+              50.6232431,
+              26.2635017
+            ],
+            [
+              50.6231071,
+              26.2636494
+            ],
+            [
+              50.6230335,
+              26.263713
+            ],
+            [
+              50.6229769,
+              26.2637583
+            ],
+            [
+              50.6229739,
+              26.2637992
+            ],
+            [
+              50.6230266,
+              26.2638528
+            ],
+            [
+              50.6230856,
+              26.2638564
+            ],
+            [
+              50.6232358,
+              26.2638292
+            ],
+            [
+              50.623396,
+              26.2637994
+            ],
+            [
+              50.6235735,
+              26.2638052
+            ],
+            [
+              50.6237717,
+              26.2638288
+            ],
+            [
+              50.6239797,
+              26.2638532
+            ],
+            [
+              50.6241714,
+              26.2638363
+            ],
+            [
+              50.6243654,
+              26.2637989
+            ],
+            [
+              50.6245201,
+              26.2637547
+            ],
+            [
+              50.6245706,
+              26.2637807
+            ],
+            [
+              50.6245776,
+              26.2637947
+            ],
+            [
+              50.6245912,
+              26.2638239
+            ],
+            [
+              50.6245048,
+              26.2638876
+            ],
+            [
+              50.6244874,
+              26.2639191
+            ],
+            [
+              50.6244853,
+              26.2639918
+            ],
+            [
+              50.6244499,
+              26.2641918
+            ],
+            [
+              50.6243048,
+              26.2641822
+            ],
+            [
+              50.6241951,
+              26.2641822
+            ],
+            [
+              50.6240641,
+              26.264214
+            ],
+            [
+              50.6239013,
+              26.2642457
+            ],
+            [
+              50.6237668,
+              26.264214
+            ],
+            [
+              50.6237067,
+              26.2641568
+            ],
+            [
+              50.6235333,
+              26.2642025
+            ],
+            [
+              50.6235085,
+              26.2642723
+            ],
+            [
+              50.6233528,
+              26.2643453
+            ],
+            [
+              50.6220043,
+              26.2645643
+            ],
+            [
+              50.6218769,
+              26.2645421
+            ],
+            [
+              50.6217849,
+              26.264485
+            ],
+            [
+              50.6217106,
+              26.2643993
+            ],
+            [
+              50.6216858,
+              26.2642025
+            ],
+            [
+              50.6216221,
+              26.263682
+            ],
+            [
+              50.6216221,
+              26.2632313
+            ],
+            [
+              50.6216186,
+              26.2630949
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_najwat_bulthama",
+      "properties": {
+        "name": "Najwat Bulthama",
+        "arabic_name": "محمية نجوة بولثامة",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2017",
+        "area_km2": 3.2,
+        "source": "MPAtlas site 68821297 - features API (MultiPolygon, 13 nodes, WDPA designated 2017)",
+        "description": "Small offshore marine reserve - pearl oyster and coral habitat. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.966408,
+              26.896647
+            ],
+            [
+              50.972772,
+              26.892856
+            ],
+            [
+              50.976044,
+              26.888442
+            ],
+            [
+              50.974208,
+              26.883719
+            ],
+            [
+              50.969903,
+              26.88015
+            ],
+            [
+              50.96514757,
+              26.88174608
+            ],
+            [
+              50.960392,
+              26.883342
+            ],
+            [
+              50.95599315,
+              26.88720557
+            ],
+            [
+              50.951594,
+              26.891069
+            ],
+            [
+              50.953978,
+              26.895492
+            ],
+            [
+              50.958006,
+              26.897672
+            ],
+            [
+              50.961522,
+              26.898247
+            ],
+            [
+              50.966408,
+              26.896647
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_hayr_bulthama",
+      "properties": {
+        "name": "Hayr Bulthama Reserve",
+        "arabic_name": "محمية هير بولثامة",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2017",
+        "area_km2": 58.7,
+        "source": "MPAtlas site 68821298 - features API (MultiPolygon, 68 nodes, WDPA designated 2017)",
+        "description": "Offshore coral reef and pearl oyster reserve - healthiest corals in Bahraini waters. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.81880809,
+              26.68927528
+            ],
+            [
+              50.827783,
+              26.688089
+            ],
+            [
+              50.83610367,
+              26.68458604
+            ],
+            [
+              50.84442383,
+              26.68108259
+            ],
+            [
+              50.85274348,
+              26.67757865
+            ],
+            [
+              50.86106262,
+              26.67407422
+            ],
+            [
+              50.86938126,
+              26.6705693
+            ],
+            [
+              50.87769938,
+              26.6670639
+            ],
+            [
+              50.886017,
+              26.663558
+            ],
+            [
+              50.89207328,
+              26.65860439
+            ],
+            [
+              50.89812905,
+              26.65365052
+            ],
+            [
+              50.90418428,
+              26.64869639
+            ],
+            [
+              50.910239,
+              26.643742
+            ],
+            [
+              50.91320968,
+              26.63696707
+            ],
+            [
+              50.91618002,
+              26.63019207
+            ],
+            [
+              50.91915,
+              26.623417
+            ],
+            [
+              50.91930202,
+              26.61450501
+            ],
+            [
+              50.91945402,
+              26.60559301
+            ],
+            [
+              50.919606,
+              26.596681
+            ],
+            [
+              50.91635997,
+              26.59029841
+            ],
+            [
+              50.91311431,
+              26.58391575
+            ],
+            [
+              50.909869,
+              26.577533
+            ],
+            [
+              50.9018149,
+              26.57338428
+            ],
+            [
+              50.89376138,
+              26.56923509
+            ],
+            [
+              50.88570845,
+              26.56508545
+            ],
+            [
+              50.87765609,
+              26.56093535
+            ],
+            [
+              50.86960431,
+              26.5567848
+            ],
+            [
+              50.86155311,
+              26.55263378
+            ],
+            [
+              50.8535025,
+              26.54848231
+            ],
+            [
+              50.84545246,
+              26.54433038
+            ],
+            [
+              50.837403,
+              26.540178
+            ],
+            [
+              50.8278125,
+              26.53866489
+            ],
+            [
+              50.81822225,
+              26.53715114
+            ],
+            [
+              50.80863225,
+              26.53563674
+            ],
+            [
+              50.7990425,
+              26.53412169
+            ],
+            [
+              50.789453,
+              26.532606
+            ],
+            [
+              50.7812704,
+              26.5333197
+            ],
+            [
+              50.7730877,
+              26.53403294
+            ],
+            [
+              50.7649049,
+              26.5347457
+            ],
+            [
+              50.756722,
+              26.535458
+            ],
+            [
+              50.74941827,
+              26.54048056
+            ],
+            [
+              50.74211391,
+              26.54550273
+            ],
+            [
+              50.73480891,
+              26.55052453
+            ],
+            [
+              50.72750327,
+              26.55554596
+            ],
+            [
+              50.720197,
+              26.560567
+            ],
+            [
+              50.71709716,
+              26.56765155
+            ],
+            [
+              50.71399695,
+              26.57473602
+            ],
+            [
+              50.71089634,
+              26.58182042
+            ],
+            [
+              50.70779536,
+              26.58890475
+            ],
+            [
+              50.704694,
+              26.595989
+            ],
+            [
+              50.70525796,
+              26.60459051
+            ],
+            [
+              50.705822,
+              26.613192
+            ],
+            [
+              50.71031788,
+              26.61893548
+            ],
+            [
+              50.71481422,
+              26.62467881
+            ],
+            [
+              50.719311,
+              26.630422
+            ],
+            [
+              50.72625629,
+              26.63579504
+            ],
+            [
+              50.73320223,
+              26.64116774
+            ],
+            [
+              50.74014881,
+              26.64654009
+            ],
+            [
+              50.74709605,
+              26.6519121
+            ],
+            [
+              50.75404394,
+              26.65728377
+            ],
+            [
+              50.76099248,
+              26.66265509
+            ],
+            [
+              50.76794167,
+              26.66802607
+            ],
+            [
+              50.77489151,
+              26.67339671
+            ],
+            [
+              50.781842,
+              26.678767
+            ],
+            [
+              50.78883922,
+              26.68169102
+            ],
+            [
+              50.79583679,
+              26.68461469
+            ],
+            [
+              50.80283471,
+              26.68753802
+            ],
+            [
+              50.809833,
+              26.690461
+            ],
+            [
+              50.81880809,
+              26.68927528
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_hayr_buamama",
+      "properties": {
+        "name": "Hayr Buamama Reserve",
+        "arabic_name": "محمية هير بوعمامة",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2017",
+        "area_km2": 48.6,
+        "source": "MPAtlas site 68821300 - features API (MultiPolygon, 33 nodes, WDPA designated 2017)",
+        "description": "Offshore marine reserve - coral and pearl habitat. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.79597041,
+              26.83775946
+            ],
+            [
+              50.80453459,
+              26.83622641
+            ],
+            [
+              50.81309854,
+              26.83469283
+            ],
+            [
+              50.82166226,
+              26.83315874
+            ],
+            [
+              50.83022574,
+              26.83162413
+            ],
+            [
+              50.838789,
+              26.830089
+            ],
+            [
+              50.843794,
+              26.8247
+            ],
+            [
+              50.84444404,
+              26.81762651
+            ],
+            [
+              50.845094,
+              26.810553
+            ],
+            [
+              50.84348745,
+              26.80336829
+            ],
+            [
+              50.8418811,
+              26.79618355
+            ],
+            [
+              50.84027495,
+              26.78899879
+            ],
+            [
+              50.838669,
+              26.781814
+            ],
+            [
+              50.83358432,
+              26.77768359
+            ],
+            [
+              50.8285,
+              26.773553
+            ],
+            [
+              50.822589,
+              26.77350862
+            ],
+            [
+              50.816678,
+              26.773464
+            ],
+            [
+              50.80813413,
+              26.77649529
+            ],
+            [
+              50.79958982,
+              26.77952607
+            ],
+            [
+              50.79104504,
+              26.78255632
+            ],
+            [
+              50.78249982,
+              26.78558607
+            ],
+            [
+              50.77395413,
+              26.78861529
+            ],
+            [
+              50.765408,
+              26.791644
+            ],
+            [
+              50.76009467,
+              26.7953626
+            ],
+            [
+              50.754781,
+              26.799081
+            ],
+            [
+              50.75835449,
+              26.8071339
+            ],
+            [
+              50.76192849,
+              26.8151867
+            ],
+            [
+              50.76550299,
+              26.8232394
+            ],
+            [
+              50.769078,
+              26.831292
+            ],
+            [
+              50.774828,
+              26.837967
+            ],
+            [
+              50.78111696,
+              26.83862964
+            ],
+            [
+              50.787406,
+              26.839292
+            ],
+            [
+              50.79597041,
+              26.83775946
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_hayr_shtaya",
+      "properties": {
+        "name": "Hayr Shtaya Reserve",
+        "arabic_name": "محمية هير شتية",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
+        "status": "no_fishing",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2017",
+        "area_km2": 274.2,
+        "source": "MPAtlas site 68821299 - features API (MultiPolygon, 37 nodes, WDPA ID 555744923, designated 2017)",
+        "description": "Large offshore marine reserve - largest oyster bed in Arabian Gulf. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.91503189,
+              26.81958659
+            ],
+            [
+              50.92391669,
+              26.81899162
+            ],
+            [
+              50.93280139,
+              26.81839609
+            ],
+            [
+              50.941686,
+              26.8178
+            ],
+            [
+              50.94951146,
+              26.8144401
+            ],
+            [
+              50.95733646,
+              26.81107977
+            ],
+            [
+              50.965161,
+              26.807719
+            ],
+            [
+              50.96911515,
+              26.80077112
+            ],
+            [
+              50.97306882,
+              26.79382312
+            ],
+            [
+              50.977022,
+              26.786875
+            ],
+            [
+              50.973808,
+              26.786875
+            ],
+            [
+              50.9659467,
+              26.78251122
+            ],
+            [
+              50.958086,
+              26.778147
+            ],
+            [
+              50.94880952,
+              26.77574669
+            ],
+            [
+              50.93953344,
+              26.77334576
+            ],
+            [
+              50.93025774,
+              26.77094424
+            ],
+            [
+              50.92098244,
+              26.7685421
+            ],
+            [
+              50.91170752,
+              26.76613935
+            ],
+            [
+              50.902433,
+              26.763736
+            ],
+            [
+              50.89330719,
+              26.76284225
+            ],
+            [
+              50.88418152,
+              26.76194792
+            ],
+            [
+              50.875056,
+              26.761053
+            ],
+            [
+              50.86762717,
+              26.76236906
+            ],
+            [
+              50.86019817,
+              26.76368472
+            ],
+            [
+              50.852769,
+              26.765
+            ],
+            [
+              50.85539115,
+              26.77205791
+            ],
+            [
+              50.85801363,
+              26.77911577
+            ],
+            [
+              50.86063643,
+              26.78617357
+            ],
+            [
+              50.86325955,
+              26.79323131
+            ],
+            [
+              50.865883,
+              26.800289
+            ],
+            [
+              50.86962732,
+              26.8055771
+            ],
+            [
+              50.87337199,
+              26.8108651
+            ],
+            [
+              50.877117,
+              26.816153
+            ],
+            [
+              50.88679344,
+              26.81749633
+            ],
+            [
+              50.8964701,
+              26.818839
+            ],
+            [
+              50.906147,
+              26.820181
+            ],
+            [
+              50.91503189,
+              26.81958659
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_buffer_zone",
+      "properties": {
+        "name": "Buffer Zone (Territorial Sea Surrounding Bulthama, Buamama and Shtaya Reserves)",
+        "arabic_name": "الحزام الحاجز (المياه الإقليمية المحيطة بمحمية بولثامة ومحمية بوعمامة ومحمية هير شتية)",
+        "type": "protected_zone",
+        "protected_area_type": "Marine",
         "status": "restricted",
-        "warning": "Commercial shipping area - stay clear",
-        "description": "Active port operations - vessel traffic only"
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2017",
+        "area_km2": 965.7,
+        "source": "MPAtlas site 68821301 - features API (MultiPolygon, 181 nodes, WDPA designated 2017)",
+        "description": "Territorial sea buffer zone surrounding Bulthama, Buamama and Shtaya marine reserves. Restricted fishing activity."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [50.6200, 26.1800],
-            [50.6700, 26.1800],
-            [50.6700, 26.2200],
-            [50.6200, 26.2200],
-            [50.6200, 26.1800]
+            [
+              50.89971602,
+              26.91082853
+            ],
+            [
+              50.90914302,
+              26.91066244
+            ],
+            [
+              50.91856999,
+              26.91049571
+            ],
+            [
+              50.92799694,
+              26.91032835
+            ],
+            [
+              50.93742385,
+              26.91016037
+            ],
+            [
+              50.94685074,
+              26.90999175
+            ],
+            [
+              50.95627759,
+              26.90982251
+            ],
+            [
+              50.96570443,
+              26.90965264
+            ],
+            [
+              50.97513123,
+              26.90948213
+            ],
+            [
+              50.984558,
+              26.909311
+            ],
+            [
+              50.99052576,
+              26.90287039
+            ],
+            [
+              50.99649285,
+              26.89642952
+            ],
+            [
+              51.00245926,
+              26.88998839
+            ],
+            [
+              51.008425,
+              26.883547
+            ],
+            [
+              51.01046749,
+              26.87496218
+            ],
+            [
+              51.01250966,
+              26.86637732
+            ],
+            [
+              51.01455153,
+              26.85779242
+            ],
+            [
+              51.0165931,
+              26.84920748
+            ],
+            [
+              51.01863435,
+              26.8406225
+            ],
+            [
+              51.02067529,
+              26.83203748
+            ],
+            [
+              51.02271593,
+              26.82345242
+            ],
+            [
+              51.02475626,
+              26.81486732
+            ],
+            [
+              51.02679628,
+              26.80628218
+            ],
+            [
+              51.028836,
+              26.797697
+            ],
+            [
+              51.02632148,
+              26.78897131
+            ],
+            [
+              51.02380735,
+              26.78024556
+            ],
+            [
+              51.0212936,
+              26.77151975
+            ],
+            [
+              51.01878024,
+              26.76279389
+            ],
+            [
+              51.01626725,
+              26.75406797
+            ],
+            [
+              51.01375466,
+              26.745342
+            ],
+            [
+              51.01124244,
+              26.73661597
+            ],
+            [
+              51.00873061,
+              26.72788989
+            ],
+            [
+              51.00621917,
+              26.71916375
+            ],
+            [
+              51.0037081,
+              26.71043756
+            ],
+            [
+              51.00119742,
+              26.70171131
+            ],
+            [
+              50.99868712,
+              26.69298501
+            ],
+            [
+              50.99617721,
+              26.68425865
+            ],
+            [
+              50.99366767,
+              26.67553224
+            ],
+            [
+              50.99115852,
+              26.66680577
+            ],
+            [
+              50.98864975,
+              26.65807925
+            ],
+            [
+              50.98614136,
+              26.64935267
+            ],
+            [
+              50.98363335,
+              26.64062604
+            ],
+            [
+              50.98112573,
+              26.63189935
+            ],
+            [
+              50.97861848,
+              26.62317261
+            ],
+            [
+              50.97611162,
+              26.61444581
+            ],
+            [
+              50.97360513,
+              26.60571896
+            ],
+            [
+              50.97109903,
+              26.59699205
+            ],
+            [
+              50.96859331,
+              26.58826509
+            ],
+            [
+              50.96608796,
+              26.57953807
+            ],
+            [
+              50.963583,
+              26.570811
+            ],
+            [
+              50.95823977,
+              26.56379056
+            ],
+            [
+              50.9528972,
+              26.55676991
+            ],
+            [
+              50.94755527,
+              26.54974906
+            ],
+            [
+              50.942214,
+              26.542728
+            ],
+            [
+              50.93446773,
+              26.53799885
+            ],
+            [
+              50.9267221,
+              26.53326927
+            ],
+            [
+              50.9189771,
+              26.52853927
+            ],
+            [
+              50.91123273,
+              26.52380885
+            ],
+            [
+              50.903489,
+              26.519078
+            ],
+            [
+              50.895672,
+              26.51564341
+            ],
+            [
+              50.88785547,
+              26.51220839
+            ],
+            [
+              50.88003941,
+              26.50877293
+            ],
+            [
+              50.87222381,
+              26.50533705
+            ],
+            [
+              50.86440867,
+              26.50190074
+            ],
+            [
+              50.856594,
+              26.498464
+            ],
+            [
+              50.8471078,
+              26.49702833
+            ],
+            [
+              50.83762183,
+              26.49559203
+            ],
+            [
+              50.82813611,
+              26.49415511
+            ],
+            [
+              50.81865061,
+              26.49271755
+            ],
+            [
+              50.80916536,
+              26.49127935
+            ],
+            [
+              50.79968033,
+              26.48984053
+            ],
+            [
+              50.79019555,
+              26.48840108
+            ],
+            [
+              50.780711,
+              26.486961
+            ],
+            [
+              50.77107582,
+              26.48823698
+            ],
+            [
+              50.76144042,
+              26.4895123
+            ],
+            [
+              50.75180482,
+              26.49078698
+            ],
+            [
+              50.742169,
+              26.492061
+            ],
+            [
+              50.73462371,
+              26.4962745
+            ],
+            [
+              50.72707787,
+              26.50048761
+            ],
+            [
+              50.71953148,
+              26.50470031
+            ],
+            [
+              50.71198454,
+              26.50891261
+            ],
+            [
+              50.70443704,
+              26.5131245
+            ],
+            [
+              50.696889,
+              26.517336
+            ],
+            [
+              50.6916017,
+              26.5233104
+            ],
+            [
+              50.68631384,
+              26.5292846
+            ],
+            [
+              50.68102544,
+              26.5352586
+            ],
+            [
+              50.6757365,
+              26.5412324
+            ],
+            [
+              50.670447,
+              26.547206
+            ],
+            [
+              50.66739727,
+              26.55544615
+            ],
+            [
+              50.66434711,
+              26.56368622
+            ],
+            [
+              50.66129651,
+              26.57192622
+            ],
+            [
+              50.65824547,
+              26.58016615
+            ],
+            [
+              50.655194,
+              26.588406
+            ],
+            [
+              50.65522324,
+              26.59571776
+            ],
+            [
+              50.65525249,
+              26.60302952
+            ],
+            [
+              50.65528174,
+              26.61034126
+            ],
+            [
+              50.655311,
+              26.617653
+            ],
+            [
+              50.6576899,
+              26.62635993
+            ],
+            [
+              50.66006915,
+              26.63506681
+            ],
+            [
+              50.66244877,
+              26.64377363
+            ],
+            [
+              50.66482875,
+              26.65248041
+            ],
+            [
+              50.66720909,
+              26.66118713
+            ],
+            [
+              50.66958979,
+              26.66989381
+            ],
+            [
+              50.67197085,
+              26.67860043
+            ],
+            [
+              50.67435227,
+              26.68730701
+            ],
+            [
+              50.67673406,
+              26.69601353
+            ],
+            [
+              50.67911621,
+              26.70472
+            ],
+            [
+              50.68149872,
+              26.71342642
+            ],
+            [
+              50.68388159,
+              26.7221328
+            ],
+            [
+              50.68626482,
+              26.73083912
+            ],
+            [
+              50.68864842,
+              26.73954539
+            ],
+            [
+              50.69103238,
+              26.74825161
+            ],
+            [
+              50.69341671,
+              26.75695777
+            ],
+            [
+              50.69580139,
+              26.76566389
+            ],
+            [
+              50.69818644,
+              26.77436996
+            ],
+            [
+              50.70057186,
+              26.78307597
+            ],
+            [
+              50.70295764,
+              26.79178194
+            ],
+            [
+              50.70534378,
+              26.80048785
+            ],
+            [
+              50.70773029,
+              26.80919372
+            ],
+            [
+              50.71011716,
+              26.81789953
+            ],
+            [
+              50.7125044,
+              26.82660529
+            ],
+            [
+              50.714892,
+              26.835311
+            ],
+            [
+              50.720261,
+              26.84270982
+            ],
+            [
+              50.72563071,
+              26.85010844
+            ],
+            [
+              50.7310011,
+              26.85750684
+            ],
+            [
+              50.7363722,
+              26.86490502
+            ],
+            [
+              50.741744,
+              26.872303
+            ],
+            [
+              50.74915146,
+              26.87589938
+            ],
+            [
+              50.75655939,
+              26.87949537
+            ],
+            [
+              50.76396779,
+              26.88309097
+            ],
+            [
+              50.77137666,
+              26.88668618
+            ],
+            [
+              50.778786,
+              26.890281
+            ],
+            [
+              50.78807636,
+              26.89201045
+            ],
+            [
+              50.79736701,
+              26.89373928
+            ],
+            [
+              50.80665794,
+              26.89546751
+            ],
+            [
+              50.81594915,
+              26.89719512
+            ],
+            [
+              50.82524064,
+              26.89892212
+            ],
+            [
+              50.83453242,
+              26.90064851
+            ],
+            [
+              50.84382447,
+              26.90237429
+            ],
+            [
+              50.85311681,
+              26.90409946
+            ],
+            [
+              50.86240944,
+              26.90582401
+            ],
+            [
+              50.87170234,
+              26.90754795
+            ],
+            [
+              50.88099553,
+              26.90927128
+            ],
+            [
+              50.890289,
+              26.910994
+            ],
+            [
+              50.89971602,
+              26.91082853
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "protected_wadi_albuhair",
+      "properties": {
+        "name": "Wadi Albuhair Reserve",
+        "arabic_name": "محمية وادي البحير",
+        "type": "protected_zone",
+        "protected_area_type": "Wilderness",
+        "status": "no_entry",
+        "authority": "Bahrain Supreme Council for Environment",
+        "year_of_declaration": "2022",
+        "area_km2": 0.04,
+        "source": "Bahrain Protected Areas Official Data",
+        "description": "Small wetland wilderness reserve - entry restricted"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              50.509,
+              26.209
+            ],
+            [
+              50.511,
+              26.209
+            ],
+            [
+              50.511,
+              26.211
+            ],
+            [
+              50.509,
+              26.211
+            ],
+            [
+              50.509,
+              26.209
+            ]
           ]
         ]
       }

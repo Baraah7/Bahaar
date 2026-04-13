@@ -1,42 +1,42 @@
-class astro_model{
+class AstroModel {
   final String sunrise;
   final String sunset;
   final String moonrise;
   final String moonset;
-  final String moon_phase;
-  final String moon_illumination;
-  final int is_moon_up;
-  final int is_sun_up;
+  final String moonPhase;
+  final String moonIllumination;
+  final int isMoonUp;
+  final int isSunUp;
 
-  astro_model({
+  AstroModel({
     required this.sunrise,
     required this.sunset,
     required this.moonrise,
     required this.moonset,
-    required this.moon_phase,
-    required this.moon_illumination,
-    required this.is_moon_up,
-    required this.is_sun_up,
+    required this.moonPhase,
+    required this.moonIllumination,
+    required this.isMoonUp,
+    required this.isSunUp,
   });
 
-  factory astro_model.fromJson(Map<String, dynamic> json) {
+  factory AstroModel.fromJson(Map<String, dynamic> json) {
     try {
-      print('Parsing astro_model with keys: ${json.keys.toList()}');
+      // print('Parsing AstroModel with keys: ${json.keys.toList()}');
 
-      return astro_model(
+      return AstroModel(
         sunrise: json['sunrise'] is String ? json['sunrise'] as String : json['sunrise'].toString(),
         sunset: json['sunset'] is String ? json['sunset'] as String : json['sunset'].toString(),
         moonrise: json['moonrise'] is String ? json['moonrise'] as String : json['moonrise'].toString(),
         moonset: json['moonset'] is String ? json['moonset'] as String : json['moonset'].toString(),
-        moon_phase: json['moon_phase'] is String ? json['moon_phase'] as String : json['moon_phase'].toString(),
-        moon_illumination: json['moon_illumination'] is String ? json['moon_illumination'] as String : json['moon_illumination'].toString(),
-        is_moon_up: json['is_moon_up'] is int ? json['is_moon_up'] as int : (json['is_moon_up'] as num).toInt(),
-        is_sun_up: json['is_sun_up'] is int ? json['is_sun_up'] as int : (json['is_sun_up'] as num).toInt(),
+        moonPhase: json['moon_phase'] is String ? json['moon_phase'] as String : json['moon_phase'].toString(),
+        moonIllumination: json['moon_illumination'] is String ? json['moon_illumination'] as String : json['moon_illumination'].toString(),
+        isMoonUp: json['is_moon_up'] is int ? json['is_moon_up'] as int : (json['is_moon_up'] as num).toInt(),
+        isSunUp: json['is_sun_up'] is int ? json['is_sun_up'] as int : (json['is_sun_up'] as num).toInt(),
       );
     } catch (e, stackTrace) {
-      print('ERROR in astro_model.fromJson: $e');
-      print('Stack trace: $stackTrace');
-      print('JSON data: $json');
+      // print('ERROR in AstroModel.fromJson: $e');
+      // print('Stack trace: $stackTrace');
+      // print('JSON data: $json');
       rethrow;
     }
   }

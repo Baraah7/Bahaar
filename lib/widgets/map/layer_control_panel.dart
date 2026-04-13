@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/services/map_layer_manager.dart';
-import 'package:Bahaar/widgets/map/geojson_layers.dart';
+import 'package:bahaar/services/map/map_layer_manager.dart';
+import 'package:bahaar/widgets/map/geojson_layers.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app_localizations.dart';
 
 /// Control panel widget for managing all map layers
-class LayerControlPanel extends StatelessWidget {
+class LayerControlPanel extends StatefulWidget {
   final MapLayerManager layerManager;
   final GeoJsonLayerBuilder? geoJsonBuilder;
   final bool maskInitialized;
   final VoidCallback onClose;
   final VoidCallback? onEnterAdminEdit;
+  final VoidCallback? onEnterFeatureEdit;
+  final VoidCallback? onEnterOutlineEdit;
+  final VoidCallback? onOpenPrediction;
 
   const LayerControlPanel({
     super.key,
@@ -17,171 +22,482 @@ class LayerControlPanel extends StatelessWidget {
     required this.maskInitialized,
     required this.onClose,
     this.onEnterAdminEdit,
+    this.onEnterFeatureEdit,
+    this.onEnterOutlineEdit,
+    this.onOpenPrediction,
   });
+
+  @override
+  State<LayerControlPanel> createState() => _LayerControlPanelState();
+}
+
+class _LayerControlPanelState extends State<LayerControlPanel> {
+  final Set<String> _expanded = {};
+
+  @override
+  void initState() {
+    super.initState();
+    widget.layerManager.addListener(_onLayerChange);
+  }
+
+  @override
+  void dispose() {
+    widget.layerManager.removeListener(_onLayerChange);
+    super.dispose();
+  }
+
+  void _onLayerChange() => setState(() {});
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
+  MapLayerManager get lm => widget.layerManager;
+
+  bool _isExpanded(String key) => _expanded.contains(key);
+
+  void _toggleSection(String key) {
+    setState(() {
+      _expanded.contains(key) ? _expanded.remove(key) : _expanded.add(key);
+    });
+  }
+
+  // ────────────────────────────────────────────
+  // Build
+  // ────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
-      constraints: const BoxConstraints(
-        maxWidth: 300,
-        maxHeight: 600,
-      ),
+      constraints: const BoxConstraints(maxWidth: 300, maxHeight: 600),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const Divider(),
-            _buildDepthLayerSection(),
-            const Divider(),
-            _buildGeoJsonSection(),
-            const Divider(),
-            _buildNavigationMaskSection(),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildHeader(),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSection(
+                    key: 'depth',
+                    title: _l10n.depthVisualization,
+                    icon: Icons.water_drop_outlined,
+                    color: AppColors.red,
+                    isActive: lm.showDepthLayer,
+                    content: _buildDepthContent(),
+                  ),
+                  _buildSection(
+                    key: 'protected',
+                    title: _l10n.protectedExclusionZones,
+                    icon: Icons.shield_outlined,
+                    color: AppColors.red,
+                    isActive: lm.showProtectedZones || lm.showExclusionZones,
+                    content: _buildProtectedAndExclusionContent(),
+                  ),
+                  _buildSection(
+                    key: 'spots',
+                    title: _l10n.fishingSpotSuggestions,
+                    icon: Icons.place,
+                    color: AppColors.red,
+                    isActive: lm.showFishingSpots,
+                    content: _buildFishingSpotsContent(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  // ────────────────────────────────────────────
+  // Header
+  // ────────────────────────────────────────────
+
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.layers, size: 20, color: Colors.blue),
-            SizedBox(width: 8),
-            Text(
-              'Map Layers',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100, width: 1.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.layers, size: 17, color: AppColors.red),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            _l10n.mapLayers,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.1,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(Icons.close, size: 17, color: Colors.grey.shade500),
+            onPressed: widget.onClose,
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Collapsible section wrapper
+  // ────────────────────────────────────────────
+
+  Widget _buildSection({
+    required String key,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isActive,
+    required Widget content,
+  }) {
+    final expanded = _isExpanded(key);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => _toggleSection(key),
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+            decoration: BoxDecoration(
+              color: expanded ? color.withValues(alpha: 0.07) : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? color.withValues(alpha: 0.12)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 15,
+                    color: isActive ? color : Colors.grey.shade400,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: isActive ? Colors.black87 : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                if (isActive)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.close, size: 20),
-          onPressed: onClose,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+        if (expanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 6, right: 4, bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [const SizedBox(height: 4), content],
+            ),
+          ),
+        const SizedBox(height: 2),
+      ],
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Shared helpers
+  // ────────────────────────────────────────────
+
+  Widget _buildToggleRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    String? subtitle,
+    required bool value,
+    ValueChanged<bool>? onChanged,
+  }) {
+    final active = value && onChanged != null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: active
+                  ? iconColor.withValues(alpha: 0.12)
+                  : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(
+              icon,
+              size: 15,
+              color: active ? iconColor : Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: onChanged != null ? Colors.black87 : Colors.grey,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: iconColor,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────
+  // Section content builders
+  // ────────────────────────────────────────────
+
+  Widget _buildDepthContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggleRow(
+          icon: Icons.water_drop_outlined,
+          iconColor: AppColors.red,
+          label: _l10n.showDepthLayer,
+          value: lm.showDepthLayer,
+          onChanged: (val) => lm.showDepthLayer = val,
+        ),
+        if (lm.showDepthLayer) ...[
+          const SizedBox(height: 8),
+          Text(
+            _l10n.visualizationType,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            children: DepthVisualizationType.values.map((type) {
+              final selected = lm.depthVisualizationType == type;
+              return ChoiceChip(
+                label: Text(
+                  type.displayName,
+                  style: const TextStyle(fontSize: 11),
+                ),
+                selected: selected,
+                onSelected: (_) => lm.depthVisualizationType = type,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                visualDensity: VisualDensity.compact,
+                selectedColor: AppColors.red.withValues(alpha: 0.15),
+                checkmarkColor: AppColors.red,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                _l10n.opacityLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${(lm.depthLayerOpacity * 100).round()}%',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.red,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            ),
+            child: Slider(
+              value: lm.depthLayerOpacity,
+              min: 0.0,
+              max: 1.0,
+              divisions: 10,
+              activeColor: AppColors.red,
+              inactiveColor: AppColors.red.withValues(alpha: 0.15),
+              onChanged: (val) => lm.depthLayerOpacity = val,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProtectedAndExclusionContent() {
+    final featureCount = widget.geoJsonBuilder != null
+        ? widget.geoJsonBuilder!.getFeatureCount('protected_zone') +
+            widget.geoJsonBuilder!.getFeatureCount('reef')
+        : 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggleRow(
+          icon: Icons.shield_outlined,
+          iconColor: AppColors.red,
+          label: _l10n.protectedZones,
+          subtitle: featureCount > 0
+              ? _l10n.featuresLoaded(featureCount)
+              : _l10n.marineReservesReefs,
+          value: lm.showProtectedZones,
+          onChanged: (val) => lm.showProtectedZones = val,
+        ),
+        if (lm.showProtectedZones) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _legendRow(AppColors.red.withValues(alpha: 0.5), _l10n.mpaRestrictedArea),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        _buildToggleRow(
+          icon: Icons.oil_barrel,
+          iconColor: AppColors.red,
+          label: _l10n.oilGasExclusion,
+          subtitle: lm.showExclusionZones
+              ? _l10n.safetyBuffersVisible
+              : _l10n.safetyRulesApplyWhenHidden,
+          value: lm.showExclusionZones,
+          onChanged: (val) => lm.showExclusionZones = val,
         ),
       ],
     );
   }
 
-  Widget _buildDepthLayerSection() {
+  Widget _buildFishingSpotsContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Depth Visualization',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        _buildToggleRow(
+          icon: Icons.place,
+          iconColor: AppColors.red,
+          label: _l10n.showFishingSpots,
+          subtitle: _l10n.zonesMpasLocations,
+          value: lm.showFishingSpots,
+          onChanged: (val) => lm.showFishingSpots = val,
         ),
-        const SizedBox(height: 8),
-
-        // Depth layer toggle
-        SwitchListTile(
-          title: const Text('Show Depth Layer', style: TextStyle(fontSize: 13)),
-          value: layerManager.showDepthLayer,
-          onChanged: (val) => layerManager.showDepthLayer = val,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-
-        if (layerManager.showDepthLayer) ...[
-          // Visualization type selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+        if (lm.showFishingSpots) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.red.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Visualization Type',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                ...DepthVisualizationType.values.map((type) {
-                  return RadioListTile<DepthVisualizationType>(
-                    title: Text(
-                      type.displayName,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    subtitle: Text(
-                      type.description,
-                      style: const TextStyle(fontSize: 9),
-                    ),
-                    value: type,
-                    groupValue: layerManager.depthVisualizationType,
-                    onChanged: (val) {
-                      if (val != null) {
-                        layerManager.depthVisualizationType = val;
-                      }
-                    },
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  );
-                }),
-                const SizedBox(height: 8),
+                _legendRow(Colors.green.withValues(alpha: 0.6), _l10n.highConfidenceSpot),
+                _legendRow(Colors.orange.withValues(alpha: 0.6), _l10n.mediumConfidenceSpot),
+                _legendRow(Colors.blue.withValues(alpha: 0.25), _l10n.fishingZone),
 
-                // Opacity slider
-                const Text(
-                  'Layer Opacity',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                Slider(
-                  value: layerManager.depthLayerOpacity,
-                  min: 0.0,
-                  max: 1.0,
-                  divisions: 10,
-                  label: '${(layerManager.depthLayerOpacity * 100).round()}%',
-                  onChanged: (val) => layerManager.depthLayerOpacity = val,
-                ),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bathymetric: Colored depth map',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      Text(
-                        'Nautical: Navigation symbols',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      Text(
-                        'Combined: Both layers together',
-                        style: TextStyle(fontSize: 9),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Best visibility: Zoom 10+',
-                        style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                ),
+                if (widget.onOpenPrediction != null) ...[
+                    const SizedBox(height: 6),
+                    Divider(color: Colors.grey.shade100, height: 1),
+                    const SizedBox(height: 10),
+                    _buildPredictionButton(),
+                  ],
               ],
             ),
           ),
@@ -190,176 +506,78 @@ class LayerControlPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildGeoJsonSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'GeoJSON Overlays',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-
-        // Master toggle
-        SwitchListTile(
-          title: const Text('All GeoJSON Layers', style: TextStyle(fontSize: 13)),
-          value: layerManager.showGeoJsonLayers,
-          onChanged: (val) {
-            layerManager.showGeoJsonLayers = val;
-            if (val) {
-              layerManager.toggleAllGeoJsonLayers(true);
-            }
-          },
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-
-        if (layerManager.showGeoJsonLayers && geoJsonBuilder != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                _buildGeoJsonLayerToggle(
-                  'Fishing Spots',
-                  Icons.location_on,
-                  Colors.blue,
-                  layerManager.showFishingSpots,
-                  (val) => layerManager.showFishingSpots = val,
-                  geoJsonBuilder!.getFeatureCount('fishing_spot'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Shipping Lanes',
-                  Icons.route,
-                  Colors.red,
-                  layerManager.showShippingLanes,
-                  (val) => layerManager.showShippingLanes = val,
-                  geoJsonBuilder!.getFeatureCount('shipping_lane') +
-                      geoJsonBuilder!.getFeatureCount('patrol_route'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Protected Zones',
-                  Icons.shield,
-                  Colors.red,
-                  layerManager.showProtectedZones,
-                  (val) => layerManager.showProtectedZones = val,
-                  geoJsonBuilder!.getFeatureCount('protected_zone') +
-                      geoJsonBuilder!.getFeatureCount('reef'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Fishing Zones',
-                  Icons.agriculture,
-                  Colors.green,
-                  layerManager.showFishingZones,
-                  (val) => layerManager.showFishingZones = val,
-                  geoJsonBuilder!.getFeatureCount('fishing_zone'),
-                ),
-                _buildGeoJsonLayerToggle(
-                  'Restricted Areas',
-                  Icons.block,
-                  Colors.red,
-                  layerManager.showRestrictedAreas,
-                  (val) => layerManager.showRestrictedAreas = val,
-                  geoJsonBuilder!.getFeatureCount('restricted_area'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildGeoJsonLayerToggle(
-    String title,
-    IconData icon,
-    Color color,
-    bool value,
-    ValueChanged<bool> onChanged,
-    int count,
-  ) {
-    return SwitchListTile(
-      title: Row(
+  Widget _legendRow(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(title, style: const TextStyle(fontSize: 12)),
+          Container(
+            width: 18,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontSize: 10)),
         ],
       ),
-      subtitle: Text(
-        '$count feature${count != 1 ? 's' : ''}',
-        style: const TextStyle(fontSize: 10),
-      ),
-      value: value,
-      onChanged: onChanged,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
     );
   }
 
-  Widget _buildNavigationMaskSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Navigation Mask',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Show Mask Boundary', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            maskInitialized ? 'Coverage area outline' : 'Loading...',
-            style: const TextStyle(fontSize: 10),
+  Widget _buildPredictionButton() {
+    return InkWell(
+      onTap: () {
+        widget.onOpenPrediction!();
+        widget.onClose();
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.brown, AppColors.tan],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-          value: layerManager.showMaskOverlay,
-          onChanged: maskInitialized
-              ? (val) => layerManager.showMaskOverlay = val
-              : null,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        const Divider(),
-        _buildAdminSection(),
-      ],
-    );
-  }
-
-  Widget _buildAdminSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.admin_panel_settings, size: 16, color: Colors.orange),
-            SizedBox(width: 4),
-            Text(
-              'Admin Tools',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.teal.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ListTile(
-          leading: const Icon(Icons.edit, size: 18, color: Colors.orange),
-          title: const Text('Edit Mask', style: TextStyle(fontSize: 13)),
-          subtitle: Text(
-            maskInitialized
-                ? 'Paint water/land cells'
-                : 'Loading...',
-            style: const TextStyle(fontSize: 10),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          onTap: maskInitialized && onEnterAdminEdit != null
-              ? () {
-                  onEnterAdminEdit!();
-                  onClose();
-                }
-              : null,
-          enabled: maskInitialized,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _l10n.fishingPrediction,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    _l10n.aiCatchProbability,
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white70),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

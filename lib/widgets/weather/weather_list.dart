@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import '../../models/weather/forecast_day_model.dart';
+import '../../models/weather/tide_model.dart';
+import 'package:bahaar/utilities/cn/celestial_calculator.dart';
+import '../../l10n/app_localizations.dart';
+import 'celestial_almanac_card.dart';
 
 // Reusable styles and colors
 class _WeatherStyles {
@@ -27,9 +31,175 @@ class _WeatherStyles {
 }
 
 class WeatherList extends StatelessWidget {
-  final weather_response_model weatherData;
+  final WeatherResponseModel weatherData;
+  final List<TideEntry> tides;
+  final AppLocalizations l10n;
 
-  const WeatherList({super.key, required this.weatherData});
+  const WeatherList({super.key, required this.weatherData, required this.l10n, this.tides = const []});
+
+  /// Arabic translations for common Bahraini city/area names returned by WeatherAPI.
+  static const Map<String, String> _cityArabic = {
+    'manama': 'المنامة',
+    'muharraq': 'المحرق',
+    'riffa': 'الرفاع',
+    'isa town': 'مدينة عيسى',
+    'hamad town': 'مدينة حمد',
+    'sitra': 'سترة',
+    'budaiya': 'البديع',
+    'jidhafs': 'جدحفص',
+    'jidd hafs': 'جدحفص',
+    'hidd': 'الحد',
+    'tubli': 'توبلي',
+    'sanabis': 'السنابس',
+    'janabiyah': 'الجنبية',
+    'aali': 'عالي',
+    'zallaq': 'الزلاق',
+    'nuwaidrat': 'نويدرات',
+    'diraz': 'دراز',
+    'barbar': 'بربار',
+    'bilad al qadeem': 'بلاد القديم',
+    'sar': 'سار',
+    'bani jamra': 'بني جمرة',
+    'karbabad': 'كرباباد',
+    'malkiya': 'المالكية',
+    'jasra': 'الجسرة',
+    'shahrakan': 'شهركان',
+    'al malikiyah': 'المالكية',
+    'bahrain': 'البحرين',
+    'east riffa': 'الرفاع الشرقي',
+    'west riffa': 'الرفاع الغربي',
+    'northern city': 'المدينة الشمالية',
+    'southern city': 'المدينة الجنوبية',
+    'manamah': 'المنامة',
+    'al muharraq': 'المحرق',
+    'al hidd': 'الحد',
+    'al janabiyah': 'الجنبية',
+    'al budaiya': 'البديع',
+    'al sitra': 'سترة',
+    'al aali': 'عالي',
+    'qudaibiya': 'قضيبية',
+    'adliya': 'العدلية',
+    'hoora': 'الحورة',
+    'um al hassam': 'أم الحصم',
+    'mahooz': 'المحوز',
+    'segaya': 'سيجيئة',
+  };
+
+  /// Arabic translations for WeatherAPI condition text strings.
+  static const Map<String, String> _conditionArabic = {
+    'sunny': 'مشمس',
+    'clear': 'صافٍ',
+    'partly cloudy': 'غائم جزئياً',
+    'cloudy': 'غائم',
+    'overcast': 'ملبد بالغيوم',
+    'mist': 'ضباب خفيف',
+    'fog': 'ضباب',
+    'freezing fog': 'ضباب متجمد',
+    'haze': 'ضباب دخاني',
+    'dust': 'غبار',
+    'sand': 'رمال',
+    'dust whirls': 'أعمدة غبار',
+    'blowing dust': 'عواصف غبارية',
+    'blowing sand': 'عواصف رملية',
+    'sandstorm': 'عاصفة رملية',
+    'dust storm': 'عاصفة ترابية',
+    'patchy rain possible': 'أمطار متفرقة محتملة',
+    'patchy snow possible': 'ثلوج متفرقة محتملة',
+    'patchy sleet possible': 'زخات صقيع متفرقة',
+    'patchy freezing drizzle possible': 'رذاذ متجمد متفرق',
+    'thundery outbreaks possible': 'عواصف رعدية محتملة',
+    'blowing snow': 'عواصف ثلجية',
+    'blizzard': 'عاصفة ثلجية شديدة',
+    'patchy light drizzle': 'رذاذ خفيف متفرق',
+    'light drizzle': 'رذاذ خفيف',
+    'freezing drizzle': 'رذاذ متجمد',
+    'heavy freezing drizzle': 'رذاذ متجمد كثيف',
+    'patchy light rain': 'أمطار خفيفة متفرقة',
+    'light rain': 'أمطار خفيفة',
+    'moderate rain at times': 'أمطار معتدلة أحياناً',
+    'moderate rain': 'أمطار معتدلة',
+    'heavy rain at times': 'أمطار غزيرة أحياناً',
+    'heavy rain': 'أمطار غزيرة',
+    'light freezing rain': 'مطر متجمد خفيف',
+    'moderate or heavy freezing rain': 'مطر متجمد معتدل أو غزير',
+    'light sleet': 'صقيع خفيف',
+    'moderate or heavy sleet': 'صقيع معتدل أو غزير',
+    'patchy light snow': 'ثلج خفيف متفرق',
+    'light snow': 'ثلج خفيف',
+    'patchy moderate snow': 'ثلج معتدل متفرق',
+    'moderate snow': 'ثلج معتدل',
+    'patchy heavy snow': 'ثلج كثيف متفرق',
+    'heavy snow': 'ثلج كثيف',
+    'ice pellets': 'حبات صقيع',
+    'light rain shower': 'زخة مطر خفيفة',
+    'moderate or heavy rain shower': 'زخة مطر معتدلة أو غزيرة',
+    'torrential rain shower': 'زخة مطر غزيرة جداً',
+    'light snow showers': 'زخات ثلج خفيفة',
+    'moderate or heavy snow showers': 'زخات ثلج معتدلة أو غزيرة',
+    'patchy light rain with thunder': 'أمطار خفيفة مع رعد',
+    'moderate or heavy rain with thunder': 'أمطار معتدلة أو غزيرة مع رعد',
+    'patchy light snow with thunder': 'ثلج خفيف مع رعد',
+    'moderate or heavy snow with thunder': 'ثلج معتدل أو غزير مع رعد',
+    'thunderstorm': 'عاصفة رعدية',
+    'light thunderstorm': 'عاصفة رعدية خفيفة',
+    'heavy thunderstorm': 'عاصفة رعدية شديدة',
+  };
+
+  /// Arabic translations for moon phase strings from WeatherAPI.
+  static const Map<String, String> _moonPhaseArabic = {
+    'new moon': 'محاق',
+    'waxing crescent': 'هلال متصاعد',
+    'first quarter': 'تربيع أول',
+    'waxing gibbous': 'أحدب متصاعد',
+    'full moon': 'بدر',
+    'waning gibbous': 'أحدب متناقص',
+    'last quarter': 'تربيع أخير',
+    'waning crescent': 'هلال متناقص',
+  };
+
+  /// Returns city name translated to Arabic when locale is Arabic.
+  String _cityName(String name) {
+    if (l10n.localeName != 'ar') return name;
+    return _cityArabic[name.toLowerCase()] ?? name;
+  }
+
+  /// Converts ASCII digits to Arabic-Indic numerals when locale is Arabic.
+  String _n(dynamic value) {
+    final str = value.toString();
+    if (l10n.localeName != 'ar') return str;
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return str.replaceAllMapped(
+      RegExp(r'[0-9]'),
+      (m) => digits[int.parse(m.group(0)!)],
+    );
+  }
+
+  /// Translates WeatherAPI condition text when locale is Arabic.
+  String _conditionText(String text) {
+    if (l10n.localeName != 'ar') return text;
+    return _conditionArabic[text.toLowerCase()] ?? text;
+  }
+
+  /// Translates moon phase text when locale is Arabic.
+  String _moonPhase(String phase) {
+    if (l10n.localeName != 'ar') return phase;
+    return _moonPhaseArabic[phase.toLowerCase()] ?? phase;
+  }
+
+  /// Converts "06:30 AM" / "07:15 PM" to Arabic format when locale is Arabic.
+  String _formatTime(String time) {
+    if (l10n.localeName != 'ar') return time;
+    final t = time.toUpperCase()
+        .replaceAll(' AM', ' ص')
+        .replaceAll(' PM', ' م');
+    return _n(t);
+  }
+
+  /// Returns localized km/h unit string.
+  String get _kmh => l10n.localeName == 'ar' ? 'كم/س' : 'km/h';
+
+  /// Returns localized km unit string.
+  String get _km => l10n.localeName == 'ar' ? 'كم' : 'km';
 
   // Reusable weather icon widget
   Widget _weatherIcon(String iconUrl, {double size = 32}) {
@@ -111,16 +281,16 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Expanded(child: _buildCompactCard(
                       icon: Icons.wb_sunny_outlined,
-                      title: 'UV Index',
-                      value: '${weatherData.currentWeather.uv.round()}',
+                      title: l10n.uvIndex,
+                      value: _n(weatherData.currentWeather.uv.round()),
                       subtitle: _getUVLevel(weatherData.currentWeather.uv),
                       accentColor: _getUVColor(weatherData.currentWeather.uv),
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildCompactCard(
                       icon: Icons.thermostat_outlined,
-                      title: 'Feels Like',
-                      value: '${weatherData.currentWeather.feelslike_c.round()}°',
+                      title: l10n.feelsLike,
+                      value: '${_n(weatherData.currentWeather.feelslikeC.round())}°',
                       subtitle: _getFeelsLikeDescription(),
                       accentColor: const Color(0xFF64B5F6),
                     )),
@@ -131,16 +301,16 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Expanded(child: _buildCompactCard(
                       icon: Icons.water_drop,
-                      title: 'Humidity',
-                      value: '${weatherData.currentWeather.humidity}%',
-                      subtitle: 'Dew ${weatherData.currentWeather.dewpoint_c.round()}°',
+                      title: l10n.humidity,
+                      value: '${_n(weatherData.currentWeather.humidity)}%',
+                      subtitle: '${l10n.weatherDewPoint} ${_n(weatherData.currentWeather.dewpointC?.round() ?? 0)}°',
                       accentColor: _WeatherStyles.accent,
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _buildCompactCard(
                       icon: Icons.visibility_outlined,
-                      title: 'Visibility',
-                      value: '${weatherData.currentWeather.vis_km.round()} km',
+                      title: l10n.visibility,
+                      value: '${_n(weatherData.currentWeather.visKm.round())} $_km',
                       subtitle: _getVisibilityDescription(),
                       accentColor: const Color(0xFF81C784),
                     )),
@@ -148,6 +318,10 @@ class WeatherList extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildSunMoonCard(),
+                const SizedBox(height: 16),
+                _buildTidesCard(),
+                const SizedBox(height: 16),
+                _buildCelestialAlmanac(),
               ],
             ),
           ),
@@ -183,7 +357,7 @@ class WeatherList extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                weatherData.location.name.toUpperCase(),
+                _cityName(weatherData.location.name).toUpperCase(),
                 style: TextStyle(
                   color: _WeatherStyles.white(0.9),
                   fontSize: 16,
@@ -222,7 +396,7 @@ class WeatherList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${weatherData.currentWeather.temp_c.round()}',
+                    _n(weatherData.currentWeather.tempC.round()),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 72,
@@ -261,7 +435,7 @@ class WeatherList extends StatelessWidget {
                 _weatherIcon(weatherData.currentWeather.condition.icon, size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  weatherData.currentWeather.condition.text,
+                  _conditionText(weatherData.currentWeather.condition.text),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -278,12 +452,12 @@ class WeatherList extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _tempIndicator(weatherData.forecast!.forecastDay.day.maxtemp_c.round(), Icons.arrow_upward, _WeatherStyles.orange),
+                _tempIndicator(weatherData.forecast!.forecastDay.day.maxtempC.round(), Icons.arrow_upward, _WeatherStyles.orange),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: SizedBox(width: 40, height: 2, child: _gradientDivider()),
                 ),
-                _tempIndicator(weatherData.forecast!.forecastDay.day.mintemp_c.round(), Icons.arrow_downward, const Color(0xFF64B5F6)),
+                _tempIndicator(weatherData.forecast!.forecastDay.day.mintempC.round(), Icons.arrow_downward, const Color(0xFF64B5F6)),
               ],
             ),
         ],
@@ -296,7 +470,7 @@ class WeatherList extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 4),
-        Text('$temp°', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600)),
+        Text('${_n(temp)}°', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -305,7 +479,7 @@ class WeatherList extends StatelessWidget {
     if (weatherData.forecast == null) return const SizedBox.shrink();
 
     final now = DateTime.now();
-    final hours = weatherData.forecast!.forecastday
+    final hours = weatherData.forecast!.forecastDays
         .expand((day) => day.hour)
         .where((h) => DateTime.parse(h.time).isAfter(now.subtract(const Duration(hours: 1))))
         .take(24)
@@ -316,7 +490,7 @@ class WeatherList extends StatelessWidget {
       decoration: _WeatherStyles.cardDecoration(),
       child: Column(
         children: [
-          _sectionHeader('Next 24 Hours', _WeatherStyles.accent),
+          _sectionHeader(l10n.hourlyForecast, _WeatherStyles.accent),
           SizedBox(
             height: 130,
             child: ListView.builder(
@@ -333,7 +507,7 @@ class WeatherList extends StatelessWidget {
     );
   }
 
-  Widget _hourItem(hour_model hour, bool isNow) {
+  Widget _hourItem(HourModel hour, bool isNow) {
     final hourTime = DateTime.parse(hour.time);
     return Container(
       width: 70,
@@ -352,16 +526,16 @@ class WeatherList extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            isNow ? 'Now' : '${hourTime.hour}:00',
+            isNow ? l10n.weatherNow : _n('${hourTime.hour}:00'),
             style: TextStyle(
               color: isNow ? _WeatherStyles.accent : _WeatherStyles.white(0.8),
               fontSize: 14,
               fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
-          _weatherIcon(hour.condition_icon, size: 36),
+          _weatherIcon(hour.conditionIcon, size: 36),
           Text(
-            '${hour.temp_c.round()}°',
+            '${_n(hour.tempC.round())}°',
             style: TextStyle(
               color: isNow ? Colors.white : _WeatherStyles.white(0.9),
               fontSize: 18,
@@ -376,16 +550,16 @@ class WeatherList extends StatelessWidget {
   Widget _buildDailyForecast() {
     if (weatherData.forecast == null) return const SizedBox.shrink();
 
-    final days = weatherData.forecast!.forecastday;
-    final weekMin = days.map((d) => d.day.mintemp_c).reduce(math.min);
-    final weekMax = days.map((d) => d.day.maxtemp_c).reduce(math.max);
+    final days = weatherData.forecast!.forecastDays;
+    final weekMin = days.map((d) => d.day.mintempC).reduce(math.min);
+    final weekMax = days.map((d) => d.day.maxtempC).reduce(math.max);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: _WeatherStyles.cardDecoration(),
       child: Column(
         children: [
-          _sectionHeader('${days.length}-Day Forecast', _WeatherStyles.orange),
+          _sectionHeader('${_n(days.length)}-${l10n.dailyForecast}', _WeatherStyles.orange),
           ...days.asMap().entries.map((e) => _dayRow(e.value, e.key == 0, weekMin, weekMax)),
           const SizedBox(height: 8),
         ],
@@ -393,9 +567,9 @@ class WeatherList extends StatelessWidget {
     );
   }
 
-  Widget _dayRow(forecast_day day, bool isToday, double weekMin, double weekMax) {
+  Widget _dayRow(ForecastDay day, bool isToday, double weekMin, double weekMax) {
     final date = DateTime.parse(day.date);
-    final dayName = isToday ? 'Today' : _getDayName(date.weekday);
+    final dayName = isToday ? l10n.weatherToday : _getDayName(date.weekday);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -413,17 +587,17 @@ class WeatherList extends StatelessWidget {
               ),
             ),
           ),
-          _weatherIcon(day.day.condition_icon),
+          _weatherIcon(day.day.conditionIcon),
           const SizedBox(width: 8),
           SizedBox(
             width: 42,
-            child: day.day.daily_chance_of_rain > 0
+            child: day.day.dailyChanceOfRain > 0
                 ? Row(
                     children: [
                       const Icon(Icons.water_drop, color: _WeatherStyles.accent, size: 12),
                       const SizedBox(width: 2),
                       Text(
-                        '${day.day.daily_chance_of_rain}%',
+                        '${_n(day.day.dailyChanceOfRain)}%',
                         style: const TextStyle(color: _WeatherStyles.accent, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -431,11 +605,11 @@ class WeatherList extends StatelessWidget {
                 : null,
           ),
           const Spacer(),
-          Text('${day.day.mintemp_c.round()}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.mintempC.round())}°', style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(width: 8),
-          SizedBox(width: 80, child: _temperatureBar(day.day.mintemp_c, day.day.maxtemp_c, weekMin, weekMax, isToday)),
+          SizedBox(width: 80, child: _temperatureBar(day.day.mintempC, day.day.maxtempC, weekMin, weekMax, isToday)),
           const SizedBox(width: 8),
-          Text('${day.day.maxtemp_c.round()}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('${_n(day.day.maxtempC.round())}°', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -445,7 +619,7 @@ class WeatherList extends StatelessWidget {
     final range = weekMax - weekMin;
     final startPercent = (min - weekMin) / range;
     final endPercent = (max - weekMin) / range;
-    final currentPercent = isToday ? (weatherData.currentWeather.temp_c - weekMin) / range : null;
+    final currentPercent = isToday ? (weatherData.currentWeather.tempC - weekMin) / range : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -500,7 +674,7 @@ class WeatherList extends StatelessWidget {
           SizedBox(
             width: 100,
             height: 100,
-            child: CustomPaint(painter: _ModernCompassPainter(wind.wind_degree.toDouble())),
+            child: CustomPaint(painter: _ModernCompassPainter(wind.windDegree.toDouble())),
           ),
           const SizedBox(width: 24),
           Expanded(
@@ -511,18 +685,18 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.air, color: _WeatherStyles.white(0.7), size: 20),
                     const SizedBox(width: 8),
-                    const Text('Wind', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text(l10n.wind, style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${wind.wind_kph.round()}', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
+                    Text(_n(wind.windKph.round()), style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w300, height: 1)),
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('km/h', style: TextStyle(color: _WeatherStyles.white(0.7), fontSize: 16)),
+                      child: Text(_kmh, style: TextStyle(color: _WeatherStyles.white(0.7), fontSize: 16)),
                     ),
                     const SizedBox(width: 12),
                     Padding(
@@ -533,7 +707,7 @@ class WeatherList extends StatelessWidget {
                           color: _WeatherStyles.accent.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(wind.wind_dir, style: const TextStyle(color: _WeatherStyles.accent, fontSize: 14, fontWeight: FontWeight.w600)),
+                        child: Text(wind.windDir, style: const TextStyle(color: _WeatherStyles.accent, fontSize: 14, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -543,7 +717,7 @@ class WeatherList extends StatelessWidget {
                   children: [
                     Icon(Icons.waves, color: _WeatherStyles.white(0.5), size: 14),
                     const SizedBox(width: 6),
-                    Text('Gusts up to ${wind.gust_kph.round()} km/h', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
+                    Text('${l10n.weatherGusts} ${_n(wind.gustKph.round())} $_kmh', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 14)),
                   ],
                 ),
               ],
@@ -595,9 +769,9 @@ class WeatherList extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, 'Sunrise', astro.sunrise)),
+              Expanded(child: _celestialInfo(Icons.wb_sunny, _WeatherStyles.orange, l10n.sunrise, _formatTime(astro.sunrise))),
               _gradientDivider(vertical: true),
-              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, 'Sunset', astro.sunset)),
+              Expanded(child: _celestialInfo(Icons.wb_twilight, _WeatherStyles.coral, l10n.sunset, _formatTime(astro.sunset))),
             ],
           ),
           Padding(
@@ -606,23 +780,23 @@ class WeatherList extends StatelessWidget {
           ),
           Row(
             children: [
-              Icon(_getMoonIcon(astro.moon_phase), color: _WeatherStyles.white(0.9), size: 36),
+              Icon(_getMoonIcon(astro.moonPhase), color: _WeatherStyles.white(0.9), size: 36),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(astro.moon_phase, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
-                    Text('${astro.moon_illumination}% illuminated', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
+                    Text(_moonPhase(astro.moonPhase), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
+                    Text('${_n(astro.moonIllumination)}${l10n.illuminated}', style: TextStyle(color: _WeatherStyles.white(0.6), fontSize: 13)),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _moonTime(Icons.arrow_upward, astro.moonrise),
+                  _moonTime(Icons.arrow_upward, _formatTime(astro.moonrise)),
                   const SizedBox(height: 4),
-                  _moonTime(Icons.arrow_downward, astro.moonset),
+                  _moonTime(Icons.arrow_downward, _formatTime(astro.moonset)),
                 ],
               ),
             ],
@@ -664,17 +838,121 @@ class WeatherList extends StatelessWidget {
     };
   }
 
+  Widget _buildCelestialAlmanac() {
+    final now = DateTime.now();
+    final lat = weatherData.location.lat;
+    final lon = weatherData.location.lon;
+    final solar = CelestialCalculator.calculateSolarDay(lat, lon, now);
+    final lunar = CelestialCalculator.calculateLunarDay(lat, lon, now);
+    return CelestialAlmanacCard(solar: solar, lunar: lunar);
+  }
+
+  Widget _buildTidesCard() {
+    const tideBlue = Color(0xFF4FC3F7);
+    const tideLow = Color(0xFF81D4FA);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _WeatherStyles.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(l10n.weatherTodayTides, tideBlue),
+          const SizedBox(height: 4),
+          if (tides.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.waves, color: _WeatherStyles.white(0.4), size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    l10n.weatherTideUnavailable,
+                    style: TextStyle(color: _WeatherStyles.white(0.5), fontSize: 15),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...tides.map((entry) {
+              final isHigh = entry.isHigh;
+              final color = isHigh ? tideBlue : tideLow;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isHigh ? Icons.arrow_upward : Icons.arrow_downward,
+                        color: color,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isHigh ? l10n.weatherHighTide : l10n.weatherLowTide,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          _formatTime(entry.formattedTime),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${_n(entry.heightMt.toStringAsFixed(2))} m',
+                      style: TextStyle(
+                        color: _WeatherStyles.white(0.85),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
   String _getDayName(int weekday) {
-    const days = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days[weekday];
+    return [
+      '',
+      l10n.dayMon,
+      l10n.dayTue,
+      l10n.dayWed,
+      l10n.dayThu,
+      l10n.dayFri,
+      l10n.daySat,
+      l10n.daySun,
+    ][weekday];
   }
 
   String _getUVLevel(double uv) {
-    if (uv <= 2) return 'Low';
-    if (uv <= 5) return 'Moderate';
-    if (uv <= 7) return 'High';
-    if (uv <= 10) return 'Very High';
-    return 'Extreme';
+    if (uv <= 2) return l10n.uvLow;
+    if (uv <= 5) return l10n.uvModerate;
+    if (uv <= 7) return l10n.uvHigh;
+    if (uv <= 10) return l10n.uvVeryHigh;
+    return l10n.uvExtreme;
   }
 
   Color _getUVColor(double uv) {
@@ -686,17 +964,17 @@ class WeatherList extends StatelessWidget {
   }
 
   String _getFeelsLikeDescription() {
-    final diff = weatherData.currentWeather.feelslike_c - weatherData.currentWeather.temp_c;
-    if (diff.abs() < 2) return 'Similar to actual';
-    return diff > 0 ? 'Feels warmer' : 'Feels cooler';
+    final diff = weatherData.currentWeather.feelslikeC - weatherData.currentWeather.tempC;
+    if (diff.abs() < 2) return l10n.feelsLikeSimilar;
+    return diff > 0 ? l10n.feelsLikeWarmer : l10n.feelsLikeCooler;
   }
 
   String _getVisibilityDescription() {
-    final vis = weatherData.currentWeather.vis_km;
-    if (vis >= 10) return 'Clear';
-    if (vis >= 5) return 'Good';
-    if (vis >= 2) return 'Moderate';
-    return 'Low';
+    final vis = weatherData.currentWeather.visKm;
+    if (vis >= 10) return l10n.visibilityClear;
+    if (vis >= 5) return l10n.visibilityGood;
+    if (vis >= 2) return l10n.uvModerate;
+    return l10n.visibilityLow;
   }
 }
 

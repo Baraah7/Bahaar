@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:Bahaar/models/navigation/navigation_session_model.dart';
-import 'package:Bahaar/models/navigation/waypoint_model.dart';
-import 'package:Bahaar/utilities/navigation_constants.dart';
+import 'package:bahaar/models/navigation/navigation_session_model.dart';
+import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/utilities/map/navigation_constants.dart';
 
 /// Active navigation overlay showing turn-by-turn instructions and progress
 ///
