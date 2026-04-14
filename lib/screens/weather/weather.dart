@@ -7,7 +7,6 @@ import 'package:bahaar/utilities/weather/weather_api_service.dart';
 import 'package:bahaar/widgets/common/app_empty_state.dart';
 import 'package:bahaar/widgets/weather/weather_list.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 
 class Weather extends StatefulWidget {
