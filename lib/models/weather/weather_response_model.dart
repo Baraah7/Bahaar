@@ -53,7 +53,7 @@ class WeatherResponseModel {
         currentWeather: currentWeather,
         forecast: forecast,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in WeatherResponseModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');

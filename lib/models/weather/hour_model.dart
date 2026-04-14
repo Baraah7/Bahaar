@@ -130,7 +130,7 @@ class HourModel {
         dni: json['dni'] != null ? (json['dni'] as num).toDouble() : null,
         gti: json['gti'] != null ? (json['gti'] as num).toDouble() : null,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in HourModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data keys: ${json.keys.toList()}');

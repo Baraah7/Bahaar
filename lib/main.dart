@@ -1,4 +1,5 @@
 ﻿import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_screen.dart';
+import 'package:bahaar/screens/trip/trip_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -95,6 +96,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       l10n.fishRecognition,
       l10n.fishingLog,
       'Sextant',
+      'Trip',
     ];
 
     return Scaffold(
@@ -192,6 +194,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           FishRecognitionScreen(),
           FishingLogScreen(),
           CelestialNavigationScreen(),
+          TripScreen(),
         ]
       ),
       
@@ -237,6 +240,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.explore),
             label: l10n.celestialNavigation,
+            backgroundColor: AppColors.primary,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.route),
+            label: 'Trip',
             backgroundColor: AppColors.primary,
           ),
         ],

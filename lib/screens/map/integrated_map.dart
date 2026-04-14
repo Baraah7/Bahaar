@@ -34,6 +34,7 @@ import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
 import 'package:bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
+import 'package:bahaar/widgets/map/trip_track_layer.dart';
 import 'package:bahaar/widgets/map/depth_soundings_layer.dart';
 import 'package:bahaar/widgets/map/enhanced_depth_layer.dart';
 import 'package:bahaar/widgets/map/exclusion_zone_layer.dart';
@@ -2143,6 +2144,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
         // DS-1 celestial fix uncertainty circle + marker
         const CelestialFixLayer(),
+
+        // Trip recorder — live track, port markers, DR uncertainty circle
+        const TripTrackLayer(),
       ],
     );
   }
@@ -2610,7 +2614,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                     editState: _featureEditState,
                     onClose: _exitFeatureEditMode,
                     onStartAdd: (type) {
-                      _featureEditState.startAddFeature(type as MapFeatureType);
+                      _featureEditState.startAddFeature(type);
                     },
                     onStartSelect: () {
                       _featureEditState.startSelectMode();

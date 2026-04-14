@@ -31,7 +31,7 @@ class ForecastModel {
       return ForecastModel(
         forecastDays: forecastDays,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in ForecastModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');
