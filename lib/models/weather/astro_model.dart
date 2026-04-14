@@ -33,7 +33,7 @@ class AstroModel {
         isMoonUp: json['is_moon_up'] is int ? json['is_moon_up'] as int : (json['is_moon_up'] as num).toInt(),
         isSunUp: json['is_sun_up'] is int ? json['is_sun_up'] as int : (json['is_sun_up'] as num).toInt(),
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in AstroModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');

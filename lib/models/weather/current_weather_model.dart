@@ -121,7 +121,7 @@ class CurrentWeatherModel {
         dni: json['dni'] != null ? (json['dni'] as num).toDouble() : null,
         gti: json['gti'] != null ? (json['gti'] as num).toDouble() : null,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in CurrentWeatherModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');
@@ -154,7 +154,7 @@ class ConditionModel {
         icon: json['icon'] as String,
         code: json['code'] as int,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in ConditionModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');

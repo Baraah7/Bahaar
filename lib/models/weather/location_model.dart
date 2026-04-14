@@ -42,7 +42,7 @@ class LocationModel {
         localtimeEpoch: json['localtime_epoch'] as int,
         localtime: json['localtime'] as String,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in LocationModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');

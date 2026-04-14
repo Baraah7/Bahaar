@@ -12,7 +12,6 @@ import 'package:http/http.dart' as http;
 
 // Import and re-export models from the existing service so callers only need
 // one import.
-import 'package:bahaar/services/map/fishing_ai_service.dart';
 export 'package:bahaar/services/map/fishing_ai_service.dart'
     show
         PredictionResult,

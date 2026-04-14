@@ -125,7 +125,7 @@ class WeatherApiService {
         // print('Error body: ${response.body}');
         throw Exception('Server error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('=== EXCEPTION CAUGHT in getWeather ===');
       // print('Exception: $e');
       // print('Exception Type: ${e.runtimeType}');

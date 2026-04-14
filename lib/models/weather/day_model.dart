@@ -71,7 +71,7 @@ class DayModel {
         conditionText: json['condition']['text'] is String ? json['condition']['text'] as String : json['condition']['text'].toString(),
         conditionIcon: json['condition']['icon'] is String ? json['condition']['icon'] as String : json['condition']['icon'].toString(),
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       // print('ERROR in DayModel.fromJson: $e');
       // print('Stack trace: $stackTrace');
       // print('JSON data: $json');
