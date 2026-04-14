@@ -1,5 +1,6 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
+import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/models/registration/user.dart' as app_user;
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
@@ -15,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = ProfileLocalizations.of(context);
     final user = ref.watch(authProviderProvider).currentAppUser;
 
     if (user == null) {
@@ -257,7 +258,7 @@ class _GuestBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final app = AppLocalization.of(context);
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -278,7 +279,7 @@ class _GuestBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.guestMode,
+                  app.guestMode,
                   style: const TextStyle(
                     color: Color(0xFF1A1A2E),
                     fontWeight: FontWeight.w600,

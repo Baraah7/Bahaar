@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
@@ -83,7 +83,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   Future<void> _startTrip() async {
     if (_service.hasActiveTrip) {
       if (mounted) {
-        showAppSnackBar(context, AppLocalizations.of(context)!.tripAlreadyActive);
+        showAppSnackBar(context, FishingLogLocalizations.of(context).tripAlreadyActive);
       }
       return;
     }
@@ -109,7 +109,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   Future<void> _resumeTrip(Trip trip) async {
     if (_service.hasActiveTrip) {
       if (mounted) {
-        showAppSnackBar(context, AppLocalizations.of(context)!.endActiveTripFirst);
+        showAppSnackBar(context, FishingLogLocalizations.of(context).endActiveTripFirst);
       }
       return;
     }
@@ -117,12 +117,12 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     await _loadTrips();
     _startTicker();
     if (mounted) {
-      showAppSnackBar(context, AppLocalizations.of(context)!.tripResumed);
+      showAppSnackBar(context, FishingLogLocalizations.of(context).tripResumed);
     }
   }
 
   Future<void> _endTrip() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final confirm = await _confirmDialog(
       title: l10n.endTrip,
       content: l10n.endCurrentTrip,
@@ -134,7 +134,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     _ticker?.cancel();
     await _loadTrips();
     if (mounted) {
-      showAppSnackBar(context, AppLocalizations.of(context)!.tripEndedAndSaved);
+      showAppSnackBar(context, FishingLogLocalizations.of(context).tripEndedAndSaved);
     }
   }
 
@@ -153,12 +153,12 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     );
     await _loadTrips();
     if (mounted) {
-      showAppSnackBar(context, '${result.species} ${AppLocalizations.of(context)!.logCatch.toLowerCase()}!');
+      showAppSnackBar(context, '${result.species} ${FishingLogLocalizations.of(context).logCatch.toLowerCase()}!');
     }
   }
 
   Future<void> _deleteTrip(Trip trip) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final confirm = await _confirmDialog(
       title: l10n.deleteTrip,
       content: l10n.deleteTripConfirmFinished(trip.title ?? ''),
@@ -173,7 +173,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   Future<void> _deleteActiveTrip() async {
     final activeTrip = _service.activeTrip;
     if (activeTrip == null) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final confirm = await _confirmDialog(
       title: l10n.deleteActiveTrip,
       content: l10n.deleteTripConfirm,
@@ -185,7 +185,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     _ticker?.cancel();
     await _loadTrips();
     if (mounted) {
-      showAppSnackBar(context, AppLocalizations.of(context)!.tripDeleted);
+      showAppSnackBar(context, FishingLogLocalizations.of(context).tripDeleted);
     }
   }
 
@@ -194,7 +194,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) {
-        final dl10n = AppLocalizations.of(ctx)!;
+        final dl10n = FishingLogLocalizations.of(ctx);
         return AlertDialog(
           backgroundColor: AppColors.cream,
           title: Text(dl10n.editTripTitle,
@@ -243,7 +243,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
     return showDialog<bool>(
       context: context,
       builder: (ctx) {
-        final dl10n = AppLocalizations.of(ctx)!;
+        final dl10n = FishingLogLocalizations.of(ctx);
         return AlertDialog(
           backgroundColor: AppColors.cream,
           title: Text(title,
@@ -269,7 +269,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   String _formatDuration(Duration d) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final locale = l10n.localeName;
     final isAr = locale == 'ar';
     final h = d.inHours;
@@ -284,7 +284,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   @override
   Widget build(BuildContext context) {
     final isGuest = ref.watch(authProviderProvider).isGuest;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
 
     if (isGuest) {
       return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -399,8 +399,8 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                         child: _trips.isEmpty
                             ? AppEmptyState(
                                 icon: Icons.anchor,
-                                title: AppLocalizations.of(context)!.noTripsYet,
-                                message: AppLocalizations.of(context)!.tapStartTrip,
+                                title: FishingLogLocalizations.of(context).noTripsYet,
+                                message: FishingLogLocalizations.of(context).tapStartTrip,
                                 iconColor: Colors.white.withValues(alpha: 0.5),
                               )
                             : RefreshIndicator(
@@ -478,7 +478,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Widget _buildActiveBanner(Trip trip) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final dur = trip.duration;
     final dStr = _formatDuration(dur);
     final catchCount = trip.catches.length;

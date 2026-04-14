@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'fish_card.dart';
 
 class MarketplaceTab extends StatefulWidget {
@@ -56,7 +56,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
 
     return Container(
       color: const Color(0xFFF5F7FA),
@@ -94,7 +94,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  Widget _buildSearchArea(AppLocalizations l10n) {
+  Widget _buildSearchArea(MarketplaceLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       child: Container(
@@ -146,7 +146,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  Widget _buildFilterRow(AppLocalizations l10n) {
+  Widget _buildFilterRow(MarketplaceLocalizations l10n) {
     final lang = Localizations.localeOf(context).languageCode;
     final hasFilters = _selectedTypeFilter != null ||
         _selectedConditionFilter != null ||
@@ -320,7 +320,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  void _showTypeFilterSheet(AppLocalizations l10n) {
+  void _showTypeFilterSheet(MarketplaceLocalizations l10n) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -402,7 +402,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  void _showConditionFilterSheet(AppLocalizations l10n) {
+  void _showConditionFilterSheet(MarketplaceLocalizations l10n) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -470,7 +470,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  void _showPriceFilterSheet(AppLocalizations l10n) {
+  void _showPriceFilterSheet(MarketplaceLocalizations l10n) {
     double tempMin = _minPrice ?? 0;
     double tempMax = _maxPrice ?? 50;
 
@@ -563,7 +563,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations l10n) {
+  Widget _buildEmptyState(MarketplaceLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

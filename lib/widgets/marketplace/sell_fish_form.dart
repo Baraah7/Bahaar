@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/fishing/trip_model.dart';
 import '../../app_start.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 
 class SellFishForm extends StatefulWidget {
   final String? currentUserId;
@@ -33,7 +33,7 @@ class SellFishForm extends StatefulWidget {
 }
 
 class _SellFishFormState extends State<SellFishForm> {
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  MarketplaceLocalizations get _l10n => MarketplaceLocalizations.of(context);
   String get _lang => Localizations.localeOf(context).languageCode;
 
   final _formKey = GlobalKey<FormState>();

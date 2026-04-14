@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:bahaar/models/ais_model.dart';
 import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:bahaar/models/map/feature_edit_state.dart';
@@ -501,7 +501,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   void _handleMapTap(TapPosition tapPosition, LatLng point) {
     if (!_maskInitialized) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MapLocalizations.of(context);
 
     // Handle feature edit mode
     if (_layerManager.isFeatureEditMode) {
@@ -1046,7 +1046,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   Future<void> _calculatePortToSeaRoute() async {
     if (_selectedPort == null || _seaDestination == null) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = MapLocalizations.of(context);
       _showMessage(l10n.stepTapPort, Colors.orange);
       return;
     }
@@ -1066,7 +1066,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     final landOrigin = _customLandOrigin ?? gpsLocation;
 
     if (landOrigin == null) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = MapLocalizations.of(context);
       _showMessage(l10n.currentLocationOnLandRequired, Colors.orange);
       return;
     }
@@ -1199,7 +1199,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   /// Show bottom sheet to let user choose which navigation mode to start.
   void _openNavModeSelection() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MapLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1272,7 +1272,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
       _seaOrigin = null;
       _seaDestination = null;
     });
-    _showMessage(AppLocalizations.of(context)!.tapSeaDeparture, Colors.blue);
+    _showMessage(MapLocalizations.of(context).tapSeaDeparture, Colors.blue);
   }
 
   void _startSeaToLandMode() {
@@ -1657,7 +1657,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   Future<void> _handleResetMask() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MapLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -2281,7 +2281,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
   }
 
-  Widget _buildNavigationStatusIndicator(AppLocalizations l10n) {
+  Widget _buildNavigationStatusIndicator(MapLocalizations l10n) {
     final ready = _maskInitialized;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -2446,7 +2446,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MapLocalizations.of(context);
 
     return Scaffold(
       body: Stack(

@@ -1,5 +1,3 @@
-import 'package:bahaar/l10n/app_localizations.dart';
-
 class AuthenticationValidation {
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {

@@ -1,5 +1,6 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
+import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/utilities/authentication/authentication_validation.dart';
 import 'package:bahaar/widgets/common/app_snackbar.dart';
@@ -42,8 +43,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleForgotPassword() async {
-    final l10n = AppLocalizations.of(context)!;
-    final lang = l10n.localeName;
+    final l10n = ProfileLocalizations.of(context);
+    final app = AppLocalization.of(context);
+    final lang = app.localeName;
     final emailCtrl = TextEditingController();
 
     final submitted = await showDialog<bool>(
@@ -85,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel, style: TextStyle(color: Color.fromARGB(255, 65, 53, 39).withValues(alpha: 0.6))),
+            child: Text(app.cancel, style: TextStyle(color: Color.fromARGB(255, 65, 53, 39).withValues(alpha: 0.6))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -120,7 +122,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProviderProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final app = AppLocalization.of(context);
+    final l10n = ProfileLocalizations.of(context);
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -158,7 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 22),
                         Center(
                           child: Text(
-                            l10n.appName,
+                            app.appName,
                             style: const TextStyle(
                               fontFamily: 'Zain',
                               fontSize: 34,
@@ -171,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 8),
                         Center(
                           child: Text(
-                            'Ready to continue your journey?\nYour path is right here.',
+                            l10n.loginSubtitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Zain',
@@ -190,14 +193,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               widgets.AuthField(
                                 controller: _emailCtrl,
-                                label: 'Enter email',
+                                label: l10n.enterEmail,
                                 keyboardType: TextInputType.emailAddress,
                                 validator: AuthenticationValidation.validateEmail,
                               ),
                               const SizedBox(height: 14),
                               widgets.AuthField(
                                 controller: _passCtrl,
-                                label: 'Password',
+                                label: l10n.password,
                                 obscure: _obscure,
                                 validator: AuthenticationValidation.validatePassword,
                                 suffixIcon: IconButton(
@@ -221,13 +224,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: GestureDetector(
-                            onTap: () => ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text('Password reset coming soon'),
-                              behavior: SnackBarBehavior.floating,
-                            )),
+                            onTap: _handleForgotPassword,
                             child: Text(
-                              'Forgot password?',
+                              l10n.forgotPassword,
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 fontSize: 14,
@@ -242,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         // ── Log In button ─────────────────────────────────────
                         AuthGradientButton(
-                          label: 'Log In',
+                          label: l10n.logIn,
                           isLoading: auth.isLoading,
                           onPressed: auth.isLoading ? null : _handleLogin,
                         ),
@@ -255,7 +254,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Text(
-                              'OR',
+                              l10n.orDivider,
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 color: Colors.white.withValues(alpha: 0.75),
@@ -273,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: GestureDetector(
                             onTap: auth.isLoading ? null : _handleGuest,
                             child: Text(
-                              'Continue as Guest',
+                              l10n.continueAsGuest,
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 fontSize: 14,
@@ -292,7 +291,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              "Don't have an account? ",
+                              l10n.dontHaveAccount,
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 fontSize: 14,
@@ -306,7 +305,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     builder: (_) => const SignUpScreen()),
                               ),
                               child: Text(
-                                'Sign Up',
+                                l10n.signUp,
                                 style: TextStyle(
                                   fontFamily: 'Zain',
                                   fontSize: 14,

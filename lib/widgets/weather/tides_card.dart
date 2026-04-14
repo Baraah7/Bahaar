@@ -63,7 +63,7 @@ class _TideRow extends StatelessWidget {
     final color = isHigh ? _tideBlue : _tideLow;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           Container(

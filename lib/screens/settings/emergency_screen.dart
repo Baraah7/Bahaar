@@ -1,5 +1,5 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/settings/settings_localizations.dart';
 import 'package:bahaar/services/sos_service.dart';
 import 'package:bahaar/widgets/map/sos_button.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +25,7 @@ class EmergencyScreen extends StatelessWidget {
     ('rule6Title', 'rule6Body'),
   ];
 
-  void _copyNumber(BuildContext context, String number, AppLocalizations l10n) {
+  void _copyNumber(BuildContext context, String number, SettingsLocalizations l10n) {
     Clipboard.setData(ClipboardData(text: number));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(l10n.phoneNumberCopied),
@@ -36,7 +36,7 @@ class EmergencyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = SettingsLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -181,7 +181,7 @@ class EmergencyScreen extends StatelessWidget {
     );
   }
 
-  String _localizedContactLabel(AppLocalizations l10n, String key) {
+  String _localizedContactLabel(SettingsLocalizations l10n, String key) {
     switch (key) {
       case 'coastGuard': return l10n.coastGuard;
       case 'marineRescue': return l10n.marineRescue;
@@ -191,7 +191,7 @@ class EmergencyScreen extends StatelessWidget {
     }
   }
 
-  String _localizedRuleTitle(AppLocalizations l10n, String key) {
+  String _localizedRuleTitle(SettingsLocalizations l10n, String key) {
     switch (key) {
       case 'rule1Title': return l10n.rule1Title;
       case 'rule2Title': return l10n.rule2Title;
@@ -203,7 +203,7 @@ class EmergencyScreen extends StatelessWidget {
     }
   }
 
-  String _localizedRuleBody(AppLocalizations l10n, String key) {
+  String _localizedRuleBody(SettingsLocalizations l10n, String key) {
     switch (key) {
       case 'rule1Body': return l10n.rule1Body;
       case 'rule2Body': return l10n.rule2Body;

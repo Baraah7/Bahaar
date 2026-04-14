@@ -22,16 +22,24 @@ class WeatherCompactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      height: 130,
+      height: 140,
       decoration: WeatherStyles.cardDecoration(radius: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, color: accentColor, size: 18),
               const SizedBox(width: 6),
-              Text(title, style: WeatherStyles.labelStyle),
+              Expanded(
+                child: Text(
+                  title,
+                  style: WeatherStyles.labelStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           const Spacer(),

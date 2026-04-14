@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 
 ImageProvider _resolveImage(String path) {
@@ -47,7 +47,7 @@ class FishCard extends StatelessWidget {
   }
 
   Widget _buildImageSection(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
     final lang = Localizations.localeOf(context).languageCode;
 
     return Stack(
@@ -161,7 +161,7 @@ class FishCard extends StatelessWidget {
   String _n(String value, String lang) => arabicN(value, lang);
 
   Widget _buildInfoSection(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     final isAr = lang == 'ar';
 

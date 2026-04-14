@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'order_card.dart';
 
 class OrdersTab extends StatelessWidget {
@@ -17,7 +17,7 @@ class OrdersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
 
     if (currentUserId == null) {
       return _buildLoginPrompt(context, l10n);
@@ -58,7 +58,7 @@ class OrdersTab extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginPrompt(BuildContext context, AppLocalizations l10n) {
+  Widget _buildLoginPrompt(BuildContext context, MarketplaceLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +85,7 @@ class OrdersTab extends StatelessWidget {
     );
   }
 
-  Widget _buildOrdersTabBar(int sellerCount, int buyerCount, AppLocalizations l10n) {
+  Widget _buildOrdersTabBar(int sellerCount, int buyerCount, MarketplaceLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
@@ -132,7 +132,7 @@ class OrdersTab extends StatelessWidget {
 class _OrdersList extends StatelessWidget {
   final List<Order> orders;
   final bool isSeller;
-  final AppLocalizations l10n;
+  final MarketplaceLocalizations l10n;
   final FishMarketplaceService marketplaceService;
 
   const _OrdersList({

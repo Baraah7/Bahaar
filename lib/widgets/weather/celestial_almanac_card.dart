@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bahaar/utilities/cn/celestial_calculator.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 
 /// Displays sunrise, solar noon, sunset, moonrise and moonset times.
 class CelestialAlmanacCard extends StatelessWidget {
@@ -34,14 +34,14 @@ class CelestialAlmanacCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = WeatherLocalizations.of(context);
     final isAr = l10n.localeName == 'ar';
     final illuminationStr =
         '${_n(lunar.illumination.toStringAsFixed(0), isAr)}%';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(24),

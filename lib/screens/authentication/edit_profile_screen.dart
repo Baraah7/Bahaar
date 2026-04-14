@@ -1,5 +1,5 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
 import 'package:bahaar/widgets/common/card_divider.dart';
@@ -64,7 +64,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = ProfileLocalizations.of(context);
     final user = ref.watch(authProviderProvider).currentAppUser;
     final fullName =
         '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();

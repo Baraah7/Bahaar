@@ -19,6 +19,9 @@ import 'package:bahaar/services/offline/database_service.dart';
 import 'package:bahaar/services/notifications/notification_service.dart';
 import 'package:bahaar/services/notifications/weather_monitor.dart';
 import 'l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
+import 'package:bahaar/l10n/settings/settings_localizations.dart';
+import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'app_start.dart';
 
 Future<void> main() async {
@@ -86,7 +89,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalization.of(context);
 
     final pageTitles = [
       l10n.marketplace,
@@ -94,7 +97,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       l10n.weather,
       l10n.fishRecognition,
       l10n.fishingLog,
-      'Sextant',
+      l10n.celestialNavigation,
     ];
 
     return Scaffold(
@@ -139,14 +142,16 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               }
             },
             itemBuilder: (ctx) {
-              final ml10n = AppLocalizations.of(ctx)!;
+              final ml10n = AppLocalization.of(ctx);
+              final sl10n = SettingsLocalizations.of(ctx);
+              final pl10n = ProfileLocalizations.of(ctx);
               return [
                 PopupMenuItem(
                   value: 'emergency',
                   child: Row(children: [
                     const Icon(Icons.sos_rounded, color: AppColors.red, size: 22),
                     const SizedBox(width: 12),
-                    Text(ml10n.emergency,
+                    Text(sl10n.emergency,
                         style: const TextStyle(
                             color: AppColors.red,
                             fontWeight: FontWeight.w600)),
@@ -168,7 +173,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                     const Icon(Icons.person_outline,
                         color: AppColors.primary, size: 22),
                     const SizedBox(width: 12),
-                    Text(ml10n.profile,
+                    Text(pl10n.profile,
                         style: const TextStyle(color: AppColors.primary)),
                   ]),
                 ),
@@ -211,32 +216,32 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.sailing),
-            label: l10n.marketplace,
+            label: pageTitles[0],
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.map),
-            label: l10n.fishingMap,
+            label: pageTitles[1],
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.cloud),
-            label: l10n.weather,
+            label: pageTitles[2],
             backgroundColor: AppColors.accent,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.camera_alt),
-            label: l10n.fishRecognition,
+            label: pageTitles[3],
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.anchor),
-            label: l10n.fishingLog,
+            label: pageTitles[4],
             backgroundColor: AppColors.primary,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.explore),
-            label: l10n.celestialNavigation,
+            label: pageTitles[5],
             backgroundColor: AppColors.primary,
           ),
         ],

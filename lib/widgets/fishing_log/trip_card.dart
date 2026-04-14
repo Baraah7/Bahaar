@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 
@@ -37,7 +37,7 @@ class TripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final lang = l10n.localeName;
     final locale = lang == 'ar' ? 'ar' : 'en';
     final dateStr = DateFormat('EEE d MMM yyyy', locale).format(trip.startTime.toLocal());
