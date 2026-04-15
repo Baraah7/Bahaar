@@ -14,7 +14,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
     'advice': 'يتواجد قرب الشعاب المرجانية، ينشط صباحاً وغروباً',
   },
   {
-    'id': 'rubyan',
+    'id': 'shrimp',
     'nameAr': 'ربيان',
     'nameEn': 'Shrimp',
     'scientific': 'Penaeus semisulcatus',
@@ -47,7 +47,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
     'advice': 'يتواجد قرب الأعشاب البحرية',
   },
   {
-    'id': 'ghabgab',
+    'id': 'crab',
     'nameAr': 'غبغب',
     'nameEn': 'Blue Crab',
     'scientific': 'Portunus pelagicus',
@@ -58,7 +58,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
     'advice': 'يُصطاد بالقراقير والحظرة',
   },
   {
-    'id': 'sheri',
+    'id': 'emperor',
     'nameAr': 'شعري',
     'nameEn': 'Emperor Fish',
     'scientific': 'Lethrinus nebulosus',
@@ -69,7 +69,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
     'advice': 'ينشط في الخريف، يفضل الأعماق المتوسطة',
   },
   {
-    'id': 'sheum',
+    'id': 'bream',
     'nameAr': 'شعوم',
     'nameEn': 'Bream',
     'scientific': 'Acanthopagrus bifasciatus',
@@ -80,7 +80,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
     'advice': 'متوفر طوال العام، ينشط في الصيف',
   },
   {
-    'id': 'zebaidi',
+    'id': 'silver_pomfret',
     'nameAr': 'زبيدي',
     'nameEn': 'Silver Pomfret',
     'scientific': 'Pampus argenteus',
