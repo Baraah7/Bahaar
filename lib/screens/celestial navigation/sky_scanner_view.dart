@@ -150,7 +150,24 @@ class _SkyScannerViewState extends State<SkyScannerView> {
                           fontSize: 14),
                     ),
                     const Spacer(),
-                    if (_processing)
+                    if (widget.service.isSimulated)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade700,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'SIMULATION',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8),
+                        ),
+                      )
+                    else if (_processing)
                       Container(
                         width: 8,
                         height: 8,

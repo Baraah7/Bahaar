@@ -180,7 +180,11 @@ class VisionBridge {
   String? loadLibrary() {
     if (_loaded) return null;
     try {
-      final lib = DynamicLibrary.open(_libraryName());
+      final libName = _libraryName();
+      if (libName == null) {
+        return 'DS-1: Vision engine is not supported on ${Platform.operatingSystem}.';
+      }
+      final lib = DynamicLibrary.open(libName);
 
       _init = lib
           .lookup<NativeFunction<_InitNative>>('init_vision_engine')
@@ -360,10 +364,9 @@ class VisionBridge {
 
   // ── Internal ────────────────────────────────────────────────────────────────
 
-  static String _libraryName() {
+  static String? _libraryName() {
     if (Platform.isAndroid) return 'libds1_vision.so';
     if (Platform.isIOS)     return 'ds1_vision.framework/ds1_vision';
-    throw UnsupportedError(
-        'DS-1 vision engine is not supported on ${Platform.operatingSystem}.');
+    return null; // unsupported platform — caller treats null as "unavailable"
   }
 }

@@ -5,6 +5,28 @@ import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'vision_bridge.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Simulation helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Pre-baked synthetic star centroids (pixel coords for a 1920×1080 frame).
+/// Positions are spread across the frame in a realistic constellation-like
+/// pattern so the StarIdentifier triangle matcher can exercise real code paths.
+const List<StarCentroid> _kSimStars = [
+  StarCentroid( 960.0,  540.0),   // frame centre
+  StarCentroid(1120.0,  380.0),
+  StarCentroid( 780.0,  420.0),
+  StarCentroid(1050.0,  680.0),
+  StarCentroid( 650.0,  600.0),
+  StarCentroid(1300.0,  490.0),
+  StarCentroid( 500.0,  350.0),
+  StarCentroid(1450.0,  720.0),
+  StarCentroid( 400.0,  730.0),
+  StarCentroid(1200.0,  250.0),
+  StarCentroid( 820.0,  820.0),
+  StarCentroid(1550.0,  310.0),
+];
+
 // ── Tuning constants (from blueprint) ────────────────────────────────────────
 const Duration _kBurstDuration  = Duration(seconds: 1);
 const Duration _kCoolDuration   = Duration(seconds: 1);
@@ -83,12 +105,15 @@ class CameraService {
   CameraService();
 
   // ── Public state ────────────────────────────────────────────────────────────
-  bool get isAvailable    => _cameraAvailable;
+  bool get isAvailable    => _cameraAvailable || _simMode;
   bool get isCapturing    => _capturing;
   String? get initError   => _initError;
 
+  /// True when running in simulation mode (no real camera or native lib).
+  bool get isSimulated => _simMode;
+
   /// Exposes the underlying [CameraController] so the UI can show a preview.
-  /// Returns `null` before [initialize] completes successfully.
+  /// Returns `null` before [initialize] completes successfully, or in sim mode.
   CameraController? get controller => _cameraCtrl;
 
   final _resultsController =
@@ -102,6 +127,7 @@ class CameraService {
   bool               _cameraAvailable = false;
   bool               _capturing       = false;
   String?            _initError;
+  bool               _simMode         = false;
 
   // IMU — latest gyroscope reading
   ImuTag _latestImu = ImuTag(
@@ -113,6 +139,7 @@ class CameraService {
   // Duty-cycle state
   bool   _inBurst     = false;
   Timer? _dutyTimer;
+  Timer? _simTimer;
 
   // ── Calibration parameters ───────────────────────────────────────────────────
   double _focalMm   = _kDefaultFocalMm;
@@ -195,17 +222,36 @@ class CameraService {
     return null;
   }
 
+  /// Enter simulation mode — no camera or native library needed.
+  ///
+  /// Fires synthetic [CameraFrameResult]s on a 2-second tick so the full
+  /// pipeline (SkyScannerView → StarIdentifier → ConfidenceEngine) runs
+  /// exactly as in production.  Call instead of [initialize] for testing.
+  ///
+  /// Always returns `null` (success).
+  Future<String?> initSimulation() async {
+    _simMode = true;
+    _cameraAvailable = false; // no real camera
+    return null;
+  }
+
   // ── Capture control ─────────────────────────────────────────────────────────
 
   Future<void> startCapture() async {
-    if (!_cameraAvailable || _capturing) return;
+    if ((!_cameraAvailable && !_simMode) || _capturing) return;
     _capturing = true;
-    _startBurst();
+    if (_simMode) {
+      _startSimulation();
+    } else {
+      _startBurst();
+    }
   }
 
   Future<void> stopCapture() async {
     if (!_capturing) return;
     _capturing = false;
+    _simTimer?.cancel();
+    _simTimer = null;
     _dutyTimer?.cancel();
     _dutyTimer = null;
     try {
@@ -218,8 +264,41 @@ class CameraService {
     stopCapture();
     _gyroSub?.cancel();
     _cameraCtrl?.dispose();
-    VisionBridge.instance.shutdown();
+    if (!_simMode) VisionBridge.instance.shutdown();
     _resultsController.close();
+  }
+
+  // ── Simulation tick ───────────────────────────────────────────────────────────
+
+  void _startSimulation() {
+    // Emit one frame immediately, then every 2 seconds.
+    _emitSimFrame();
+    _simTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (_capturing) _emitSimFrame();
+    });
+  }
+
+  void _emitSimFrame() {
+    final imu = ImuTag(
+      gyroX: 0.01, gyroY: 0.01, gyroZ: 0.00,
+      timestamp: DateTime.now(),
+    );
+
+    _resultsController.add(CameraFrameResult(
+      stars: StarDetectionResult(
+        stars: _kSimStars,
+        frameRejected: false,
+        reason: '',
+      ),
+      horizon: const HorizonResult(
+        angleDeg: 0.5,
+        offsetPx: 8.0,
+        reason: '',
+      ),
+      engineConfidence: 82.0,
+      imuTag: imu,
+      motionBlurred: false,
+    ));
   }
 
   // ── Duty cycling ─────────────────────────────────────────────────────────────

@@ -274,6 +274,14 @@ class _CelestialNavigationScreenState
     }
   }
 
+  /// Falls back to simulation mode when the real camera / native lib are
+  /// unavailable (e.g. during development or on unsupported hardware).
+  Future<void> _initSimulation() async {
+    setState(() => _scannerError = null);
+    await _cameraService.initSimulation();
+    if (mounted) setState(() => _scannerReady = true);
+  }
+
   /// Initialises the camera (if needed) then pushes [SkyScannerView].
   /// When the user closes the scanner the results are applied to state and
   /// the confidence-engine inputs are auto-filled.
@@ -524,12 +532,43 @@ class _CelestialNavigationScreenState
             title: 'Sky Scanner (DS-1 Camera)',
             icon: Icons.camera_alt_outlined,
             children: [
-              if (_scannerError != null)
+              if (_scannerError != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     _scannerError!,
                     style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+                // Offer simulation when hardware is unavailable
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.amber.shade800,
+                      side: BorderSide(color: Colors.amber.shade700),
+                    ),
+                    icon: const Icon(Icons.science_outlined, size: 18),
+                    label: const Text('Run Simulation'),
+                    onPressed: _initSimulation,
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (_cameraService.isSimulated)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          size: 14, color: Colors.amber.shade700),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Simulation active — synthetic star data',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.amber.shade800),
+                      ),
+                    ],
                   ),
                 ),
               // Open scanner button
