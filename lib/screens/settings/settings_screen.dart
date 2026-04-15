@@ -1,5 +1,5 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
 import 'package:bahaar/providers/language/language_provider.dart';
 import 'package:bahaar/screens/authentication/profile_screen.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
@@ -16,7 +16,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(languageProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalization.of(context);
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final email = firebaseUser?.email;
     final isGuest = firebaseUser?.isAnonymous ?? true;
@@ -131,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _confirmSignOut(
-      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+      BuildContext context, WidgetRef ref, AppLocalization l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -180,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showPrivacyPolicy(BuildContext context, AppLocalizations l10n) {
+  void _showPrivacyPolicy(BuildContext context, AppLocalization l10n) {
     showDialog(
       context: context,
       builder: (_) => Dialog(

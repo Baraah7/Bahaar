@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 
 Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, Function(PaymentMethod) onChanged, {required BuildContext context}) {
   final isSelected = selectedPayment == method;
@@ -70,8 +70,8 @@ Widget buildPaymentOption(PaymentMethod method, PaymentMethod? selectedPayment, 
                 const SizedBox(height: 2),
                 Text(
                   method == PaymentMethod.cash
-                      ? AppLocalizations.of(context)!.payWithCashOnDelivery
-                      : AppLocalizations.of(context)!.payInstantlyViaBenefitPay,
+                      ? MarketplaceLocalizations.of(context).payWithCashOnDelivery
+                      : MarketplaceLocalizations.of(context).payInstantlyViaBenefitPay,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade500,

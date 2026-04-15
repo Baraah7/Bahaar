@@ -2,14 +2,14 @@
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 
 class OrderCard extends StatelessWidget {
   final Order order;
   final FishListing? listing;
   final bool isSeller;
-  final AppLocalizations l10n;
+  final MarketplaceLocalizations l10n;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onComplete;

@@ -1,6 +1,6 @@
 ﻿import 'dart:io';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fish_recognition/fish_recognition_localizations.dart';
 import 'package:bahaar/models/fishing/fish_probability_model.dart';
 import 'package:bahaar/providers/fish%20recognition/fish_classification_provider.dart';
 import 'package:bahaar/providers/language/language_provider.dart';
@@ -107,7 +107,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     final classificationState = ref.watch(fishClassificationProvider);
     final isInitialized = classificationState.isInitialized;
     final hasError = classificationState.error != null && !isInitialized;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishRecognitionLocalizations.of(context);
 
     if (classificationState.result != null) {
       _animationController.forward();
@@ -132,9 +132,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             child: hasError
                 ? AppEmptyState(
                     icon: Icons.error_outline_rounded,
-                    title: AppLocalizations.of(context)!.failedToLoadModel,
+                    title: FishRecognitionLocalizations.of(context).failedToLoadModel,
                     message: classificationState.error,
-                    buttonText: AppLocalizations.of(context)!.tryAgain,
+                    buttonText: FishRecognitionLocalizations.of(context).tryAgain,
                     onButtonPressed: () => ref.read(fishClassificationProvider.notifier).initialize(),
                     iconColor: Colors.white,
                   )
@@ -149,7 +149,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   Widget _buildMainContent(
     BuildContext context,
     dynamic classificationState,
-    AppLocalizations l10n,
+    FishRecognitionLocalizations l10n,
   ) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -180,7 +180,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildUploadArea(dynamic classificationState, AppLocalizations l10n) {
+  Widget _buildUploadArea(dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -298,7 +298,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildImagePreview(dynamic classificationState, AppLocalizations l10n) {
+  Widget _buildImagePreview(dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -357,7 +357,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildResultCard(BuildContext context, dynamic result, AppLocalizations l10n) {
+  Widget _buildResultCard(BuildContext context, dynamic result, FishRecognitionLocalizations l10n) {
     final isConfident = result.isConfident;
     final confidence = result.confidence as double;
 
@@ -680,7 +680,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildActionButtons(dynamic classificationState, AppLocalizations l10n) {
+  Widget _buildActionButtons(dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -769,7 +769,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     'Shrimp': 'assets/images/Shrimp.jpeg',
   };
 
-  Widget _buildSupportedSpecies(AppLocalizations l10n) {
+  Widget _buildSupportedSpecies(FishRecognitionLocalizations l10n) {
     final isArabic = ref.watch(languageProvider).languageCode == 'ar';
 
     return Container(

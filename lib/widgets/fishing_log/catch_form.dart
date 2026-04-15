@@ -4,7 +4,7 @@ import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/screens/fishing log/location_picker_screen.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
 import 'package:bahaar/widgets/common/section_label.dart';
 import 'package:bahaar/widgets/common/card_divider.dart';
@@ -49,7 +49,7 @@ class _CatchFormState extends State<CatchForm> {
     ('قبقب', 'Crab'),
   ];
 
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  FishingLogLocalizations get _l10n => FishingLogLocalizations.of(context);
   bool get _isAr => _l10n.localeName == 'ar';
 
   @override

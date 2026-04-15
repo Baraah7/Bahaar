@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../app_start.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'buildSellerCard.dart';
 import 'buildPaymentOption.dart';
 
@@ -42,7 +42,7 @@ class FishDetailsSheet extends StatefulWidget {
 }
 
 class _FishDetailsSheetState extends State<FishDetailsSheet> {
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  MarketplaceLocalizations get _l10n => MarketplaceLocalizations.of(context);
 
   String _n(String value) {
     final lang = Localizations.localeOf(context).languageCode;

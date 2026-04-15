@@ -1,5 +1,6 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
+import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/utilities/authentication/authentication_validation.dart';
 import 'package:bahaar/widgets/common/app_snackbar.dart';
@@ -49,7 +50,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       password:  _passCtrl.text,
     );
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = ProfileLocalizations.of(context);
     if (auth.error != null) {
       showAppSnackBar(context, auth.error!, isError: true);
     } else {
@@ -60,7 +61,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProviderProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = ProfileLocalizations.of(context);
+    final app = AppLocalization.of(context);
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -99,7 +101,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         const SizedBox(height: 22),
                         Center(
                           child: Text(
-                            l10n.appName,
+                            app.appName,
                             style: const TextStyle(
                               fontFamily: 'Zain',
                               fontSize: 34,
@@ -248,7 +250,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Text(
-                                l10n.logIn,
+                                app.logIn,
                                 style: TextStyle(
                                   fontFamily: 'Zain',
                                   fontSize: 14,

@@ -1,5 +1,5 @@
 ﻿import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/marketplace/marketplace_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/models/marketplace/fish_listing.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
@@ -102,7 +102,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context)!;
     final authProvider = ref.watch(authProviderProvider);
     final user = authProvider.currentAppUser;
     final fullName = user != null
@@ -160,7 +160,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     );
   }
 
-  Widget _buildGuestLocked(AppLocalizations l10n) {
+  Widget _buildGuestLocked(MarketplaceLocalizations l10n) {
     return Container(
       color: Colors.grey.shade50,
       child: Center(
@@ -214,7 +214,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     );
   }
 
-  Widget _buildGradientHeader(AppLocalizations l10n) {
+  Widget _buildGradientHeader(MarketplaceLocalizations l10n) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -338,7 +338,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   ) async {
     final authProvider = ref.read(authProviderProvider);
     final user = authProvider.currentAppUser;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context)!;
     final lang = Localizations.localeOf(context).languageCode;
 
     if (user == null) {
@@ -370,7 +370,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
       showDialog(
         context: context,
         builder: (ctx) {
-          final dl10n = AppLocalizations.of(ctx)!;
+          final dl10n = MarketplaceLocalizations.of(ctx)!;
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: Row(
@@ -460,7 +460,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   Future<void> _deleteListing(FishListing listing) async {
     await _marketplaceService.removeListing(listing.id);
     if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = MarketplaceLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.listingDeleted),
@@ -475,7 +475,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   }
 
   Future<void> _onListingSubmitted(
-      FishListing listing, AppLocalizations l10n) async {
+      FishListing listing, MarketplaceLocalizations l10n) async {
     await _marketplaceService.addListing(listing);
     _marketplaceService.setCurrentUser(listing.sellerId);
     setState(() {});

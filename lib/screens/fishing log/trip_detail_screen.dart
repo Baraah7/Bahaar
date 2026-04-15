@@ -1,5 +1,5 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
@@ -38,7 +38,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _addCatch() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final trip = widget.trip;
     DateTime? catchTime;
     if (trip.endTime != null) {
@@ -71,7 +71,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     });
   }
 
-  Future<DateTime?> _pickCatchTime(DateTime start, DateTime end, AppLocalizations l10n) async {
+  Future<DateTime?> _pickCatchTime(DateTime start, DateTime end, FishingLogLocalizations l10n) async {
     final midMinutes = start.difference(end).inMinutes.abs() ~/ 2;
     final initialTime = TimeOfDay.fromDateTime(start.add(Duration(minutes: midMinutes)));
 
@@ -129,7 +129,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _deleteCatch(CatchEntry entry) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -164,7 +164,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final locale = l10n.localeName;
     final dateStr = DateFormat('EEE d MMM yyyy', locale == 'ar' ? 'ar' : 'en').format(widget.trip.startTime.toLocal());
     final startStr = _fmt(widget.trip.startTime, locale);
@@ -300,7 +300,7 @@ class _CatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final locale = l10n.localeName;
     final timeStr = arabicN(DateFormat('HH:mm').format(entry.timestamp.toLocal()), locale);
 
@@ -503,7 +503,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
     }
   }
 
-  String _localizedSpecies(AppLocalizations l10n, int index) {
+  String _localizedSpecies(FishingLogLocalizations l10n, int index) {
     switch (_quickSpeciesKeys[index]) {
       case 'quickSpeciesHamour':   return l10n.quickSpeciesHamour;
       case 'quickSpeciesSafi':     return l10n.quickSpeciesSafi;
@@ -528,7 +528,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = FishingLogLocalizations.of(context);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       decoration: const BoxDecoration(

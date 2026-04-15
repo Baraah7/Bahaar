@@ -1,6 +1,6 @@
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/core/constants/species_data.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/fish_recognition/fish_recognition_localizations.dart';
 import 'package:bahaar/services/bahaar_ai_service.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
@@ -41,7 +41,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
   static const _teal = Color(0xFF0D4F54);
   static const _tealLight = Color(0xFF0E7490);
 
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  FishRecognitionLocalizations get _l10n => FishRecognitionLocalizations.of(context);
   bool get _isAr => _l10n.localeName == 'ar';
 
   String _n(String value) => arabicN(value, _l10n.localeName);

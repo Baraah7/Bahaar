@@ -1,5 +1,5 @@
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 import 'package:bahaar/models/weather/tide_model.dart';
 import 'package:bahaar/models/weather/weather_response_model.dart';
 import 'package:bahaar/services/weather/world_tides_service.dart';
@@ -67,7 +67,7 @@ class _WeatherPageState extends State<Weather> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = WeatherLocalizations.of(context);
 
     return Container(
       decoration: const BoxDecoration(

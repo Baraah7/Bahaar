@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/tide_model.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/weather/weather_localizations.dart';
 import '../../utilities/cn/celestial_calculator.dart';
 import 'styles.dart';
 import 'weather_l10n_helper.dart';
@@ -17,7 +17,7 @@ import 'celestial_almanac_card.dart';
 class WeatherList extends StatelessWidget {
   final WeatherResponseModel weatherData;
   final List<TideEntry> tides;
-  final AppLocalizations l10n;
+  final WeatherLocalizations l10n;
 
   const WeatherList({
     super.key,

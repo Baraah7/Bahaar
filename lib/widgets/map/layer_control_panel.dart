@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
 import 'package:bahaar/widgets/map/geojson_layers.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/map/map_localizations.dart';
 
 /// Control panel widget for managing all map layers
 class LayerControlPanel extends StatefulWidget {
@@ -48,7 +48,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
 
   void _onLayerChange() => setState(() {});
 
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+  MapLocalizations get _l10n => MapLocalizations.of(context);
 
   MapLayerManager get lm => widget.layerManager;
 

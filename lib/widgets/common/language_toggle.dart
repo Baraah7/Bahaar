@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bahaar/providers/language/language_provider.dart';
-import 'package:bahaar/l10n/app_localizations.dart';
+import 'package:bahaar/l10n/app/app_localization.dart';
 
 class LanguageToggle extends ConsumerWidget {
   const LanguageToggle({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalization.of(context);
     return GestureDetector(
       onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
       child: Container(

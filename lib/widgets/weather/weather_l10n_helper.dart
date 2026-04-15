@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/weather/weather_localizations.dart';
 
-/// Wraps [AppLocalizations] with weather-specific locale helpers and
+/// Wraps [WeatherLocalizations] with weather-specific locale helpers and
 /// translation maps, so individual weather widgets stay free of boilerplate.
 class WeatherL10nHelper {
-  final AppLocalizations l10n;
+  final WeatherLocalizations l10n;
   const WeatherL10nHelper(this.l10n);
 
   // ── Translation maps ────────────────────────────────────────────────────────
