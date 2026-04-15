@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -55,15 +57,13 @@ class Port {
 
 /// Persistent metadata about a trip.  Never stores location data.
 class TripRecord {
-  final int?     id;
-  final int      departurePortId;
-  final DateTime startTime;
+  final int?      id;
+  final DateTime  startTime;
   final DateTime? endTime;
-  final bool     active;
+  final bool      active;
 
   const TripRecord({
     this.id,
-    required this.departurePortId,
     required this.startTime,
     this.endTime,
     required this.active,
@@ -71,20 +71,18 @@ class TripRecord {
 
   Map<String, dynamic> toMap() => {
     if (id != null) 'id': id,
-    'departure_port_id': departurePortId,
-    'start_time':        startTime.toIso8601String(),
-    'end_time':          endTime?.toIso8601String(),
-    'active':            active ? 1 : 0,
+    'start_time': startTime.toIso8601String(),
+    'end_time':   endTime?.toIso8601String(),
+    'active':     active ? 1 : 0,
   };
 
   factory TripRecord.fromMap(Map<String, dynamic> m) => TripRecord(
-    id:               m['id'] as int,
-    departurePortId:  m['departure_port_id'] as int,
-    startTime:        DateTime.parse(m['start_time'] as String),
-    endTime:          m['end_time'] != null
-                        ? DateTime.parse(m['end_time'] as String)
-                        : null,
-    active:           (m['active'] as int) == 1,
+    id:        m['id'] as int,
+    startTime: DateTime.parse(m['start_time'] as String),
+    endTime:   m['end_time'] != null
+                 ? DateTime.parse(m['end_time'] as String)
+                 : null,
+    active:    (m['active'] as int) == 1,
   );
 }
 
@@ -179,7 +177,7 @@ class TripDatabase {
 
   Future<Database> _open() async {
     final dbPath = await getDatabasesPath();
-    return openDatabase(
+    final db = await openDatabase(
       p.join(dbPath, 'trip_nav.db'),
       version: 1,
       onCreate: (db, _) async {
@@ -196,11 +194,10 @@ class TripDatabase {
 
         await db.execute('''
           CREATE TABLE trips (
-            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-            departure_port_id  INTEGER NOT NULL REFERENCES ports(id),
-            start_time         TEXT    NOT NULL,
-            end_time           TEXT,
-            active             INTEGER NOT NULL DEFAULT 1
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            start_time TEXT    NOT NULL,
+            end_time   TEXT,
+            active     INTEGER NOT NULL DEFAULT 1
           )
         ''');
 
@@ -225,6 +222,45 @@ class TripDatabase {
         ''');
       },
     );
+
+    // Seed ports from bundled seaports.json on first install.
+    await _seedPortsIfEmpty(db);
+
+    return db;
+  }
+
+  /// Seeds the ports table from assets/data/seaports.json the first time the
+  /// database is created (i.e. when the table is empty).  This makes all known
+  /// Bahrain ports available offline without any user action.
+  Future<void> _seedPortsIfEmpty(Database db) async {
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM ports'),
+    ) ?? 0;
+    if (count > 0) return; // already seeded
+
+    final raw = await rootBundle.loadString('assets/data/seaports.json');
+    final List<dynamic> list = json.decode(raw) as List<dynamic>;
+
+    final batch = db.batch();
+    final now = DateTime.now().toUtc().toIso8601String();
+    for (final item in list) {
+      final m = item as Map<String, dynamic>;
+      final name = (m['name'] as String?) ?? 'Unknown Port';
+      final lat  = (m['y_latitude']  as num?)?.toDouble()
+                ?? (m['location']?['lat'] as num?)?.toDouble();
+      final lng  = (m['x_longitude'] as num?)?.toDouble()
+                ?? (m['location']?['lon'] as num?)?.toDouble();
+      if (lat == null || lng == null) continue;
+
+      batch.insert('ports', {
+        'name':       name,
+        'lat':        lat,
+        'lng':        lng,
+        'notes':      'Seeded from map data',
+        'created_at': now,
+      });
+    }
+    await batch.commit(noResult: true);
   }
 
   // ── Ports (PERMANENT) ─────────────────────────────────────────────────────
@@ -261,21 +297,19 @@ class TripDatabase {
 
   // ── Trips ─────────────────────────────────────────────────────────────────
 
-  Future<TripRecord> startTrip(int departurePortId) async {
+  Future<TripRecord> startTrip() async {
     final db = await database;
 
     // Only one active trip at a time — safety invariant.
-    final existing = await db.query('trips',
-        where: 'active = 1', limit: 1);
+    final existing = await db.query('trips', where: 'active = 1', limit: 1);
     if (existing.isNotEmpty) {
       throw StateError(
           'DS-1: Cannot start a new trip while one is already active.');
     }
 
     final rec = TripRecord(
-      departurePortId: departurePortId,
-      startTime:       DateTime.now().toUtc(),
-      active:          true,
+      startTime: DateTime.now().toUtc(),
+      active:    true,
     );
     final id = await db.insert('trips', rec.toMap());
     return rec.copyWith(id: id);
@@ -313,6 +347,23 @@ class TripDatabase {
     return db.insert('waypoints', wp.toMap());
   }
 
+  /// Replaces the previous periodic waypoint with a new one in a single
+  /// transaction.  Used by the 10-minute timer so only one rolling position
+  /// fix is kept; the previous one is discarded before inserting the new one.
+  /// Returns the new waypoint's row id.
+  Future<int> replacePeriodicWaypoint(Waypoint wp, int? previousId) async {
+    final db = await database;
+    late int newId;
+    await db.transaction((txn) async {
+      if (previousId != null) {
+        await txn.delete('waypoints',
+            where: 'id = ?', whereArgs: [previousId]);
+      }
+      newId = await txn.insert('waypoints', wp.toMap());
+    });
+    return newId;
+  }
+
   Future<List<Waypoint>> getWaypoints(int tripId) async {
     final db = await database;
     final rows = await db.query('waypoints',
@@ -337,10 +388,9 @@ class TripDatabase {
 // Extension to allow copyWith on TripRecord
 extension TripRecordX on TripRecord {
   TripRecord copyWith({int? id, bool? active, DateTime? endTime}) => TripRecord(
-    id:               id       ?? this.id,
-    departurePortId:  departurePortId,
-    startTime:        startTime,
-    endTime:          endTime  ?? this.endTime,
-    active:           active   ?? this.active,
+    id:        id      ?? this.id,
+    startTime: startTime,
+    endTime:   endTime ?? this.endTime,
+    active:    active  ?? this.active,
   );
 }

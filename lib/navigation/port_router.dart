@@ -10,14 +10,12 @@ class RouteToPort {
   final Port   port;
   final double bearingDeg;    // true north bearing to port
   final double distanceNm;    // great-circle distance
-  final bool   isDeparture;   // true if this is the trip's departure port
   final String? warning;      // non-null if uncertainty makes routing unsafe
 
   const RouteToPort({
     required this.port,
     required this.bearingDeg,
     required this.distanceNm,
-    required this.isDeparture,
     this.warning,
   });
 
@@ -44,16 +42,14 @@ class PortRouter {
   static RouteToPort? routeTo({
     required LatLng fromPosition,
     required Port   destination,
-    int?            departurePortId,
     double          positionUncertaintyNm = 0.0,
   }) {
-    final dist = DeadReckoning.distanceNm(
-        fromPosition, LatLng(destination.lat, destination.lng));
+    final dest = LatLng(destination.lat, destination.lng);
+    final dist = DeadReckoning.distanceNm(fromPosition, dest);
 
     if (dist < 0.01) return null; // already at port
 
-    final bear = DeadReckoning.bearingDeg(
-        fromPosition, LatLng(destination.lat, destination.lng));
+    final bear = DeadReckoning.bearingDeg(fromPosition, dest);
 
     String? warning;
     if (positionUncertaintyNm >= kDrMaxReliableNm) {
@@ -65,25 +61,21 @@ class PortRouter {
     }
 
     return RouteToPort(
-      port:        destination,
-      bearingDeg:  bear,
-      distanceNm:  dist,
-      isDeparture: destination.id == departurePortId,
-      warning:     warning,
+      port:       destination,
+      bearingDeg: bear,
+      distanceNm: dist,
+      warning:    warning,
     );
   }
 
   /// Returns routes to ALL known ports sorted by distance, nearest first.
   ///
-  /// [maxResults]  — cap the list (default 5).
-  /// [departurePortId] — marks the departure port in results so it can be
-  ///                     highlighted even if it isn't the nearest.
+  /// [maxResults] — cap the list (default 5).
   static List<RouteToPort> nearestPorts({
-    required LatLng    fromPosition,
+    required LatLng     fromPosition,
     required List<Port> allPorts,
-    int                maxResults       = 5,
-    int?               departurePortId,
-    double             positionUncertaintyNm = 0.0,
+    int                 maxResults            = 5,
+    double              positionUncertaintyNm = 0.0,
   }) {
     final routes = <RouteToPort>[];
 
@@ -91,7 +83,6 @@ class PortRouter {
       final r = routeTo(
         fromPosition:          fromPosition,
         destination:           port,
-        departurePortId:       departurePortId,
         positionUncertaintyNm: positionUncertaintyNm,
       );
       if (r != null) routes.add(r);

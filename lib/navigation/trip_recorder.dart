@@ -11,10 +11,13 @@ import 'trip_database.dart';
 // Configuration
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// How often to attempt a periodic waypoint save.
-const Duration _kRecordInterval = Duration(minutes: 5);
+/// How often the rolling GPS save fires.  Each tick replaces the previous
+/// periodic fix — only one rolling position is ever kept in the database.
+const Duration _kRecordInterval = Duration(minutes: 1);
 
 /// Minimum distance traveled (NM) before saving an extra waypoint mid-interval.
+/// These distance-triggered saves are NOT replaced — they are permanent for the
+/// session and represent critical route fixes for the celestial nav pairing.
 const double _kMinDistanceNm = 0.5;
 
 /// GPS is considered "lost" after this many consecutive failures.
@@ -59,7 +62,6 @@ class LivePosition {
 
 class TripRecorder extends ChangeNotifier {
   TripRecorder._() {
-    // Listen for celestial fixes from DS-1
     CelestialFixNotifier.instance.addListener(_onCelestialFix);
   }
 
@@ -67,15 +69,20 @@ class TripRecorder extends ChangeNotifier {
 
   // ── Public state ────────────────────────────────────────────────────────
 
-  TripStatus     get status         => _status;
-  TripRecord?    get activeTrip     => _trip;
-  Port?          get departurePort  => _departurePort;
-  LivePosition?  get currentPosition => _currentPos;
-  DeadReckoningFix? get drFix       => _drFix;
-  List<Waypoint> get waypoints      => List.unmodifiable(_waypoints);
+  TripStatus        get status          => _status;
+  TripRecord?       get activeTrip      => _trip;
+  LivePosition?     get currentPosition => _currentPos;
+  DeadReckoningFix? get drFix           => _drFix;
+  List<Waypoint>    get waypoints       => List.unmodifiable(_waypoints);
 
-  /// Routes to ports — recomputed whenever the position updates.
-  List<RouteToPort> get portRoutes  => List.unmodifiable(_portRoutes);
+  /// Routes to the nearest ports — recomputed whenever position updates.
+  List<RouteToPort> get portRoutes => List.unmodifiable(_portRoutes);
+
+  /// The port the user has chosen to navigate toward, if any.
+  Port? get selectedRouteTarget => _selectedRouteTarget;
+
+  /// The active routing instruction for [selectedRouteTarget], or null.
+  RouteToPort? get activeRoute => _activeRoute;
 
   /// Non-null during DR mode when uncertainty is ≥ warning threshold.
   String? get drAdvisory => _drFix != null &&
@@ -87,12 +94,13 @@ class TripRecorder extends ChangeNotifier {
 
   TripStatus    _status = TripStatus.idle;
   TripRecord?   _trip;
-  Port?         _departurePort;
   List<Port>    _allPorts = [];
   final List<Waypoint> _waypoints = [];
   List<RouteToPort> _portRoutes = [];
 
-  // Live position and DR state
+  Port?         _selectedRouteTarget;
+  RouteToPort?  _activeRoute;
+
   LivePosition?       _currentPos;
   DeadReckoningFix?   _drFix;
   LatLng?             _lastGoodGpsPos;
@@ -103,29 +111,33 @@ class TripRecorder extends ChangeNotifier {
   int                 _gpsFailCount   = 0;
   LatLng?             _lastRecordedPos;
 
-  // Location service
+  // The row-id of the most recent PERIODIC save — replaced on the next tick.
+  int? _lastPeriodicWaypointId;
+
   final _location = Location();
   StreamSubscription<LocationData>? _locationSub;
   Timer? _recordTimer;
 
   // ── Trip lifecycle ───────────────────────────────────────────────────────
 
-  /// Starts a new trip.  Caller must pass the resolved [Port] object.
+  /// Starts a new trip. No departure port is recorded — the user will be
+  /// prompted to choose a destination port when they want to return.
   /// Throws [StateError] if a trip is already active.
-  Future<void> startTrip(Port departure) async {
+  Future<void> startTrip() async {
     if (_status != TripStatus.idle) {
       throw StateError('A trip is already active.');
     }
 
-    // Refresh port list for routing
     _allPorts = await TripDatabase.instance.getAllPorts();
+    _trip = await TripDatabase.instance.startTrip();
 
-    _trip = await TripDatabase.instance.startTrip(departure.id!);
-    _departurePort = departure;
     _waypoints.clear();
     _portRoutes.clear();
     _drFix = null;
     _gpsFailCount = 0;
+    _lastPeriodicWaypointId = null;
+    _selectedRouteTarget = null;
+    _activeRoute = null;
 
     _status = TripStatus.active;
     notifyListeners();
@@ -134,7 +146,7 @@ class TripRecorder extends ChangeNotifier {
     _recordTimer = Timer.periodic(_kRecordInterval, (_) => _periodicRecord());
   }
 
-  /// Ends the active trip and IMMEDIATELY deletes all waypoints.
+  /// Ends the active trip and immediately deletes all waypoints.
   /// Safe to call even if no trip is active.
   Future<void> endTrip() async {
     if (_trip == null) return;
@@ -144,16 +156,25 @@ class TripRecorder extends ChangeNotifier {
     await _locationSub?.cancel();
     _locationSub = null;
 
-    final id = _trip!.id!;
-    await TripDatabase.instance.endTrip(id); // purges waypoints in transaction
+    await TripDatabase.instance.endTrip(_trip!.id!);
 
-    _trip          = null;
-    _departurePort = null;
+    _trip                   = null;
     _waypoints.clear();
     _portRoutes.clear();
-    _currentPos    = null;
-    _drFix         = null;
-    _status        = TripStatus.idle;
+    _currentPos             = null;
+    _drFix                  = null;
+    _lastPeriodicWaypointId = null;
+    _selectedRouteTarget    = null;
+    _activeRoute            = null;
+    _status                 = TripStatus.idle;
+    notifyListeners();
+  }
+
+  /// Sets the port the user wants to be routed toward.
+  /// Pass null to clear the active routing target.
+  void selectRouteTarget(Port? port) {
+    _selectedRouteTarget = port;
+    _updateActiveRoute();
     notifyListeners();
   }
 
@@ -172,7 +193,7 @@ class TripRecorder extends ChangeNotifier {
 
     await _location.changeSettings(
       accuracy: LocationAccuracy.high,
-      interval: 10000, // 10 s polling
+      interval: 10000,
     );
 
     _locationSub = _location.onLocationChanged.listen(
@@ -186,17 +207,12 @@ class TripRecorder extends ChangeNotifier {
 
     final lat = data.latitude;
     final lng = data.longitude;
+    if (lat == null || lng == null) { _onGpsFailure(); return; }
 
-    if (lat == null || lng == null) {
-      _onGpsFailure();
-      return;
-    }
-
-    final pos       = LatLng(lat, lng);
+    final pos        = LatLng(lat, lng);
     final headingDeg = data.heading ?? _lastHeadingDeg;
-    final speedKn    = (data.speed ?? 0.0) * 1.94384; // m/s → knots
-    // GPS accuracy from device is in metres; convert to NM
-    final accNm      = ((data.accuracy ?? 50.0) / 1852.0);
+    final speedKn    = (data.speed ?? 0.0) * 1.94384;
+    final accNm      = (data.accuracy ?? 50.0) / 1852.0;
 
     _lastGoodGpsPos        = pos;
     _lastGoodGpsTime       = DateTime.now().toUtc();
@@ -215,9 +231,7 @@ class TripRecorder extends ChangeNotifier {
       time:       DateTime.now().toUtc(),
     );
 
-    if (_status == TripStatus.gpsLost) {
-      _status = TripStatus.active;
-    }
+    if (_status == TripStatus.gpsLost) _status = TripStatus.active;
 
     _recomputeRoutes();
     _maybeSaveDistanceTrigger(pos);
@@ -269,25 +283,21 @@ class TripRecorder extends ChangeNotifier {
     final fix = CelestialFixNotifier.instance.fix;
     if (fix == null || _trip == null) return;
 
-    // Celestial fix resets DR uncertainty
-    final celestialAccNm = fix.uncertaintyNm;
-
     _lastGoodGpsPos        = fix.position;
     _lastGoodGpsTime       = fix.timestamp;
-    _lastGoodGpsAccuracyNm = celestialAccNm;
+    _lastGoodGpsAccuracyNm = fix.uncertaintyNm;
     _drFix                 = null;
 
     _currentPos = LivePosition(
       position:   fix.position,
       source:     FixType.celestial,
-      accuracyNm: celestialAccNm,
+      accuracyNm: fix.uncertaintyNm,
       headingDeg: _lastHeadingDeg,
       speedKn:    _lastSpeedKn,
       time:       fix.timestamp,
     );
 
-    // Save celestial waypoint immediately
-    _saveWaypoint(_currentPos!);
+    _saveWaypoint(_currentPos!, isPeriodic: false);
     _recomputeRoutes();
     notifyListeners();
   }
@@ -296,22 +306,18 @@ class TripRecorder extends ChangeNotifier {
 
   void _periodicRecord() {
     if (_trip == null || _currentPos == null) return;
-
-    // If GPS lost, refresh DR before saving
     if (_status == TripStatus.gpsLost) _updateDrFix();
-
-    _saveWaypoint(_currentPos!);
+    _saveWaypoint(_currentPos!, isPeriodic: true);
   }
 
-  /// Saves an extra waypoint if the vessel has moved ≥ 0.5 NM since the
-  /// last recorded position (regardless of the timer interval).
   void _maybeSaveDistanceTrigger(LatLng current) {
     if (_lastRecordedPos == null) return;
-    final dist = DeadReckoning.distanceNm(_lastRecordedPos!, current);
-    if (dist >= _kMinDistanceNm) _saveWaypoint(_currentPos!);
+    if (DeadReckoning.distanceNm(_lastRecordedPos!, current) >= _kMinDistanceNm) {
+      _saveWaypoint(_currentPos!, isPeriodic: false);
+    }
   }
 
-  Future<void> _saveWaypoint(LivePosition pos) async {
+  Future<void> _saveWaypoint(LivePosition pos, {required bool isPeriodic}) async {
     if (_trip == null) return;
 
     final wp = Waypoint(
@@ -325,9 +331,23 @@ class TripRecorder extends ChangeNotifier {
       recordedAt: pos.time,
     );
 
-    final id = await TripDatabase.instance.insertWaypoint(wp);
-    final saved = Waypoint(
-      id:         id,
+    late int newId;
+    if (isPeriodic) {
+      newId = await TripDatabase.instance
+          .replacePeriodicWaypoint(wp, _lastPeriodicWaypointId);
+
+      // Remove the old periodic entry from the in-memory list before adding new.
+      if (_lastPeriodicWaypointId != null && _waypoints.isNotEmpty &&
+          _waypoints.last.id == _lastPeriodicWaypointId) {
+        _waypoints.removeLast();
+      }
+      _lastPeriodicWaypointId = newId;
+    } else {
+      newId = await TripDatabase.instance.insertWaypoint(wp);
+    }
+
+    _waypoints.add(Waypoint(
+      id:         newId,
       tripId:     wp.tripId,
       lat:        wp.lat,
       lng:        wp.lng,
@@ -336,9 +356,8 @@ class TripRecorder extends ChangeNotifier {
       headingDeg: wp.headingDeg,
       speedKn:    wp.speedKn,
       recordedAt: wp.recordedAt,
-    );
+    ));
 
-    _waypoints.add(saved);
     _lastRecordedPos = pos.position;
     notifyListeners();
   }
@@ -352,22 +371,34 @@ class TripRecorder extends ChangeNotifier {
       fromPosition:          _currentPos!.position,
       allPorts:              _allPorts,
       maxResults:            5,
-      departurePortId:       _departurePort?.id,
+      positionUncertaintyNm: _currentPos!.accuracyNm,
+    );
+
+    _updateActiveRoute();
+  }
+
+  /// Recomputes [activeRoute] from the current position toward [selectedRouteTarget].
+  void _updateActiveRoute() {
+    if (_currentPos == null || _selectedRouteTarget == null) {
+      _activeRoute = null;
+      return;
+    }
+    _activeRoute = PortRouter.routeTo(
+      fromPosition:          _currentPos!.position,
+      destination:           _selectedRouteTarget!,
       positionUncertaintyNm: _currentPos!.accuracyNm,
     );
   }
 
-  /// Forces a route refresh — call after port list changes.
+  /// Forces a port list refresh — call after external port list changes.
   Future<void> refreshPorts() async {
     _allPorts = await TripDatabase.instance.getAllPorts();
     _recomputeRoutes();
     notifyListeners();
   }
 
-  // ── DR timer (called from UI every 30 s while GPS is lost) ──────────────
+  // ── DR tick (called from UI every 30 s while GPS is lost) ───────────────
 
-  /// Called periodically by the UI to keep the DR fix current while
-  /// no GPS signal is available.
   void tickDr() {
     if (_status == TripStatus.gpsLost) _updateDrFix();
   }
