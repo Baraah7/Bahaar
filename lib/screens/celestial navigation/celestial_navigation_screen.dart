@@ -13,7 +13,11 @@ import 'package:bahaar/navigation/star_identifier.dart';
 import 'package:bahaar/screens/celestial navigation/sky_scanner_view.dart';
 
 class CelestialNavigationScreen extends StatefulWidget {
-  const CelestialNavigationScreen({super.key});
+  /// Optional controller used to switch to the map tab when the user taps
+  /// "Fix is live on map". If null the button is hidden.
+  final PageController? pageController;
+
+  const CelestialNavigationScreen({super.key, this.pageController});
 
   @override
   State<CelestialNavigationScreen> createState() =>
@@ -437,11 +441,15 @@ class _CelestialNavigationScreenState
         ),
         centerTitle: true,
         actions: [
-          if (_postedFix != null)
+          if (_postedFix != null && widget.pageController != null)
             IconButton(
               icon: const Icon(Icons.map_outlined),
               tooltip: 'Fix is live on map',
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => widget.pageController!.animateToPage(
+                1,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              ),
             ),
         ],
       ),

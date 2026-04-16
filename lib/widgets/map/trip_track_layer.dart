@@ -44,7 +44,6 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     final waypoints  = _recorder.waypoints;
     final currentPos = _recorder.currentPosition;
     final drFix      = _recorder.drFix;
-    final depPort    = _recorder.departurePort;
 
     // ── Build track polyline ─────────────────────────────────────────────
     final trackPoints = waypoints
@@ -79,11 +78,7 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     // ── Port markers ─────────────────────────────────────────────────────
     final portMarkers = <Marker>[];
     for (final route in _recorder.portRoutes) {
-      portMarkers.add(_portMarker(route.port, isDeparture: route.isDeparture));
-    }
-    if (depPort != null &&
-        !_recorder.portRoutes.any((r) => r.port.id == depPort.id)) {
-      portMarkers.add(_portMarker(depPort, isDeparture: true));
+      portMarkers.add(_portMarker(route.port));
     }
 
     // ── Current position marker ───────────────────────────────────────────
@@ -176,7 +171,7 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     }
   }
 
-  static Marker _portMarker(Port port, {required bool isDeparture}) {
+  static Marker _portMarker(Port port) {
     return Marker(
       point:  LatLng(port.lat, port.lng),
       width:  44,
@@ -187,7 +182,7 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              color:  isDeparture ? AppColors.primary : AppColors.accent,
+              color:  AppColors.accent,
               shape:  BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
               boxShadow: const [

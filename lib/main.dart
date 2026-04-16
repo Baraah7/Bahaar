@@ -190,13 +190,13 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           });
         },
 
-        children: const [
-          MarinerHarvestPage(),
-          IntegratedMap(),
-          Weather(),
-          FishRecognitionScreen(),
-          FishingLogScreen(),
-          CelestialNavigationScreen(),
+        children: [
+          const MarinerHarvestPage(),
+          const IntegratedMap(),
+          const Weather(),
+          const FishRecognitionScreen(),
+          const FishingLogScreen(),
+          CelestialNavigationScreen(pageController: _controller),
         ]
       ),
       
