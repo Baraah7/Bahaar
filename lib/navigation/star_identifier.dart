@@ -106,7 +106,7 @@ class StarIdentifier {
           .map((e) => CatalogStar.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      // Sort by magnitude (brightest first) so brightest-3 search is O(1)
+      // Sort ascending magnitude = brightest first (Sirius = -1.46, faintest = +5.x)
       _catalog.sort((a, b) => a.mag.compareTo(b.mag));
 
       // Pre-build triplet index from the brightest 500 stars

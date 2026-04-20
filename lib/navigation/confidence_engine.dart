@@ -102,7 +102,9 @@ class ConfidenceEngine {
         .clamp(0.0, 100.0);
 
     // ── Factor 4: IMU Health (20%) ───────────────────────────────────────────
-    final imuScore = (100.0 - peakGyroDriftDegPerSec * 1000.0).clamp(0.0, 100.0);
+    // Linear from 100 (0 °/s drift) down to 0 (at hard-reject limit of 0.5 °/s)
+    final imuScore =
+        ((1.0 - peakGyroDriftDegPerSec / _kMaxGyroDrift) * 100.0).clamp(0.0, 100.0);
 
     // ── Weighted composite ────────────────────────────────────────────────────
     final composite = seaScore * 0.30

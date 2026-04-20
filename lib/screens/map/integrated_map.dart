@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:bahaar/core/constants/app_colors.dart';
@@ -122,6 +123,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
   bool _serviceEnabled = false;
   PermissionStatus _permissionStatus = PermissionStatus.denied;
   LocationData? _locationData;
+  StreamSubscription<LocationData>? _locationSubscription;
   bool _maskInitialized = false;
   bool _showDepthLegend = false;
   double _currentZoom = MapConstants.defaultZoom;
@@ -248,9 +250,40 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   void _onNavigationUpdate() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (!mounted) return;
+    final session = _navigationManager?.session;
+    final navLocation = session?.currentLocation;
+
+    setState(() {
+      if (navLocation != null) {
+        // Mirror live position into _locationData so the marker and other
+        // consumers (AIS CPA, exclusion zones) stay in sync.
+        _locationData = LocationData.fromMap({
+          'latitude': navLocation.latitude,
+          'longitude': navLocation.longitude,
+          'accuracy': _locationData?.accuracy,
+          'altitude': _locationData?.altitude,
+          'speed': session?.currentSpeed,
+          'speed_accuracy': null,
+          'heading': session?.currentBearing,
+          'time': DateTime.now().millisecondsSinceEpoch.toDouble(),
+          'isMock': false,
+          'verticalAccuracy': null,
+          'headingAccuracy': null,
+          'elapsedRealtimeNanos': null,
+          'elapsedRealtimeUncertaintyNanos': null,
+          'satelliteNumber': null,
+          'provider': null,
+        });
+      }
+
+      // Keep the polyline layer in sync when the session recalculates a new
+      // route after an off-route event.
+      if (session != null && _currentRoute != null &&
+          session.route.id != _currentRoute!.id) {
+        _currentRoute = session.route;
+      }
+    });
   }
 
   void _onAisUpdate() {
@@ -308,6 +341,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   @override
   void dispose() {
+    _locationSubscription?.cancel();
     _navigationManager?.removeListener(_onNavigationUpdate);
     _navigationManager?.dispose();
     _featureEditState.removeListener(_onFeatureEditUpdate);
@@ -394,6 +428,15 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ));
         }
       }
+
+      // Continuously update position so the user marker stays live
+      _locationSubscription = _location.onLocationChanged.listen((data) {
+        if (!mounted) return;
+        setState(() => _locationData = data);
+        if (data.latitude != null && data.longitude != null) {
+          _checkExclusionZones(LatLng(data.latitude!, data.longitude!));
+        }
+      });
     } catch (e) {
       log('Error getting location: $e');
       if (mounted) setState(() {});
@@ -1203,52 +1246,95 @@ class _IntegratedMapState extends State<IntegratedMap> {
     final l10n = MapLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.chooseNavType,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.42,
+        minChildSize: 0.28,
+        maxChildSize: 0.75,
+        builder: (_, scrollController) => Column(
+          children: [
+            // Drag handle + title row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.chooseNavType,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Scroll-down / collapse button
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    tooltip: 'Collapse',
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _NavModeOption(
-                icon: Icons.directions_boat,
-                title: l10n.landToSea,
-                subtitle: l10n.landToSeaSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startLandToSeaMode();
-                },
+            ),
+            const Divider(height: 1),
+            // Scrollable options
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  _NavModeOption(
+                    icon: Icons.directions_boat,
+                    title: l10n.landToSea,
+                    subtitle: l10n.landToSeaSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startLandToSeaMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _NavModeOption(
+                    icon: Icons.waves,
+                    title: l10n.seaToSea,
+                    subtitle: l10n.seaToSeaSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startSeaToSeaMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _NavModeOption(
+                    icon: Icons.home,
+                    title: l10n.returnSeaToLand,
+                    subtitle: l10n.returnSeaToLandSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startSeaToLandMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(height: 8),
-              _NavModeOption(
-                icon: Icons.waves,
-                title: l10n.seaToSea,
-                subtitle: l10n.seaToSeaSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startSeaToSeaMode();
-                },
-              ),
-              const SizedBox(height: 8),
-              _NavModeOption(
-                icon: Icons.home,
-                title: l10n.returnSeaToLand,
-                subtitle: l10n.returnSeaToLandSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startSeaToLandMode();
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -2136,10 +2222,17 @@ class _IntegratedMapState extends State<IntegratedMap> {
             catches: TripService.instance.activeTrip!.catches,
           ),
 
-        // User location marker
-        if (_locationData != null)
+        // User location marker — arrow during active navigation, dot otherwise
+        if (_locationData != null && !(_navigationManager?.isNavigating ?? false))
           MarkerLayer(
             markers: [_buildUserLocationMarker()],
+          ),
+
+        // Navigation arrow marker — replaces the dot while navigating
+        if (_navigationManager?.isNavigating == true &&
+            _navigationManager?.session?.currentLocation != null)
+          MarkerLayer(
+            markers: [_buildNavigationArrowMarker()],
           ),
 
         // DS-1 celestial fix uncertainty circle + marker
@@ -2281,6 +2374,33 @@ class _IntegratedMapState extends State<IntegratedMap> {
             blurRadius: 4,
           ),
         ],
+      ),
+    );
+  }
+
+  Marker _buildNavigationArrowMarker() {
+    final session = _navigationManager!.session!;
+    final pos = session.currentLocation!;
+    final bearing = session.currentBearing ?? 0.0;
+
+    return Marker(
+      point: pos,
+      width: 48,
+      height: 48,
+      rotate: false,
+      child: Transform.rotate(
+        angle: bearing * 3.14159265358979 / 180.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: const [
+              BoxShadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2)),
+            ],
+          ),
+          child: const Icon(Icons.navigation, color: Colors.white, size: 26),
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:bahaar/navigation/corrections.dart';
 import 'package:bahaar/navigation/confidence_engine.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/navigation/camera_service.dart';
+import 'package:bahaar/navigation/dead_reckoning.dart';
 import 'package:bahaar/navigation/star_identifier.dart';
 import 'package:bahaar/screens/celestial navigation/sky_scanner_view.dart';
 
@@ -278,14 +279,6 @@ class _CelestialNavigationScreenState
     }
   }
 
-  /// Falls back to simulation mode when the real camera / native lib are
-  /// unavailable (e.g. during development or on unsupported hardware).
-  Future<void> _initSimulation() async {
-    setState(() => _scannerError = null);
-    await _cameraService.initSimulation();
-    if (mounted) setState(() => _scannerReady = true);
-  }
-
   /// Initialises the camera (if needed) then pushes [SkyScannerView].
   /// When the user closes the scanner the results are applied to state and
   /// the confidence-engine inputs are auto-filled.
@@ -329,13 +322,21 @@ class _CelestialNavigationScreenState
     final uncertaintyNm =
         _confidenceResult!.decision == FixDecision.fix ? 3.0 : 5.0;
 
-    // GPS spoofing check — compare celestial fix to GPS.
-    // In manual-entry mode the celestial fix IS the GPS position
-    // (user hasn't entered a separate fix lat/lng), so we use the
-    // confidence score itself as the spoofing proxy.
-    // A full implementation would compare independently derived positions.
-    final isSpoofed = _confidenceResult!.score < 30 &&
-        CelestialFixNotifier.instance.fix != null;
+    // GPS spoofing check — compare the new celestial fix position to the
+    // current GPS reading.  If the two positions diverge by more than
+    // (uncertaintyNm + 2 NM guard band) the GPS signal is likely spoofed.
+    bool isSpoofed = false;
+    if (_gpsPosition != null) {
+      final prevFix = CelestialFixNotifier.instance.fix;
+      if (prevFix != null) {
+        final deltaNm = DeadReckoning.distanceNm(
+          _gpsPosition!,
+          prevFix.position,
+        );
+        // Alert if GPS position and last celestial fix are > uncertaintyNm + 2 NM apart
+        isSpoofed = deltaNm > (uncertaintyNm + 2.0);
+      }
+    }
 
     final fix = CelestialFix(
       position: _gpsPosition!,
@@ -540,43 +541,12 @@ class _CelestialNavigationScreenState
             title: 'Sky Scanner (DS-1 Camera)',
             icon: Icons.camera_alt_outlined,
             children: [
-              if (_scannerError != null) ...[
+              if (_scannerError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     _scannerError!,
                     style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-                // Offer simulation when hardware is unavailable
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.amber.shade800,
-                      side: BorderSide(color: Colors.amber.shade700),
-                    ),
-                    icon: const Icon(Icons.science_outlined, size: 18),
-                    label: const Text('Run Simulation'),
-                    onPressed: _initSimulation,
-                  ),
-                ),
-                const SizedBox(height: 6),
-              ],
-              if (_cameraService.isSimulated)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline,
-                          size: 14, color: Colors.amber.shade700),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Simulation active — synthetic star data',
-                        style: TextStyle(
-                            fontSize: 11, color: Colors.amber.shade800),
-                      ),
-                    ],
                   ),
                 ),
               // Open scanner button
