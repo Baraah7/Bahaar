@@ -23,27 +23,4 @@ tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
 
-// 1. Read the properties file at the top of your build.gradle
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
-}
 
-// 2. Get the value
-def opencvPath = localProperties.getProperty('opencv.dir')
-
-android {
-    // ... existing config ...
-
-    defaultConfig {
-        externalNativeBuild {
-            cmake {
-                // 3. Pass the variable to CMake using -D
-                arguments "-DOPENCV_DIR=$opencvPath"
-            }
-        }
-    }
-}

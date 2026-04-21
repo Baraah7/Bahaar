@@ -1,22 +1,27 @@
-import java.io.FileInputStream
 import java.util.Properties
+import java.io.FileInputStream
+
+// 1. Load properties ONCE at the very top
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
+// 2. Get the OpenCV path and handle Windows backslashes
+val opencvPathRaw = localProperties.getProperty("opencv.dir") ?: ""
+val opencvPath = opencvPathRaw.replace("\\", "/")
 
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
-}
-
-val localProps = Properties().apply {
-    load(FileInputStream(rootProject.file("local.properties")))
 }
 
 android {
     namespace = "com.example.aquanav"
     compileSdk = flutter.compileSdkVersion
-    // Pin NDK version — required for reproducible OpenCV builds
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -37,15 +42,14 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // ── DS-1 Vision Engine (C++ / OpenCV) ────────────────────────────────
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
+
         externalNativeBuild {
             cmake {
-                val opencvDir = localProps.getProperty("opencv.dir")
-                    ?: error("opencv.dir not set in android/local.properties")
-                arguments += "-DOPENCV_DIR=${opencvDir.replace("\\", "/")}/sdk/native/jni"
+                // Pass the path we extracted at the top
+                arguments += "-DOPENCV_DIR=$opencvPath"
             }
         }
     }
