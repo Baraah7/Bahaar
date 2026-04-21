@@ -27,41 +27,45 @@ class ActiveNavigationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArriving = session.nextWaypoint == null;
+
     return Stack(
       children: [
-        // Top instruction card
-        Positioned(
-          top: 60,
-          left: 16,
-          right: 16,
-          child: _buildInstructionCard(context),
-        ),
-
-        // Bottom progress card
-        Positioned(
-          bottom: 16,
-          left: 16,
-          right: 16,
-          child: _buildProgressCard(context),
-        ),
-
-        // Recenter button (right side)
-        if (onRecenter != null)
+        // Arrival banner — full-width at very top, only at final destination
+        if (isArriving)
           Positioned(
-            bottom: 140,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'recenter_nav',
-              onPressed: onRecenter,
-              backgroundColor: Colors.white,
-              child: const Icon(Icons.my_location, color: AppColors.primary),
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _buildArrivalCard(context),
+              ),
             ),
           ),
+
+        // Instruction card — shown only while en-route
+        if (!isArriving)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: SafeArea(child: _buildInstructionCard(context)),
+          ),
+
+        // Compact metrics strip — fits between SOS (left) and zoom controls (right)
+        Positioned(
+          bottom: 24,
+          left: 80,
+          right: 80,
+          child: _buildProgressCard(context),
+        ),
 
         // Recalculating overlay
         if (isRecalculating)
           Positioned(
-            top: 120,
+            top: 130,
             left: 0,
             right: 0,
             child: Center(
@@ -105,20 +109,15 @@ class ActiveNavigationOverlay extends StatelessWidget {
     );
   }
 
-  /// Build the instruction card showing next waypoint
+  /// Instruction card — shown while navigating toward the next waypoint
   Widget _buildInstructionCard(BuildContext context) {
-    final nextWaypoint = session.nextWaypoint;
-
-    if (nextWaypoint == null) {
-      return _buildArrivalCard();
-    }
-
+    final nextWaypoint = session.nextWaypoint!;
     final distanceToWaypoint = _calculateDistanceToWaypoint(nextWaypoint);
     final icon = _getWaypointIcon(nextWaypoint.type);
     final color = _getSegmentColor(nextWaypoint.segmentType);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -132,23 +131,16 @@ class ActiveNavigationOverlay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
           Container(
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 32,
-            ),
+            child: Icon(icon, color: color, size: 30),
           ),
-          const SizedBox(width: 16),
-
-          // Instruction and distance
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,230 +148,158 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 Text(
                   _formatDistance(distanceToWaypoint),
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  nextWaypoint.instruction ?? 'Continue',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
+                  nextWaypoint.instruction ?? _defaultInstruction(nextWaypoint.type),
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-
-          // End navigation button
-          if (onEndNavigation != null)
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red),
-              onPressed: onEndNavigation,
-              tooltip: 'End Navigation',
-            ),
         ],
       ),
     );
   }
 
-  /// Build arrival card when nearing destination
-  Widget _buildArrivalCard() {
+  /// Arrival banner — shown at top only when reaching the final destination
+  Widget _buildArrivalCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.green,
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF1B5E20),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.flag,
-            color: Colors.white,
-            size: 40,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.flag_rounded, color: Colors.white, size: 28),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Arriving',
+                  'You have arrived',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   'You have reached your destination',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
               ],
             ),
           ),
           if (onEndNavigation != null)
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
+            TextButton(
               onPressed: onEndNavigation,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              child: const Text('Done',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
         ],
       ),
     );
   }
 
-  /// Build the progress card showing navigation metrics
+  /// Compact metrics strip that fits between SOS and zoom controls
   Widget _buildProgressCard(BuildContext context) {
-    final progress = session.progressPercentage;
     final distanceRemaining = session.distanceRemaining;
     final timeRemaining = session.timeRemaining;
     final currentSpeed = session.currentSpeed ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: 0.18),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Progress bar
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress / 100,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _getProgressColor(progress),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${progress.toStringAsFixed(0)}%',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Metrics row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildMetricItem(
-                icon: Icons.straighten,
-                label: 'Distance',
-                value: _formatDistance(distanceRemaining),
-                color: AppColors.primary,
-              ),
-              _buildMetricItem(
-                icon: Icons.access_time,
-                label: 'ETA',
-                value: _formatDuration(timeRemaining),
-                color: Colors.orange,
-              ),
-              _buildMetricItem(
-                icon: Icons.speed,
-                label: 'Speed',
-                value: NavigationConstants.formatSpeed(currentSpeed),
-                color: AppColors.accent,
-              ),
-            ],
-          ),
-
-          // Marina transition indicator
-          if (session.isNearingTransition) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.directions_boat, color: Colors.orange, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Marina transition ahead',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange[900],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          _buildCompactMetric(
+              _formatDistance(distanceRemaining), AppColors.primary),
+          _buildDivider(),
+          _buildCompactMetric(_formatDuration(timeRemaining), Colors.orange),
+          _buildDivider(),
+          _buildCompactMetric(
+              NavigationConstants.formatSpeed(currentSpeed), AppColors.accent),
         ],
       ),
     );
   }
 
-  Widget _buildMetricItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
+  Widget _buildCompactMetric(String value, Color color) {
+    return Text(
+      value,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: color,
+      ),
     );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 16,
+      color: Colors.grey.shade300,
+    );
+  }
+
+  String _defaultInstruction(WaypointType type) {
+    switch (type) {
+      case WaypointType.marinaEntry:
+        return 'Head to the marina';
+      case WaypointType.marinaExit:
+        return 'Leave the marina';
+      case WaypointType.end:
+        return 'Arriving at destination';
+      default:
+        return 'Continue straight';
+    }
   }
 
   // ============================================================
@@ -420,13 +340,6 @@ class ActiveNavigationOverlay extends StatelessWidget {
       case RouteSegmentType.transition:
         return Colors.orange;
     }
-  }
-
-  Color _getProgressColor(double progress) {
-    if (progress < 25) return Colors.red;
-    if (progress < 50) return Colors.orange;
-    if (progress < 75) return Colors.blue;
-    return Colors.green;
   }
 
   String _formatDistance(double meters) {

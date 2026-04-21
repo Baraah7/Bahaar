@@ -9,6 +9,7 @@ class MapLeftToolbar extends StatelessWidget {
   final bool hasNavMode;
   final bool maskInitialized;
   final bool celestialFixActive;
+  final bool isNavigating;
   final VoidCallback onToggleLayers;
   final VoidCallback onToggleLegend;
   final VoidCallback onOpenCelestial;
@@ -22,6 +23,7 @@ class MapLeftToolbar extends StatelessWidget {
     required this.hasNavMode,
     required this.maskInitialized,
     required this.celestialFixActive,
+    required this.isNavigating,
     required this.onToggleLayers,
     required this.onToggleLegend,
     required this.onOpenCelestial,
@@ -30,6 +32,9 @@ class MapLeftToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hide entire toolbar during active navigation
+    if (isNavigating) return const SizedBox.shrink();
+
     return Positioned(
       top: 90,
       left: 12,

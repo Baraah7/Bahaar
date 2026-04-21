@@ -2627,12 +2627,13 @@ class _IntegratedMapState extends State<IntegratedMap> {
             child: _buildMap(),
           ),
 
-          // Navigation status indicator (top right)
-          Positioned(
-            top: 50,
-            right: 10,
-            child: NavigationStatusIndicator(isReady: _maskInitialized, l10n: l10n),
-          ),
+          // Navigation status indicator (top right) — hidden during navigation
+          if (!(_navigationManager?.isNavigating ?? false))
+            Positioned(
+              top: 50,
+              right: 10,
+              child: NavigationStatusIndicator(isReady: _maskInitialized, l10n: l10n),
+            ),
 
           // Layer controls panel (top right, with outside-tap dismissal)
           ListenableBuilder(
@@ -2743,6 +2744,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 hasNavMode: _navMode != null,
                 maskInitialized: _maskInitialized,
                 celestialFixActive: CelestialFixNotifier.instance.fix != null,
+                isNavigating: _navigationManager?.isNavigating ?? false,
                 onToggleLayers: () => _layerManager.showLayerControls =
                     !_layerManager.showLayerControls,
                 onToggleLegend: () =>
