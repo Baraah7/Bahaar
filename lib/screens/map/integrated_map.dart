@@ -1965,8 +1965,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
             editState: _featureEditState,
           ),
 
-        // Marina markers
-        if (_marinaService.isInitialized && _showMarinas)
+        // Marina markers — hidden during active navigation
+        if (_marinaService.isInitialized && _showMarinas &&
+            !(_navigationManager?.isNavigating ?? false))
           MarinaMarkerLayer(
             marinas: _marinaService.getAllMarinas(),
             highlightedMarinaId: _selectedMarina?.id,

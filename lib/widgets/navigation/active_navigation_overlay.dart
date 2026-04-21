@@ -1,8 +1,10 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Active navigation overlay showing turn-by-turn instructions and progress
 ///
@@ -27,7 +29,8 @@ class ActiveNavigationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArriving = session.nextWaypoint == null;
+    // Only show arrival card when the session is truly complete (at destination)
+    final isArriving = session.state == NavigationState.completed;
 
     return Stack(
       children: [
@@ -111,10 +114,14 @@ class ActiveNavigationOverlay extends StatelessWidget {
 
   /// Instruction card — shown while navigating toward the next waypoint
   Widget _buildInstructionCard(BuildContext context) {
-    final nextWaypoint = session.nextWaypoint!;
+    // If session is completed but arrival card hasn't shown yet, show nothing
+    final nextWaypoint = session.nextWaypoint;
+    if (nextWaypoint == null) return const SizedBox.shrink();
+
     final distanceToWaypoint = _calculateDistanceToWaypoint(nextWaypoint);
     final icon = _getWaypointIcon(nextWaypoint.type);
     final color = _getSegmentColor(nextWaypoint.segmentType);
+    final directionText = _directionInstruction(nextWaypoint, session.currentLocation);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -155,7 +162,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  nextWaypoint.instruction ?? _defaultInstruction(nextWaypoint.type),
+                  directionText,
                   style: const TextStyle(fontSize: 13, color: Colors.black87),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -289,17 +296,57 @@ class ActiveNavigationOverlay extends StatelessWidget {
     );
   }
 
-  String _defaultInstruction(WaypointType type) {
-    switch (type) {
+  /// Returns a human-readable direction instruction for the next waypoint.
+  /// Uses the bearing from the current location to give a compass direction
+  /// when no explicit instruction is set on the waypoint.
+  String _directionInstruction(Waypoint waypoint, LatLng? fromLocation) {
+    switch (waypoint.type) {
       case WaypointType.marinaEntry:
-        return 'Head to the marina';
+        return waypoint.instruction ?? 'Head to the marina';
       case WaypointType.marinaExit:
-        return 'Leave the marina';
+        return waypoint.instruction ?? 'Dock at the marina';
       case WaypointType.end:
-        return 'Arriving at destination';
+        // Never show the raw "Arrived at destination" text while en-route
+        if (fromLocation != null) {
+          final compass = _bearingToCompass(
+              _computeBearing(fromLocation, waypoint.location));
+          return 'Head $compass toward destination';
+        }
+        return 'Head toward destination';
       default:
+        // Use explicit instruction if it exists and is meaningful
+        final raw = waypoint.instruction;
+        if (raw != null &&
+            raw != 'Start navigation' &&
+            raw != 'Arrived at destination' &&
+            raw != 'Continue') {
+          return raw;
+        }
+        if (fromLocation != null) {
+          final compass = _bearingToCompass(
+              _computeBearing(fromLocation, waypoint.location));
+          return 'Head $compass';
+        }
         return 'Continue straight';
     }
+  }
+
+  double _computeBearing(LatLng from, LatLng to) {
+    final lat1 = from.latitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final dLon = (to.longitude - from.longitude) * math.pi / 180;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    return (math.atan2(y, x) * 180 / math.pi + 360) % 360;
+  }
+
+  String _bearingToCompass(double bearing) {
+    const dirs = [
+      'North', 'North-East', 'East', 'South-East',
+      'South', 'South-West', 'West', 'North-West'
+    ];
+    return dirs[((bearing + 22.5) / 45).floor() % 8];
   }
 
   // ============================================================
