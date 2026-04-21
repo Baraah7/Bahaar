@@ -7,6 +7,7 @@ import 'package:bahaar/models/ais_model.dart';
 import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:bahaar/models/map/feature_edit_state.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
+import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
@@ -2046,21 +2047,24 @@ class _IntegratedMapState extends State<IntegratedMap> {
             ],
           ),
 
-        // Port markers (visible when port selection is active or a port is selected)
-        if (_showPortSelection || _selectedPort != null || _navMode == NavMode.seaToLand)
+        // Port markers (visible when port selection is active or a port is selected, hidden during navigation)
+        if (!(_navigationManager?.isNavigating ?? false) &&
+            (_showPortSelection || _selectedPort != null || _navMode == NavMode.seaToLand))
           MarkerLayer(
             markers: _availablePorts.map((port) {
               final isSelected = _selectedPort?.id == port.id;
               return Marker(
                 point: port.location,
-                width: 36,
-                height: 48,
+                width: 52,
+                height: 52,
                 child: GestureDetector(
                   onTap: () => _handlePortSelected(port),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(5),
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: isSelected ? Colors.green : AppColors.red,
                           shape: BoxShape.circle,
@@ -2078,11 +2082,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
                         child: const Icon(
                           Icons.anchor,
                           color: Colors.white,
-                          size: 14,
+                          size: 16,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Container(
+                        constraints: const BoxConstraints(maxWidth: 52),
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -2100,6 +2105,8 @@ class _IntegratedMapState extends State<IntegratedMap> {
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -2791,12 +2798,23 @@ class _IntegratedMapState extends State<IntegratedMap> {
             ),
 
           // Active navigation overlay (when navigating)
-          if (_navigationManager?.session != null)
-            ActiveNavigationOverlay(
-              session: _navigationManager!.session!,
-              onEndNavigation: _endNavigation,
-              onRecenter: _recenterOnLocation,
-              isRecalculating: _navigationManager!.isRecalculating,
+          if (_navigationManager != null)
+            Positioned.fill(
+              child: ListenableBuilder(
+                listenable: _navigationManager!,
+                builder: (context, _) {
+                  final session = _navigationManager!.session;
+                  if (session == null || session.state == NavigationState.cancelled) {
+                    return const SizedBox.shrink();
+                  }
+                  return ActiveNavigationOverlay(
+                    session: session,
+                    onEndNavigation: _endNavigation,
+                    onRecenter: _recenterOnLocation,
+                    isRecalculating: _navigationManager!.isRecalculating,
+                  );
+                },
+              ),
             ),
 
           // Navigation instructions panel (shown during any active nav mode)

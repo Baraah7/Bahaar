@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
+import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:latlong2/latlong.dart';
@@ -33,6 +34,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
     final isArriving = session.state == NavigationState.completed;
 
     return Stack(
+      fit: StackFit.expand,
       children: [
         // Arrival banner — full-width at very top, only at final destination
         if (isArriving)
@@ -170,6 +172,21 @@ class ActiveNavigationOverlay extends StatelessWidget {
               ],
             ),
           ),
+          if (onEndNavigation != null) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onEndNavigation,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.close, size: 18, color: Colors.grey.shade600),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -215,7 +232,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'You have reached your destination',
+                  _arrivalSubtitle(),
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.85),
@@ -296,6 +313,23 @@ class ActiveNavigationOverlay extends StatelessWidget {
     );
   }
 
+  /// Returns context-sensitive arrival subtitle based on the destination type.
+  String _arrivalSubtitle() {
+    final waypoints = session.route.waypoints;
+    if (waypoints.isNotEmpty) {
+      final lastType = waypoints.last.type;
+      if (lastType == WaypointType.marinaExit) {
+        return 'You have arrived at the port';
+      }
+    }
+    final lastSegments = session.route.segments;
+    if (lastSegments.isNotEmpty &&
+        lastSegments.last.type == SegmentType.marine) {
+      return 'You have arrived at your sea destination';
+    }
+    return 'You have reached your destination';
+  }
+
   /// Returns a human-readable direction instruction for the next waypoint.
   /// Uses the bearing from the current location to give a compass direction
   /// when no explicit instruction is set on the waypoint.
@@ -354,11 +388,21 @@ class ActiveNavigationOverlay extends StatelessWidget {
   // ============================================================
 
   double _calculateDistanceToWaypoint(Waypoint waypoint) {
-    if (session.currentLocation == null) {
-      return waypoint.distanceFromStart - session.metrics.distanceTraveled;
+    final loc = session.currentLocation;
+    if (loc == null) {
+      return (waypoint.distanceFromStart - session.metrics.distanceTraveled)
+          .clamp(0, double.infinity);
     }
-    // Approximate - actual distance would need haversine calculation
-    return (waypoint.distanceFromStart - session.metrics.distanceTraveled).clamp(0, double.infinity);
+    // Haversine distance from current GPS position to next waypoint
+    const r = 6371000.0; // Earth radius in metres
+    final lat1 = loc.latitude * math.pi / 180;
+    final lat2 = waypoint.location.latitude * math.pi / 180;
+    final dLat = (waypoint.location.latitude - loc.latitude) * math.pi / 180;
+    final dLon = (waypoint.location.longitude - loc.longitude) * math.pi / 180;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) *
+            math.sin(dLon / 2) * math.sin(dLon / 2);
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
   IconData _getWaypointIcon(WaypointType type) {
