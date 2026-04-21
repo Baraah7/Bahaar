@@ -1,16 +1,16 @@
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../models/weather/tide_model.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
 
 class WeatherTidesCard extends StatelessWidget {
   final List<TideEntry> tides;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   static const _tideBlue = Color(0xFF4FC3F7);
 
   const WeatherTidesCard(
-      {super.key, required this.tides, required this.helper});
+      {super.key, required this.tides, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class WeatherTidesCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WeatherStyles.sectionHeader(
-              helper.l10n.weatherTodayTides, _tideBlue),
+               l10n.weatherTodayTides, _tideBlue),
           const SizedBox(height: 4),
           if (tides.isEmpty)
             Padding(
@@ -32,7 +32,7 @@ class WeatherTidesCard extends StatelessWidget {
                       color: WeatherStyles.white(0.4), size: 28),
                   const SizedBox(width: 12),
                   Text(
-                    helper.l10n.weatherTideUnavailable,
+                     l10n.weatherTideUnavailable,
                     style: TextStyle(
                         color: WeatherStyles.white(0.5), fontSize: 15),
                   ),
@@ -41,7 +41,7 @@ class WeatherTidesCard extends StatelessWidget {
             )
           else
             ...tides.map((entry) => _TideRow(
-                entry: entry, helper: helper)),
+                entry: entry, l10n: l10n)),
         ],
       ),
     );
@@ -50,12 +50,12 @@ class WeatherTidesCard extends StatelessWidget {
 
 class _TideRow extends StatelessWidget {
   final TideEntry entry;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   static const _tideBlue = Color(0xFF4FC3F7);
   static const _tideLow = Color(0xFF81D4FA);
 
-  const _TideRow({required this.entry, required this.helper});
+  const _TideRow({required this.entry, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -85,15 +85,15 @@ class _TideRow extends StatelessWidget {
             children: [
               Text(
                 isHigh
-                    ? helper.l10n.weatherHighTide
-                    : helper.l10n.weatherLowTide,
+                    ?  l10n.weatherHighTide
+                    :  l10n.weatherLowTide,
                 style: TextStyle(
                     color: color,
                     fontSize: 13,
                     fontWeight: FontWeight.w600),
               ),
               Text(
-                helper.formatTime(entry.formattedTime),
+                l10n.formatTime(entry.formattedTime),
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -103,7 +103,7 @@ class _TideRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '${helper.n(entry.heightMt.toStringAsFixed(2))} m',
+            '${l10n.n(entry.heightMt.toStringAsFixed(2))} m',
             style: TextStyle(
                 color: WeatherStyles.white(0.85),
                 fontSize: 16,

@@ -1,7 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
+import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Active navigation overlay showing turn-by-turn instructions and progress
 ///
@@ -26,41 +30,47 @@ class ActiveNavigationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Only show arrival card when the session is truly complete (at destination)
+    final isArriving = session.state == NavigationState.completed;
+
     return Stack(
+      fit: StackFit.expand,
       children: [
-        // Top instruction card
-        Positioned(
-          top: 60,
-          left: 16,
-          right: 16,
-          child: _buildInstructionCard(context),
-        ),
-
-        // Bottom progress card
-        Positioned(
-          bottom: 16,
-          left: 16,
-          right: 16,
-          child: _buildProgressCard(context),
-        ),
-
-        // Recenter button (right side)
-        if (onRecenter != null)
+        // Arrival banner — full-width at very top, only at final destination
+        if (isArriving)
           Positioned(
-            bottom: 140,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'recenter_nav',
-              onPressed: onRecenter,
-              backgroundColor: Colors.white,
-              child: const Icon(Icons.my_location, color: Colors.blue),
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _buildArrivalCard(context),
+              ),
             ),
           ),
+
+        // Instruction card — shown only while en-route
+        if (!isArriving)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: SafeArea(child: _buildInstructionCard(context)),
+          ),
+
+        // Compact metrics strip — fits between SOS (left) and zoom controls (right)
+        Positioned(
+          bottom: 24,
+          left: 80,
+          right: 80,
+          child: _buildProgressCard(context),
+        ),
 
         // Recalculating overlay
         if (isRecalculating)
           Positioned(
-            top: 120,
+            top: 130,
             left: 0,
             right: 0,
             child: Center(
@@ -104,20 +114,19 @@ class ActiveNavigationOverlay extends StatelessWidget {
     );
   }
 
-  /// Build the instruction card showing next waypoint
+  /// Instruction card — shown while navigating toward the next waypoint
   Widget _buildInstructionCard(BuildContext context) {
+    // If session is completed but arrival card hasn't shown yet, show nothing
     final nextWaypoint = session.nextWaypoint;
-
-    if (nextWaypoint == null) {
-      return _buildArrivalCard();
-    }
+    if (nextWaypoint == null) return const SizedBox.shrink();
 
     final distanceToWaypoint = _calculateDistanceToWaypoint(nextWaypoint);
     final icon = _getWaypointIcon(nextWaypoint.type);
     final color = _getSegmentColor(nextWaypoint.segmentType);
+    final directionText = _directionInstruction(nextWaypoint, session.currentLocation);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -131,23 +140,16 @@ class ActiveNavigationOverlay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
           Container(
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 32,
-            ),
+            child: Icon(icon, color: color, size: 30),
           ),
-          const SizedBox(width: 16),
-
-          // Instruction and distance
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,195 +157,33 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 Text(
                   _formatDistance(distanceToWaypoint),
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  nextWaypoint.instruction ?? 'Continue',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
+                  directionText,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-
-          // End navigation button
-          if (onEndNavigation != null)
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red),
-              onPressed: onEndNavigation,
-              tooltip: 'End Navigation',
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// Build arrival card when nearing destination
-  Widget _buildArrivalCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.flag,
-            color: Colors.white,
-            size: 40,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Arriving',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+          if (onEndNavigation != null) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onEndNavigation,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'You have reached your destination',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (onEndNavigation != null)
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: onEndNavigation,
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// Build the progress card showing navigation metrics
-  Widget _buildProgressCard(BuildContext context) {
-    final progress = session.progressPercentage;
-    final distanceRemaining = session.distanceRemaining;
-    final timeRemaining = session.timeRemaining;
-    final currentSpeed = session.currentSpeed ?? 0;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Progress bar
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress / 100,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _getProgressColor(progress),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${progress.toStringAsFixed(0)}%',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Metrics row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildMetricItem(
-                icon: Icons.straighten,
-                label: 'Distance',
-                value: _formatDistance(distanceRemaining),
-                color: Colors.blue,
-              ),
-              _buildMetricItem(
-                icon: Icons.access_time,
-                label: 'ETA',
-                value: _formatDuration(timeRemaining),
-                color: Colors.orange,
-              ),
-              _buildMetricItem(
-                icon: Icons.speed,
-                label: 'Speed',
-                value: NavigationConstants.formatSpeed(currentSpeed),
-                color: Colors.green,
-              ),
-            ],
-          ),
-
-          // Marina transition indicator
-          if (session.isNearingTransition) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.directions_boat, color: Colors.orange, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Marina transition ahead',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange[900],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                child: Icon(Icons.close, size: 18, color: Colors.grey.shade600),
               ),
             ),
           ],
@@ -352,33 +192,195 @@ class ActiveNavigationOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color,
+  /// Arrival banner — shown at top only when reaching the final destination
+  Widget _buildArrivalCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B5E20),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.flag_rounded, color: Colors.white, size: 28),
           ),
-        ),
-      ],
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'You have arrived',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _arrivalSubtitle(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onEndNavigation != null)
+            TextButton(
+              onPressed: onEndNavigation,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              child: const Text('Done',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
     );
+  }
+
+  /// Compact metrics strip that fits between SOS and zoom controls
+  Widget _buildProgressCard(BuildContext context) {
+    final distanceRemaining = session.distanceRemaining;
+    final timeRemaining = session.timeRemaining;
+    final currentSpeed = session.currentSpeed ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildCompactMetric(
+              _formatDistance(distanceRemaining), AppColors.primary),
+          _buildDivider(),
+          _buildCompactMetric(_formatDuration(timeRemaining), Colors.orange),
+          _buildDivider(),
+          _buildCompactMetric(
+              NavigationConstants.formatSpeed(currentSpeed), AppColors.accent),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactMetric(String value, Color color) {
+    return Text(
+      value,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: color,
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 16,
+      color: Colors.grey.shade300,
+    );
+  }
+
+  /// Returns context-sensitive arrival subtitle based on the destination type.
+  String _arrivalSubtitle() {
+    final waypoints = session.route.waypoints;
+    if (waypoints.isNotEmpty) {
+      final lastType = waypoints.last.type;
+      if (lastType == WaypointType.marinaExit) {
+        return 'You have arrived at the port';
+      }
+    }
+    final lastSegments = session.route.segments;
+    if (lastSegments.isNotEmpty &&
+        lastSegments.last.type == SegmentType.marine) {
+      return 'You have arrived at your sea destination';
+    }
+    return 'You have reached your destination';
+  }
+
+  /// Returns a human-readable direction instruction for the next waypoint.
+  /// Uses the bearing from the current location to give a compass direction
+  /// when no explicit instruction is set on the waypoint.
+  String _directionInstruction(Waypoint waypoint, LatLng? fromLocation) {
+    switch (waypoint.type) {
+      case WaypointType.marinaEntry:
+        return waypoint.instruction ?? 'Head to the marina';
+      case WaypointType.marinaExit:
+        return waypoint.instruction ?? 'Dock at the marina';
+      case WaypointType.end:
+        // Never show the raw "Arrived at destination" text while en-route
+        if (fromLocation != null) {
+          final compass = _bearingToCompass(
+              _computeBearing(fromLocation, waypoint.location));
+          return 'Head $compass toward destination';
+        }
+        return 'Head toward destination';
+      default:
+        // Use explicit instruction if it exists and is meaningful
+        final raw = waypoint.instruction;
+        if (raw != null &&
+            raw != 'Start navigation' &&
+            raw != 'Arrived at destination' &&
+            raw != 'Continue') {
+          return raw;
+        }
+        if (fromLocation != null) {
+          final compass = _bearingToCompass(
+              _computeBearing(fromLocation, waypoint.location));
+          return 'Head $compass';
+        }
+        return 'Continue straight';
+    }
+  }
+
+  double _computeBearing(LatLng from, LatLng to) {
+    final lat1 = from.latitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final dLon = (to.longitude - from.longitude) * math.pi / 180;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    return (math.atan2(y, x) * 180 / math.pi + 360) % 360;
+  }
+
+  String _bearingToCompass(double bearing) {
+    const dirs = [
+      'North', 'North-East', 'East', 'South-East',
+      'South', 'South-West', 'West', 'North-West'
+    ];
+    return dirs[((bearing + 22.5) / 45).floor() % 8];
   }
 
   // ============================================================
@@ -386,11 +388,21 @@ class ActiveNavigationOverlay extends StatelessWidget {
   // ============================================================
 
   double _calculateDistanceToWaypoint(Waypoint waypoint) {
-    if (session.currentLocation == null) {
-      return waypoint.distanceFromStart - session.metrics.distanceTraveled;
+    final loc = session.currentLocation;
+    if (loc == null) {
+      return (waypoint.distanceFromStart - session.metrics.distanceTraveled)
+          .clamp(0, double.infinity);
     }
-    // Approximate - actual distance would need haversine calculation
-    return (waypoint.distanceFromStart - session.metrics.distanceTraveled).clamp(0, double.infinity);
+    // Haversine distance from current GPS position to next waypoint
+    const r = 6371000.0; // Earth radius in metres
+    final lat1 = loc.latitude * math.pi / 180;
+    final lat2 = waypoint.location.latitude * math.pi / 180;
+    final dLat = (waypoint.location.latitude - loc.latitude) * math.pi / 180;
+    final dLon = (waypoint.location.longitude - loc.longitude) * math.pi / 180;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) *
+            math.sin(dLon / 2) * math.sin(dLon / 2);
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
   IconData _getWaypointIcon(WaypointType type) {
@@ -413,19 +425,12 @@ class ActiveNavigationOverlay extends StatelessWidget {
   Color _getSegmentColor(RouteSegmentType type) {
     switch (type) {
       case RouteSegmentType.land:
-        return Colors.blue;
+        return AppColors.primary;
       case RouteSegmentType.marine:
-        return Colors.cyan;
+        return AppColors.accent;
       case RouteSegmentType.transition:
         return Colors.orange;
     }
-  }
-
-  Color _getProgressColor(double progress) {
-    if (progress < 25) return Colors.red;
-    if (progress < 50) return Colors.orange;
-    if (progress < 75) return Colors.blue;
-    return Colors.green;
   }
 
   String _formatDistance(double meters) {

@@ -1,4 +1,5 @@
 ﻿import 'dart:io';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';
@@ -86,44 +87,60 @@ class OrdersTab extends StatelessWidget {
   }
 
   Widget _buildOrdersTabBar(int sellerCount, int buyerCount, MarketplaceLocalizations l10n) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(14),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: TabBar(
         indicator: BoxDecoration(
-          color: const Color(0xFF0D4F54),
-          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0D4F54), Color(0xFF0E7490)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0D4F54).withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey.shade600,
+        unselectedLabelColor: const Color(0xFF0D4F54),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+        splashBorderRadius: BorderRadius.circular(12),
         tabs: [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.sell_outlined, size: 18),
-                const SizedBox(width: 6),
-                Text(l10n.sellingTab(sellerCount)),
-              ],
-            ),
+          _buildTab(
+            icon: Icons.sell_outlined,
+            label: l10n.sellingTab(sellerCount),
+            count: sellerCount,
           ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.shopping_bag_outlined, size: 18),
-                const SizedBox(width: 6),
-                Text(l10n.purchasesTab(buyerCount)),
-              ],
-            ),
+          _buildTab(
+            icon: Icons.shopping_bag_outlined,
+            label: l10n.purchasesTab(buyerCount),
+            count: buyerCount,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTab({required IconData icon, required String label, required int count}) {
+    return Tab(
+      height: 46,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 17),
+            const SizedBox(width: 6),
+            Text(label),
+          ],
+        ),
       ),
     );
   }
@@ -253,13 +270,14 @@ class _OrdersList extends StatelessWidget {
                 ),
               ),
               maxLines: 2,
+              style: const TextStyle(fontSize: 14),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: Text(l10n.cancel, style: const TextStyle(fontSize: 16),),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -314,7 +332,7 @@ class _OrdersList extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(l10n.orderCancelled),
-                    backgroundColor: Colors.grey.shade700,
+                    backgroundColor: AppColors.red,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -323,7 +341,7 @@ class _OrdersList extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
+              backgroundColor: AppColors.red,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),

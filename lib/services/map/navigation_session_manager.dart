@@ -74,13 +74,14 @@ class NavigationSessionManager extends ChangeNotifier {
       );
 
       // Create session
+      final initSpeed = initialLocation.speed;
       _session = NavigationSession(
         id: 'session_${DateTime.now().millisecondsSinceEpoch}',
         route: route,
         state: NavigationState.active,
         currentLocation: currentLocation,
         currentBearing: initialLocation.heading,
-        currentSpeed: initialLocation.speed,
+        currentSpeed: (initSpeed != null && initSpeed >= 0) ? initSpeed : 0.0,
         currentSegmentIndex: 0,
         currentWaypointIndex: 0,
         startTime: DateTime.now(),
@@ -206,7 +207,9 @@ class NavigationSessionManager extends ChangeNotifier {
 
     final currentLocation = LatLng(lat, lon);
     final bearing = locationData.heading;
-    final speed = locationData.speed;
+    // GPS speed can return -1 when unavailable; clamp to zero
+    final rawSpeed = locationData.speed;
+    final speed = (rawSpeed != null && rawSpeed >= 0) ? rawSpeed : 0.0;
 
     // Update breadcrumbs
     final updatedBreadcrumbs = List<LatLng>.from(_session!.breadcrumbs);

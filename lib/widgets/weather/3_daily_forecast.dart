@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/forecast_day_model.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 
 class WeatherDailyForecast extends StatelessWidget {
   final WeatherResponseModel weatherData;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   const WeatherDailyForecast(
-      {super.key, required this.weatherData, required this.helper});
+      {super.key, required this.weatherData, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class WeatherDailyForecast extends StatelessWidget {
       child: Column(
         children: [
           WeatherStyles.sectionHeader(
-              '${helper.n(days.length)}-${helper.l10n.dailyForecast}',
+              '${l10n.n(days.length)}-${l10n.dailyForecast}',
               WeatherStyles.orange),
           ...days.asMap().entries.map((e) => _DayRow(
                 day: e.value,
@@ -34,7 +34,6 @@ class WeatherDailyForecast extends StatelessWidget {
                 weekMin: weekMin,
                 weekMax: weekMax,
                 currentTemp: weatherData.currentWeather.tempC,
-                helper: helper,
               )),
           const SizedBox(height: 8),
         ],
@@ -49,7 +48,7 @@ class _DayRow extends StatelessWidget {
   final double weekMin;
   final double weekMax;
   final double currentTemp;
-  final WeatherL10nHelper helper;
+  // final WeatherL10nHelper helper;
 
   const _DayRow({
     required this.day,
@@ -57,14 +56,16 @@ class _DayRow extends StatelessWidget {
     required this.weekMin,
     required this.weekMax,
     required this.currentTemp,
-    required this.helper,
+    // required this.helper,
   });
 
   @override
   Widget build(BuildContext context) {
+
+    final l10n = WeatherLocalizations.of(context);
     final date = DateTime.parse(day.date);
     final dayName =
-        isToday ? helper.l10n.weatherToday : helper.dayName(date.weekday);
+        isToday ? l10n.weatherToday : l10n.dayName(date.weekday);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -74,7 +75,7 @@ class _DayRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 55,
+            width: 60,
             child: Text(
               dayName,
               style: TextStyle(
@@ -96,7 +97,7 @@ class _DayRow extends StatelessWidget {
                           color: WeatherStyles.accent, size: 12),
                       const SizedBox(width: 2),
                       Text(
-                        '${helper.n(day.day.dailyChanceOfRain)}%',
+                        '${l10n.n(day.day.dailyChanceOfRain)}%',
                         style: const TextStyle(
                             color: WeatherStyles.accent,
                             fontSize: 12,
@@ -108,7 +109,7 @@ class _DayRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '${helper.n(day.day.mintempC.round())}°',
+            '${l10n.n(day.day.mintempC.round())}°',
             style: TextStyle(
                 color: WeatherStyles.white(0.5),
                 fontSize: 16,
@@ -127,7 +128,7 @@ class _DayRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '${helper.n(day.day.maxtempC.round())}°',
+            '${l10n.n(day.day.maxtempC.round())}°',
             style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,

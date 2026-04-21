@@ -319,6 +319,11 @@ class FishMarketplaceService extends ChangeNotifier {
           'respondAt': Timestamp.now(),
         });
         await updateListingStatus(listingId, ListingStatus.available);
+        final idx = _orders.indexWhere((o) => o.id == orderId);
+        if (idx != -1) {
+          _orders[idx] = _orders[idx].copyWith(status: OrderStatus.cancelled);
+          notifyListeners();
+        }
       }
     } catch (e) {
       _error = 'Failed to cancel order: $e';

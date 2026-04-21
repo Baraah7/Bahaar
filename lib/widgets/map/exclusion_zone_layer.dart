@@ -1,3 +1,4 @@
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:bahaar/services/map/exclusion_zone_service.dart';
@@ -22,11 +23,11 @@ class ExclusionZoneLayer extends StatelessWidget {
 
     final circles = service.zones.map((zone) {
       final color = zone.isGasInstallation
-          ? Colors.orange.withValues(alpha: 0.25)
-          : Colors.red.withValues(alpha: 0.20);
+          ? AppColors.brown.withValues(alpha: 0.25)
+          : Colors.orange.withValues(alpha: 0.25);
       final borderColor = zone.isGasInstallation
-          ? Colors.orange.shade700
-          : Colors.red.shade700;
+          ? AppColors.brown
+          : Colors.orange.shade700;
 
       return CircleMarker(
         point: zone.center,
@@ -48,8 +49,8 @@ class ExclusionZoneLayer extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: zone.isGasInstallation
-                  ? Colors.orange.shade700
-                  : Colors.red.shade800,
+                  ? AppColors.brown
+                  : Colors.orange.shade700,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
               boxShadow: const [

@@ -4,15 +4,13 @@ import '../../models/weather/tide_model.dart';
 import '../../l10n/weather/weather_localizations.dart';
 import '../../utilities/cn/celestial_calculator.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
-import 'compact_card.dart';
-import 'header.dart';
-import 'hourly_forecast.dart';
-import 'daily_forecast.dart';
-import 'wind_card.dart';
-import 'sun_moon_card.dart';
-import 'tides_card.dart';
-import 'celestial_almanac_card.dart';
+import '5_compact_card.dart';
+import '1_header.dart';
+import '2_hourly_forecast.dart';
+import '3_daily_forecast.dart';
+import '4_wind_card.dart';
+import '6_tides_card.dart';
+import '7_celestial_almanac_card.dart';
 
 class WeatherList extends StatelessWidget {
   final WeatherResponseModel weatherData;
@@ -28,23 +26,22 @@ class WeatherList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final helper = WeatherL10nHelper(l10n);
     final current = weatherData.currentWeather;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          WeatherHeader(weatherData: weatherData, helper: helper),
-          WeatherHourlyForecast(weatherData: weatherData, helper: helper),
+          WeatherHeader(weatherData: weatherData, l10n: l10n),
+          WeatherHourlyForecast(weatherData: weatherData, l10n: l10n),
           const SizedBox(height: 20),
-          WeatherDailyForecast(weatherData: weatherData, helper: helper),
+          WeatherDailyForecast(weatherData: weatherData, l10n: l10n),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                WeatherWindCard(wind: current, helper: helper),
+                WeatherWindCard(wind: current, l10n: l10n),
                 const SizedBox(height: 16),
 
                 // Compact info row 1: UV + Feels like
@@ -53,8 +50,8 @@ class WeatherList extends StatelessWidget {
                     child: WeatherCompactCard(
                       icon: Icons.wb_sunny_outlined,
                       title: l10n.uvIndex,
-                      value: helper.n(current.uv.round()),
-                      subtitle: helper.uvLevel(current.uv),
+                      value: l10n.n(current.uv.round()),
+                      subtitle: l10n.uvLevel(current.uv),
                       accentColor: WeatherStyles.uvColor(current.uv),
                     ),
                   ),
@@ -63,8 +60,8 @@ class WeatherList extends StatelessWidget {
                     child: WeatherCompactCard(
                       icon: Icons.thermostat_outlined,
                       title: l10n.feelsLike,
-                      value: '${helper.n(current.feelslikeC.round())}°',
-                      subtitle: helper.feelsLikeDescription(
+                      value: '${l10n.n(current.feelslikeC.round())}°',
+                      subtitle: l10n.feelsLikeDescription(
                           current.feelslikeC, current.tempC),
                       accentColor: const Color(0xFF64B5F6),
                     ),
@@ -78,9 +75,9 @@ class WeatherList extends StatelessWidget {
                     child: WeatherCompactCard(
                       icon: Icons.water_drop,
                       title: l10n.humidity,
-                      value: '${helper.n(current.humidity)}%',
+                      value: '${l10n.n(current.humidity)}%',
                       subtitle:
-                          '${l10n.weatherDewPoint} ${helper.n(current.dewpointC?.round() ?? 0)}°',
+                          '${l10n.weatherDewPoint} ${l10n.n(current.dewpointC?.round() ?? 0)}°',
                       accentColor: WeatherStyles.accent,
                     ),
                   ),
@@ -90,22 +87,15 @@ class WeatherList extends StatelessWidget {
                       icon: Icons.visibility_outlined,
                       title: l10n.visibility,
                       value:
-                          '${helper.n(current.visKm.round())} ${helper.km}',
+                          '${l10n.n(current.visKm.round())} ${l10n.km}',
                       subtitle:
-                          helper.visibilityDescription(current.visKm),
+                          l10n.visibilityDescription(current.visKm),
                       accentColor: const Color(0xFF81C784),
                     ),
                   ),
                 ]),
                 const SizedBox(height: 16),
-
-                if (weatherData.forecast != null)
-                  WeatherSunMoonCard(
-                    astro: weatherData.forecast!.forecastDay.astro,
-                    helper: helper,
-                  ),
-                const SizedBox(height: 16),
-                WeatherTidesCard(tides: tides, helper: helper),
+                WeatherTidesCard(tides: tides, l10n: l10n),
                 const SizedBox(height: 16),
                 _buildCelestialAlmanac(),
               ],

@@ -28,6 +28,17 @@ class FishRecognitionLocalizations {
   String get failedToSelectImage => _isAr ? 'فشل تحديد الصورة' : 'Failed to select image';
   String get modelNotReady => _isAr ? 'النموذج غير جاهز' : 'Model not ready';
   String get classificationFailed => _isAr ? 'فشل التصنيف' : 'Classification failed';
+  String get highConfidence => _isAr ? 'ثقة عالية' : 'High Confidence';
+  String get lowConfidence  => _isAr ? 'ثقة منخفضة' : 'Low Confidence';
+  String get reanalyze      => _isAr ? 'إعادة التحليل' : 'Reanalyze';
+  String get fishInfo       => _isAr ? 'معلومات السمكة' : 'Fish Info';
+  String get labelHabitat   => _isAr ? 'الموطن' : 'Habitat';
+  String get labelSize      => _isAr ? 'الحجم' : 'Size';
+  String get labelSeason    => _isAr ? 'أفضل موسم' : 'Best Season';
+  String get labelDiet      => _isAr ? 'الغذاء' : 'Diet';
+  String get labelFlavor    => _isAr ? 'المذاق' : 'Flavor';
+  String get labelPopularIn => _isAr ? 'شائع في' : 'Popular In';
+  String get labelNutrition => _isAr ? 'القيمة الغذائية' : 'Nutrition';
 
   // ── Catch prediction ─────────────────────────────────────────────────────────
   String get selectLocationFirst => _isAr ? 'يرجى اختيار موقع أولاً'        : 'Please select a location first';

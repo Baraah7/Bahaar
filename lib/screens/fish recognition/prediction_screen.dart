@@ -176,7 +176,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: Row(
         children: [
           if (Navigator.canPop(context)) ...[
@@ -189,13 +189,37 @@ class _PredictionScreenState extends State<PredictionScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          Text(
-            _l10n.predictionTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _l10n.predictionTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'AI-Powered Catch Analysis',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            ),
+            child: const Icon(Icons.set_meal_rounded, color: Colors.white, size: 28),
           ),
         ],
       ),
@@ -518,43 +542,68 @@ class _PredictionScreenState extends State<PredictionScreen> {
     final label = _probabilityLabel(probability);
 
     return AppCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
+          Row(
+            children: [
+              const Icon(Icons.analytics_outlined, color: _teal, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'Catch Probability',
+                style: TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14, color: _teal),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           SizedBox(
-            width: 160,
-            height: 160,
+            width: 170,
+            height: 170,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 160,
-                  height: 160,
+                  width: 170,
+                  height: 170,
                   child: CircularProgressIndicator(
                     value: probability / 100,
-                    strokeWidth: 14,
+                    strokeWidth: 16,
                     backgroundColor: Colors.grey.shade200,
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                     strokeCap: StrokeCap.round,
                   ),
                 ),
-                Text(
-                  '${_n(probability.toStringAsFixed(0))}%',
-                  style: TextStyle(
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${_n(probability.toStringAsFixed(0))}%',
+                      style: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Text(label,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: color.withValues(alpha: 0.35)),
+            ),
+            child: Text(
+              label,
               style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: color),
+            ),
+          ),
         ],
       ),
     );
@@ -588,10 +637,10 @@ class _PredictionScreenState extends State<PredictionScreen> {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 3),
             padding:
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -602,8 +651,15 @@ class _PredictionScreenState extends State<PredictionScreen> {
             ),
             child: Column(
               children: [
-                Icon(item['icon'] as IconData, color: color, size: 20),
-                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item['icon'] as IconData, color: color, size: 18),
+                ),
+                const SizedBox(height: 6),
                 Text(item['label'] as String,
                     style: TextStyle(
                         color: Colors.grey.shade600, fontSize: 10),

@@ -62,7 +62,7 @@ class FishingLogLocalizations {
   String get noTripsYet => _isAr ? 'لا توجد رحلات بعد' : 'No trips yet';
   String get tapStartTrip => _isAr ? 'اضغط على الزر أدناه لبدء أول رحلة' : 'Tap the button below to start your first trip';
   String get resumeTrip => _isAr ? 'استئناف الرحلة' : 'Resume Trip';
-  String get startTrip => _isAr ? 'بدء رحلة' : 'Start Trip';
+  String get startTrip => _isAr ? 'بدء رحلة جديدة' : 'Start New Trip';
   String get tripInProgress => _isAr ? 'رحلة جارية' : 'Trip in progress';
   String get catchWord => _isAr ? 'مصيد' : 'catch';
   String get catches => _isAr ? 'مصطادات' : 'catches';

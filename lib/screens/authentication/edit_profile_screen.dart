@@ -72,7 +72,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Form(
       key: _formKey,
       child: GradientScreen(
-        expandedHeight: 200,
+        expandedHeight: 220,
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
@@ -96,7 +96,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ],
         flexContent: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,

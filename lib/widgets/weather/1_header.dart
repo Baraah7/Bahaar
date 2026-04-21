@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 
 class WeatherHeader extends StatelessWidget {
   final WeatherResponseModel weatherData;
-  final WeatherL10nHelper helper;
 
   const WeatherHeader(
-      {super.key, required this.weatherData, required this.helper});
+      {super.key, required this.weatherData, required WeatherLocalizations l10n});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = WeatherLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
@@ -37,12 +38,12 @@ class WeatherHeader extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                helper.cityName(weatherData.location.name).toUpperCase(),
+                l10n.cityName(weatherData.location.name).toUpperCase(),
+                // helper.cityName(weatherData.location.name).toUpperCase(),
                 style: TextStyle(
                   color: WeatherStyles.white(0.9),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 3,
                 ),
               ),
             ],
@@ -80,7 +81,7 @@ class WeatherHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    helper.n(weatherData.currentWeather.tempC.round()),
+                    l10n.n(weatherData.currentWeather.tempC.round()),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 72,
@@ -123,7 +124,7 @@ class WeatherHeader extends StatelessWidget {
                     size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  helper.conditionText(
+                  l10n.conditionText(
                       weatherData.currentWeather.condition.text),
                   style: const TextStyle(
                     color: Colors.white,
@@ -146,7 +147,7 @@ class WeatherHeader extends StatelessWidget {
                       .round(),
                   icon: Icons.arrow_upward,
                   color: WeatherStyles.orange,
-                  helper: helper,
+                  l10n: l10n,
                 ),
                 Padding(
                   padding:
@@ -161,7 +162,7 @@ class WeatherHeader extends StatelessWidget {
                       .round(),
                   icon: Icons.arrow_downward,
                   color: const Color(0xFF64B5F6),
-                  helper: helper,
+                  l10n: l10n,
                 ),
               ],
             ),
@@ -175,21 +176,27 @@ class _TempIndicator extends StatelessWidget {
   final int temp;
   final IconData icon;
   final Color color;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
+
 
   const _TempIndicator(
-      {required this.temp,
+      {
+      required this.temp,
       required this.icon,
       required this.color,
-      required this.helper});
+      required this.l10n,
+      });
 
   @override
   Widget build(BuildContext context) {
+
+    final l10n = WeatherLocalizations.of(context);
+
     return Row(
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 4),
-        Text('${helper.n(temp)}°',
+        Text('${l10n.n(temp)}°',
             style: TextStyle(
                 color: color,
                 fontSize: 18,

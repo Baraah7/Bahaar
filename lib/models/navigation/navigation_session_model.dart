@@ -45,10 +45,15 @@ class NavigationSession {
 
   // Get estimated time remaining (seconds)
   int get timeRemaining {
-    if (route.estimatedDuration == 0) return 0;
-    final elapsed = metrics.elapsedTime;
-    final estimated = route.estimatedDuration;
-    return (estimated - elapsed).clamp(0, estimated);
+    final remaining = distanceRemaining;
+    // Use actual GPS speed when valid (> 0.5 m/s to avoid division by near-zero)
+    final speed = currentSpeed;
+    if (speed != null && speed > 0.5) {
+      return (remaining / speed).round();
+    }
+    // Fall back to average boat speed (10 knots = 5.14 m/s)
+    const averageSpeed = 5.14;
+    return (remaining / averageSpeed).round();
   }
 
   // Get the next waypoint to reach

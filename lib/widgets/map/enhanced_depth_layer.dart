@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
@@ -133,22 +134,22 @@ class DepthLegend extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Water Depth',
-            style: TextStyle(
+          Text(
+            MapLocalizations.of(context).depthLegendTitle,
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          _buildLegendItem(const Color(0xFFC8F0C8), '0 m', 'Land / Coast'),
-          _buildLegendItem(const Color(0xFFB8E8F8), '0–10 m', 'Very Shallow'),
-          _buildLegendItem(const Color(0xFF80D0F8), '10–50 m', 'Shallow'),
-          _buildLegendItem(const Color(0xFF50C0F8), '50–100 m', 'Moderate'),
-          _buildLegendItem(const Color(0xFF10B0F0), '100–300 m', 'Deep'),
-          _buildLegendItem(const Color(0xFF0090D8), '300–700 m', 'Very Deep'),
-          _buildLegendItem(const Color(0xFF0060C8), '700–2000 m', 'Abyssal'),
-          _buildLegendItem(const Color(0xFF0030A0), '2000 m+', 'Ultra Deep'),
+          _buildLegendItem(const Color(0xFFC8F0C8), '0 m', MapLocalizations.of(context).depthLandCoast),
+          _buildLegendItem(const Color(0xFFB8E8F8), '0–10 m', MapLocalizations.of(context).depthVeryShallow),
+          _buildLegendItem(const Color(0xFF80D0F8), '10–50 m', MapLocalizations.of(context).depthShallow),
+          _buildLegendItem(const Color(0xFF50C0F8), '50–100 m', MapLocalizations.of(context).depthModerate),
+          _buildLegendItem(const Color(0xFF10B0F0), '100–300 m', MapLocalizations.of(context).depthDeep),
+          _buildLegendItem(const Color(0xFF0090D8), '300–700 m', MapLocalizations.of(context).depthVeryDeep),
+          _buildLegendItem(const Color(0xFF0060C8), '700–2000 m', MapLocalizations.of(context).depthAbyssal),
+          _buildLegendItem(const Color(0xFF0030A0), '2000 m+', MapLocalizations.of(context).depthUltraDeep),
         ],
       ),
     );

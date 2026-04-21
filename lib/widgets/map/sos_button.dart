@@ -1,18 +1,10 @@
-import 'dart:async';
+import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bahaar/services/sos_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-/// A persistent floating SOS button that requires a 3-second long-press
-/// to activate, preventing accidental triggers.
-///
-/// Shows a circular progress ring during the hold, then opens a confirmation
-/// dialog before dispatching the alert.
 class SosButton extends StatefulWidget {
-  /// Called when the user confirms SOS and the system begins sending.
-  final Future<SosAlert> Function() onSosConfirmed;
-
-  const SosButton({super.key, required this.onSosConfirmed});
+  const SosButton({super.key});
 
   @override
   State<SosButton> createState() => _SosButtonState();
@@ -24,7 +16,6 @@ class _SosButtonState extends State<SosButton>
 
   late AnimationController _progressController;
   bool _holding = false;
-  bool _sending = false;
 
   @override
   void initState() {
@@ -46,7 +37,6 @@ class _SosButtonState extends State<SosButton>
   }
 
   void _onPressStart() {
-    if (_sending) return;
     setState(() => _holding = true);
     _progressController.forward(from: 0);
     HapticFeedback.mediumImpact();
@@ -68,6 +58,7 @@ class _SosButtonState extends State<SosButton>
   }
 
   Future<void> _showConfirmationDialog() async {
+    final l10n = MapLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -75,36 +66,35 @@ class _SosButtonState extends State<SosButton>
         backgroundColor: Colors.red.shade900,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(Icons.sos, color: Colors.white, size: 48),
-        title: const Text(
-          'Send SOS Alert?',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.sosSendAlert,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        content: const Text(
-          'This will send your GPS location and status to emergency services.\n\nOnly use in a genuine emergency.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          l10n.sosDialogBody,
+          style: const TextStyle(color: Colors.white70),
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.red.shade900,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'SEND SOS',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            child: Text(
+              l10n.sosSend,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],
@@ -112,74 +102,17 @@ class _SosButtonState extends State<SosButton>
     );
 
     if (confirmed == true) {
-      await _dispatchSos();
+      await _callEmergency();
     }
   }
 
-  Future<void> _dispatchSos() async {
-    setState(() => _sending = true);
-
-    // Show sending indicator
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(width: 12),
-              Text('Sending SOS alert...'),
-            ],
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 30),
-        ),
-      );
+  Future<void> _callEmergency() async {
+    final uri = Uri.parse('tel:39999334');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      await launchUrl(uri);
     }
-
-    final alert = await widget.onSosConfirmed();
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    setState(() => _sending = false);
-
-    if (alert.status == SosStatus.sent) {
-      _showResultDialog(success: true);
-    } else {
-      _showResultDialog(success: false);
-    }
-  }
-
-  void _showResultDialog({required bool success}) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: Icon(
-          success ? Icons.check_circle : Icons.error,
-          color: success ? Colors.green : Colors.red,
-          size: 48,
-        ),
-        title: Text(success ? 'SOS Sent' : 'SOS Failed'),
-        content: Text(
-          success
-              ? 'Your emergency alert has been transmitted with your GPS location. Help is on the way.'
-              : 'Failed to send SOS alert. Please try again or use radio channel 16.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -210,7 +143,7 @@ class _SosButtonState extends State<SosButton>
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: _sending ? Colors.orange : Colors.red.shade700,
+                color: Colors.red.shade700,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2.5),
                 boxShadow: [
@@ -221,13 +154,7 @@ class _SosButtonState extends State<SosButton>
                   ),
                 ],
               ),
-              child: _sending
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.sos, color: Colors.white, size: 26),
+              child: const Icon(Icons.sos, color: Colors.white, size: 26),
             ),
           ],
         ),

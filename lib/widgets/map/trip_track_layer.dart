@@ -80,6 +80,10 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     for (final route in _recorder.portRoutes) {
       portMarkers.add(_portMarker(route.port));
     }
+    // if (depPort != null &&
+    //     !_recorder.portRoutes.any((r) => r.port.id == depPort.id)) {
+    //   portMarkers.add(_portMarker(depPort, isDeparture: true));
+    // }
 
     // ── Current position marker ───────────────────────────────────────────
     final posMarkers = <Marker>[];

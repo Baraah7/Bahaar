@@ -413,6 +413,92 @@ class _CelestialNavigationScreenState
     return 'Az ${aa.azimuth.toStringAsFixed(1)}°  Alt ${aa.altitude.toStringAsFixed(1)}°';
   }
 
+  // ── Steps card ────────────────────────────────────────────────────────────
+
+  Widget _buildStepsCard() {
+    final steps = [
+      ['Go outside at night', 'Find a spot away from city lights with a clear view of the sky'],
+      ['Hold device steady', 'Hold your phone horizontally with the camera pointing upward'],
+      ['Tap Start Sky Scan', 'Press the button below to open the camera and begin detection'],
+      ['Stay still 5–10 seconds', 'Keep the device stable while the engine detects stars'],
+      ['Review the results', 'Check the detected star count and confidence score below'],
+    ];
+
+    return Card(
+      elevation: 2,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.list_alt_outlined, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                const Text(
+                  'How to Use',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.primary),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+            ...steps.asMap().entries.map((entry) {
+              final i = entry.key;
+              final step = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${i + 1}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(step[0],
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13)),
+                          const SizedBox(height: 2),
+                          Text(step[1],
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                  height: 1.4)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -466,75 +552,9 @@ class _CelestialNavigationScreenState
               },
             ),
 
-          // ── Astronomical Clock ──────────────────────────────────────────
-          _SectionCard(
-            title: 'Astronomical Clock',
-            icon: Icons.access_time,
-            children: [
-              _Row('UTC', _fmtUtc(_nowUtc)),
-              _Row('GMST', _fmtGmst(gmst)),
-              _Row('GMST (°)', gmst != null ? _fmtDeg(gmst) : '--'),
-              _Row(
-                'LST',
-                lst != null ? _fmtGmst(lst) : '— needs GPS —',
-              ),
-              if (_gpsPosition != null) ...[
-                const Divider(height: 12),
-                _Row('GPS Lat', '${_gpsPosition!.latitude.toStringAsFixed(5)}°'),
-                _Row('GPS Lon', '${_gpsPosition!.longitude.toStringAsFixed(5)}°'),
-              ] else
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: _gpsLoading
-                      ? const Center(
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : TextButton.icon(
-                          icon: const Icon(Icons.gps_fixed, size: 16),
-                          label: const Text('Get GPS'),
-                          onPressed: _fetchGps,
-                        ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── Celestial Bodies ────────────────────────────────────────────
-          _SectionCard(
-            title: 'Celestial Body Positions',
-            icon: Icons.wb_sunny_outlined,
-            children: [
-              _Row('☀️ Sun', _fmtAzAlt(sunPos)),
-              if (sunPos != null && sunPos.altitude < 0)
-                const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Text('Sun below horizon',
-                      style: TextStyle(fontSize: 11, color: Colors.grey)),
-                ),
-              const SizedBox(height: 4),
-              _Row('🌙 Moon', _fmtAzAlt(moonPos)),
-              if (moonPos != null && moonPos.altitude < 8 && moonPos.altitude >= 0)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Text(
-                    'Moon at ${moonPos.altitude.toStringAsFixed(1)}° — below 8° safe limit',
-                    style: const TextStyle(
-                        fontSize: 11, color: Color(0xFFB45309)),
-                  ),
-                ),
-              if (_gpsPosition == null)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text('Enable GPS for live body positions.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
+          // ── How-to steps ────────────────────────────────────────────────
+          _buildStepsCard(),
+          const SizedBox(height: 12),
 
           // ── Sky Scanner ─────────────────────────────────────────────────
           _SectionCard(
@@ -549,38 +569,56 @@ class _CelestialNavigationScreenState
                     style: const TextStyle(color: Colors.red, fontSize: 12),
                   ),
                 ),
-              // Open scanner button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  icon: const Icon(Icons.videocam_outlined, size: 18),
-                  label: Text(_detectedStars > 0
-                      ? 'Scan Again'
-                      : 'Start Sky Scan'),
+                  icon: const Icon(Icons.videocam_outlined, size: 20),
+                  label: Text(
+                    _detectedStars > 0 ? 'Scan Again' : 'Start Sky Scan',
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
                   onPressed: _openScanner,
                 ),
               ),
-              const SizedBox(height: 10),
-              // Last scan results
+              const SizedBox(height: 12),
               if (_detectedStars > 0) ...[
-                _Row('Stars detected', '$_detectedStars'),
-                _Row('Engine confidence',
-                    '${_engineConfidence.toStringAsFixed(1)} %'),
-                _Row('IMU drift',
-                    '${_imuDrift.toStringAsFixed(3)} °/s'),
-                _Row('Motion blurred', _motionBlurred ? 'YES' : 'No'),
-                _Row(
-                  'Horizon',
-                  _horizonDetected
-                      ? 'Detected  ${_horizonAngle.toStringAsFixed(1)}°'
-                      : 'Not detected',
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Column(
+                    children: [
+                      _Row('Stars detected', '$_detectedStars'),
+                      _Row('Engine confidence',
+                          '${_engineConfidence.toStringAsFixed(1)} %'),
+                      _Row('IMU drift', '${_imuDrift.toStringAsFixed(3)} °/s'),
+                      _Row('Horizon',
+                          _horizonDetected
+                              ? 'Detected  ${_horizonAngle.toStringAsFixed(1)}°'
+                              : 'Not detected'),
+                    ],
+                  ),
                 ),
                 if (_identifiedStarNames.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 10),
+                  const Text('Identified Stars',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black54)),
+                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
@@ -604,179 +642,6 @@ class _CelestialNavigationScreenState
                   'Point the camera at the night sky and tap Start Sky Scan.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── Sight Reduction Calculator ──────────────────────────────────
-          _SectionCard(
-            title: 'Sight Reduction Calculator',
-            icon: Icons.calculate_outlined,
-            children: [
-              _NumField(
-                  label: 'Apparent Altitude (°)',
-                  controller: _altController,
-                  hint: 'e.g. 45.3'),
-              _NumField(
-                  label: 'Height of Eye (m)',
-                  controller: _hoeController,
-                  hint: 'e.g. 3'),
-              _NumField(
-                  label: 'Pressure (mb)',
-                  controller: _pressController,
-                  hint: 'e.g. 1013'),
-              _NumField(
-                  label: 'Temperature (°C)',
-                  controller: _tempController,
-                  hint: 'e.g. 25'),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.functions, size: 18),
-                  label: const Text('Apply Corrections'),
-                  onPressed: _calculateSightReduction,
-                ),
-              ),
-              if (_correctionArcmin != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _correctedAltDeg != null
-                        ? const Color(0xFFE8F5E9)
-                        : const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: _correctedAltDeg != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _Row('Total correction',
-                                '${_correctionArcmin!.toStringAsFixed(2)}\''),
-                            _Row('True altitude',
-                                '${_correctedAltDeg!.toStringAsFixed(3)}°'),
-                          ],
-                        )
-                      : Text(
-                          _correctionReason.isNotEmpty
-                              ? _correctionReason
-                              : 'Sighting rejected — below 8° limit.',
-                          style: const TextStyle(
-                              color: Colors.red, fontSize: 12),
-                        ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── Confidence Score Engine ─────────────────────────────────────
-          _SectionCard(
-            title: 'Confidence Assessment',
-            icon: Icons.speed_outlined,
-            children: [
-              _NumField(
-                  label: 'Pitch Std Dev (°) — sea state proxy',
-                  controller: _pitchController,
-                  hint: 'e.g. 1.0  (calm)  >2° = rough'),
-              _NumField(
-                  label: 'Detected usable stars',
-                  controller: _starsController,
-                  hint: 'e.g. 12'),
-              _NumField(
-                  label: 'Peak gyro drift (°/s)',
-                  controller: _driftController,
-                  hint: 'e.g. 0.05'),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.assessment_outlined, size: 18),
-                  label: const Text('Compute Score'),
-                  onPressed: () {
-                    _calculateSightReduction();
-                    _calculateConfidence();
-                  },
-                ),
-              ),
-              if (_confidenceResult != null) ...[
-                const SizedBox(height: 10),
-                _ConfidenceBar(result: _confidenceResult!),
-              ],
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── GPS Spoofing Detection & Fix Posting ────────────────────────
-          _SectionCard(
-            title: 'GPS Anti-Spoofing',
-            icon: Icons.security_outlined,
-            children: [
-              const Text(
-                'Every 5 min the app compares the celestial fix to the GPS '
-                'position. A delta > 2 NM triggers a spoofing alert.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-              const SizedBox(height: 10),
-              if (_gpsPosition == null)
-                const Text('GPS unavailable — enable location.',
-                    style: TextStyle(color: Colors.red, fontSize: 12))
-              else ...[
-                _Row('GPS fix', '${_gpsPosition!.latitude.toStringAsFixed(4)}°, '
-                    '${_gpsPosition!.longitude.toStringAsFixed(4)}°'),
-                if (_postedFix != null)
-                  _Row('DS-1 fix timestamp',
-                      _fmtUtc(_postedFix!.timestamp)),
-              ],
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _canPost
-                        ? const Color(0xFF1B5E20)
-                        : Colors.grey,
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.pin_drop_outlined, size: 18),
-                  label: Text(_postedFix != null
-                      ? 'Update Fix on Map'
-                      : 'Post Fix to Map'),
-                  onPressed: _canPost ? _postFixToMap : null,
-                ),
-              ),
-              if (!_canPost)
-                const Padding(
-                  padding: EdgeInsets.only(top: 6),
-                  child: Text(
-                    'Compute confidence score first (score ≥ 30 required).',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── System limits card ──────────────────────────────────────────
-          _SectionCard(
-            title: 'System Limits (DS-1)',
-            icon: Icons.info_outline,
-            children: const [
-              _InfoRow('Accuracy', '3–5 Nautical Miles (95% CI)'),
-              _InfoRow('Min star altitude', '8° above horizon'),
-              _InfoRow('Max gyro drift', '< 0.5 °/s for valid fix'),
-              _InfoRow('Rough sea reject', 'Pitch σ > 2° halves score'),
-              _InfoRow('Spoofing threshold', 'GPS Δ > 2 NM'),
-              _InfoRow('Score < 30', 'Fix refused — never guessed'),
             ],
           ),
           const SizedBox(height: 24),

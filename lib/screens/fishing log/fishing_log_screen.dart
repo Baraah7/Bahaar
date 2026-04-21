@@ -127,7 +127,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       title: l10n.endTrip,
       content: l10n.endCurrentTrip,
       confirmLabel: l10n.endButtonLabel,
-      confirmColor: const Color(0xFF4597a8),
+      confirmColor: AppColors.red,
     );
     if (confirm != true) return;
     await _service.endTrip();
@@ -163,7 +163,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       title: l10n.deleteTrip,
       content: l10n.deleteTripConfirmFinished(trip.title ?? ''),
       confirmLabel: l10n.delete,
-      confirmColor: const Color(0xFF6b0911),
+      confirmColor: AppColors.red,
     );
     if (confirm != true) return;
     await _service.deleteTrip(trip.id);
@@ -178,7 +178,7 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       title: l10n.deleteActiveTrip,
       content: l10n.deleteTripConfirm,
       confirmLabel: l10n.delete,
-      confirmColor: const Color(0xFF6b0911),
+      confirmColor: AppColors.red,
     );
     if (confirm != true || !mounted) return;
     await _service.deleteTrip(activeTrip.id);
@@ -196,32 +196,32 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       builder: (ctx) {
         final dl10n = FishingLogLocalizations.of(ctx);
         return AlertDialog(
-          backgroundColor: AppColors.cream,
+          backgroundColor: const Color.fromARGB(255, 237, 226, 214),
           title: Text(dl10n.editTripTitle,
-              style: const TextStyle(color: AppColors.primary, fontSize: 15)),
+              style: const TextStyle(color: AppColors.brown, fontSize: 16, fontWeight: FontWeight.w700 )),
           content: TextField(
             controller: ctrl,
             autofocus: true,
-            style: const TextStyle(color: AppColors.primary),
+            style: const TextStyle(color: AppColors.brown),
             decoration: InputDecoration(
               hintText: dl10n.tripNameHint,
-              hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.4)),
+              hintStyle: TextStyle(color: AppColors.brown.withValues(alpha: 0.4)),
               enabledBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF4597a8))),
+                  borderSide: BorderSide(color: AppColors.brown)),
               focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.primary)),
+                  borderSide: BorderSide(color: AppColors.brown)),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(dl10n.cancel,
-                  style: const TextStyle(color: Color(0xFFfaf7e8))),
+                  style: const TextStyle(color: Color.fromARGB(255, 173, 148, 119))),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, ctrl.text),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4597a8)),
+                  backgroundColor: AppColors.primary),
               child: Text(dl10n.save,
                   style: const TextStyle(color: Colors.white)),
             ),
@@ -245,22 +245,22 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
       builder: (ctx) {
         final dl10n = FishingLogLocalizations.of(ctx);
         return AlertDialog(
-          backgroundColor: AppColors.cream,
+          backgroundColor: const Color.fromARGB(255, 237, 226, 214),
           title: Text(title,
-              style: const TextStyle(color: AppColors.primary, fontSize: 15)),
+              style: const TextStyle(color: AppColors.brown, fontSize: 16, fontWeight: FontWeight.w700 )),
           content: Text(content,
-              style: const TextStyle(color: AppColors.primary, fontSize: 13)),
+              style: const TextStyle(color: AppColors.brown, fontSize: 14, height: 1.4)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(dl10n.cancel,
-                  style: const TextStyle(color: AppColors.cream)),
+                  style: const TextStyle(color: Color.fromARGB(255, 173, 148, 119))),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(backgroundColor: confirmColor),
               child: Text(confirmLabel,
-                  style: const TextStyle(color: AppColors.primary)),
+                  style: const TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -331,11 +331,11 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                           onPressed: () =>
                               ref.read(authProviderProvider).logout(),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor: Colors.white.withValues(alpha: 0.85),
                             foregroundColor: AppColors.primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(20)),
                           ),
                           child: Text(
                             l10n.logIn,
@@ -375,9 +375,16 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                     children: [
                       // ── Header ──────────────────────────────────────────
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(4, 8, 16, 8),
                         child: Row(
                           children: [
+                            if (Navigator.canPop(context))
+                              IconButton(
+                                icon: const Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: Colors.white),
+                                onPressed: () => Navigator.pop(context),
+                              ),
                             Text(
                               l10n.fishingLog,
                               style: const TextStyle(
@@ -423,56 +430,64 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                                 ),
                               ),
                       ),
+
+                      // ── Bottom action buttons ─────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        child: activeTrip != null
+                            ? Row(
+                                children: [
+                                  _ActionButton(
+                                    onPressed: _endTrip,
+                                    color: const Color(0xFF6b0911),
+                                    icon: Icons.stop_rounded,
+                                    label: l10n.endTrip,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _ActionButton(
+                                      onPressed: _logCatch,
+                                      color: AppColors.accent,
+                                      icon: Icons.add_rounded,
+                                      label: l10n.logCatch,
+                                      expand: true,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_todayEndedTrip != null) ...[
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: _ActionButton(
+                                        onPressed: () => _resumeTrip(_todayEndedTrip!),
+                                        color: AppColors.cream.withValues(alpha: 0.5),
+                                        icon: Icons.play_arrow_rounded,
+                                        label: l10n.resumeTrip,
+                                        expand: true,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: _ActionButton(
+                                      onPressed: _startTrip,
+                                      color: const Color.fromARGB(255, 1, 66, 84),
+                                      icon: Icons.anchor_rounded,
+                                      label: l10n.startTrip,
+                                      expand: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
                     ],
                   ),
           ),
         ),
-        floatingActionButton: activeTrip != null
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FloatingActionButton.small(
-                    heroTag: 'end_trip',
-                    backgroundColor: const Color(0xFF6b0911),
-                    onPressed: _endTrip,
-                    tooltip: l10n.endTrip,
-                    child: const Icon(Icons.stop, color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  FloatingActionButton.extended(
-                    heroTag: 'log_catch',
-                    backgroundColor: const Color(0xFF4597a8),
-                    onPressed: _logCatch,
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: Text(l10n.logCatch,
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_todayEndedTrip != null) ...[
-                    FloatingActionButton.extended(
-                      heroTag: 'resume_trip',
-                      backgroundColor: const Color(0xFF8e7355),
-                      onPressed: () => _resumeTrip(_todayEndedTrip!),
-                      icon: const Icon(Icons.play_arrow, color: Colors.white),
-                      label: Text(l10n.resumeTrip,
-                          style: const TextStyle(color: Colors.white)),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  FloatingActionButton.extended(
-                    heroTag: 'start_trip',
-                    backgroundColor: AppColors.primary,
-                    onPressed: _startTrip,
-                    icon: const Icon(Icons.anchor, color: Colors.white),
-                    label: Text(l10n.startTrip,
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
       ),
     );
   }
@@ -523,5 +538,36 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   Future<void> _showTripDetail(Trip trip) async {
     final changed = await TripDetailScreen.open(context, trip);
     if (changed) await _loadTrips();
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Color color;
+  final IconData icon;
+  final String label;
+  final bool expand;
+
+  const _ActionButton({
+    required this.onPressed,
+    required this.color,
+    required this.icon,
+    required this.label,
+    this.expand = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.white, size: 20),
+      label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        minimumSize: expand ? const Size(double.infinity, 48) : const Size(0, 48),
+      ),
+    );
   }
 }

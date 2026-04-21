@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/hour_model.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 
 class WeatherHourlyForecast extends StatelessWidget {
   final WeatherResponseModel weatherData;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   const WeatherHourlyForecast(
-      {super.key, required this.weatherData, required this.helper});
+      {super.key, required this.weatherData, required this. l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class WeatherHourlyForecast extends StatelessWidget {
       child: Column(
         children: [
           WeatherStyles.sectionHeader(
-              helper.l10n.hourlyForecast, WeatherStyles.accent),
+               l10n.hourlyForecast, WeatherStyles.accent),
           SizedBox(
             height: 130,
             child: ListView.builder(
@@ -38,7 +38,7 @@ class WeatherHourlyForecast extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               itemCount: hours.length,
               itemBuilder: (context, index) =>
-                  _HourItem(hour: hours[index], isNow: index == 0, helper: helper),
+                  _HourItem(hour: hours[index], isNow: index == 0,  l10n:  l10n),
             ),
           ),
           const SizedBox(height: 8),
@@ -51,10 +51,10 @@ class WeatherHourlyForecast extends StatelessWidget {
 class _HourItem extends StatelessWidget {
   final HourModel hour;
   final bool isNow;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   const _HourItem(
-      {required this.hour, required this.isNow, required this.helper});
+      {required this.hour, required this.isNow, required this. l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -83,8 +83,8 @@ class _HourItem extends StatelessWidget {
         children: [
           Text(
             isNow
-                ? helper.l10n.weatherNow
-                : helper.n('${hourTime.hour}:00'),
+                ?  l10n.weatherNow
+                :  l10n.n('${hourTime.hour}:00'),
             style: TextStyle(
               color: isNow
                   ? WeatherStyles.accent
@@ -96,7 +96,7 @@ class _HourItem extends StatelessWidget {
           ),
           WeatherStyles.weatherIcon(hour.conditionIcon, size: 36),
           Text(
-            '${helper.n(hour.tempC.round())}°',
+            '${ l10n.n(hour.tempC.round())}°',
             style: TextStyle(
               color: isNow ? Colors.white : WeatherStyles.white(0.9),
               fontSize: 18,
