@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:intl/intl.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
@@ -30,6 +31,8 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   List<Trip> _trips = [];
   bool _loading = true;
   Timer? _ticker;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -40,7 +43,27 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _searchCtrl.dispose();
     super.dispose();
+  }
+
+  List<Trip> get _filteredTrips {
+    if (_searchQuery.isEmpty) return _trips;
+    final q = _searchQuery.toLowerCase();
+    return _trips.where((t) {
+      if ((t.title ?? '').toLowerCase().contains(q)) return true;
+      final date = t.startTime.toLocal();
+      // Match "21/4/2026", "21 Apr 2026", "April 2026", "2026-04-21"
+      final formats = [
+        DateFormat('d/M/yyyy').format(date),
+        DateFormat('dd/MM/yyyy').format(date),
+        DateFormat('d MMM yyyy').format(date),
+        DateFormat('d MMMM yyyy').format(date),
+        DateFormat('MMMM yyyy').format(date),
+        DateFormat('yyyy-MM-dd').format(date),
+      ];
+      return formats.any((f) => f.toLowerCase().contains(q));
+    }).toList();
   }
 
   Future<void> _init() async {
@@ -373,28 +396,47 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                     child: CircularProgressIndicator(color: Colors.white))
                 : Column(
                     children: [
-                      // ── Header ──────────────────────────────────────────
+                      // ── Search bar ──────────────────────────────────────
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 8, 16, 8),
-                        child: Row(
-                          children: [
-                            if (Navigator.canPop(context))
-                              IconButton(
-                                icon: const Icon(
-                                    Icons.arrow_back_ios_new_rounded,
-                                    color: Colors.white),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            Text(
-                              l10n.fishingLog,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25)),
+                          ),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: l10n.searchTrips,
+                              hintStyle: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 14),
+                              prefixIcon: Icon(Icons.search_rounded,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  size: 20),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(Icons.clear_rounded,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.7),
+                                          size: 18),
+                                      onPressed: () => setState(() {
+                                        _searchCtrl.clear();
+                                        _searchQuery = '';
+                                      }),
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            const Spacer(),
-                          ],
+                            onChanged: (v) =>
+                                setState(() => _searchQuery = v),
+                          ),
                         ),
                       ),
 
@@ -403,21 +445,25 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
 
                       // ── Trip list ────────────────────────────────────────
                       Expanded(
-                        child: _trips.isEmpty
+                        child: _filteredTrips.isEmpty
                             ? AppEmptyState(
                                 icon: Icons.anchor,
-                                title: FishingLogLocalizations.of(context).noTripsYet,
-                                message: FishingLogLocalizations.of(context).tapStartTrip,
+                                title: _searchQuery.isNotEmpty
+                                    ? l10n.noTripsYet
+                                    : FishingLogLocalizations.of(context).noTripsYet,
+                                message: _searchQuery.isNotEmpty
+                                    ? l10n.tapStartTrip
+                                    : FishingLogLocalizations.of(context).tapStartTrip,
                                 iconColor: Colors.white.withValues(alpha: 0.5),
                               )
                             : RefreshIndicator(
                                 onRefresh: _loadTrips,
                                 child: ListView.builder(
-                                  itemCount: _trips.length,
+                                  itemCount: _filteredTrips.length,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 8),
                                   itemBuilder: (ctx, i) {
-                                    final trip = _trips[i];
+                                    final trip = _filteredTrips[i];
                                     return TripCard(
                                       trip: trip,
                                       onTap: () => _showTripDetail(trip),

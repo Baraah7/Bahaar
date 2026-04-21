@@ -3,6 +3,7 @@ import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../app_start.dart';
@@ -62,6 +63,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   final _imagePicker = ImagePicker();
   int _currentImageIndex = 0;
   String? _paymentProofImage;
+  bool _isUploadingProof = false;
 
   @override
   void initState() {
@@ -81,10 +83,26 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
 
   Future<void> _pickPaymentProofImage() async {
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _paymentProofImage = image.path;
-      });
+    if (image == null) return;
+    setState(() => _isUploadingProof = true);
+    try {
+      final uid = widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+      final ext = image.path.split('.').last;
+      final name = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final ref = FirebaseStorage.instance.ref('marketplace/payment_proofs/$uid/$name');
+      await ref.putFile(File(image.path));
+      final url = await ref.getDownloadURL();
+      setState(() => _paymentProofImage = url);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Failed to upload proof image. Please try again.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } finally {
+      setState(() => _isUploadingProof = false);
     }
   }
 
@@ -781,13 +799,18 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
           ),
           const SizedBox(height: 12),
-          if (_paymentProofImage != null) ...[
+          if (_isUploadingProof)
+            const SizedBox(
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_paymentProofImage != null) ...[
             Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(_paymentProofImage!),
+                  child: Image(
+                    image: _resolveImage(_paymentProofImage!),
                     height: 150,
                     width: double.infinity,
                     fit: BoxFit.contain,
@@ -829,7 +852,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             ),
           ] else
             GestureDetector(
-              onTap: _pickPaymentProofImage,
+              onTap: _isUploadingProof ? null : _pickPaymentProofImage,
               child: Container(
                 height: 100,
                 width: double.infinity,

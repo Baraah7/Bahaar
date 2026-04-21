@@ -107,7 +107,7 @@ class _SosButtonState extends State<SosButton>
   }
 
   Future<void> _callEmergency() async {
-    final uri = Uri.parse('tel:39999334');
+    final uri = Uri.parse('tel:17700000');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {

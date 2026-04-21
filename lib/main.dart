@@ -75,6 +75,7 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
+  // Page order: Marketplace(0), Map(1), Weather(2), Log(3), FishRecognition(4)
   int _index = 1;
   late final PageController _controller = PageController(initialPage: _index);
 
@@ -89,7 +90,13 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalization.of(context);
-    final pageTitles = [l10n.fishingMap, l10n.weather];
+    final pageTitles = [
+      l10n.marketplace,
+      l10n.fishingMap,
+      l10n.weather,
+      l10n.fishingLog,
+      l10n.fishRecognition,
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -179,8 +186,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         controller: _controller,
         onPageChanged: (index) => setState(() => _index = index),
         children: const [
+          MarinerHarvestPage(),
           IntegratedMap(),
           Weather(),
+          FishingLogScreen(),
+          FishRecognitionScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -190,17 +200,18 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         selectedItemColor: Colors.white.withValues(alpha: 0.9),
         unselectedItemColor: AppColors.cream.withValues(alpha: 0.55),
         onTap: (index) {
-          if (index == 2) {
-            _showOtherToolsSheet(context, l10n);
-          } else {
-            _controller.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
+          _controller.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         },
         items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.storefront_outlined),
+            activeIcon: const Icon(Icons.storefront),
+            label: l10n.marketplace,
+          ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.map_outlined),
             activeIcon: const Icon(Icons.map),
@@ -212,20 +223,17 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             label: l10n.weather,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.apps_outlined),
-            activeIcon: const Icon(Icons.apps),
-            label: l10n.otherTools,
+            icon: const Icon(Icons.anchor_outlined),
+            activeIcon: const Icon(Icons.anchor),
+            label: l10n.fishingLog,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.camera_alt_outlined),
+            activeIcon: const Icon(Icons.camera_alt),
+            label: l10n.fishRecognition,
           ),
         ],
       ),
-    );
-  }
-
-  void _showOtherToolsSheet(BuildContext context, AppLocalization l10n) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _OtherToolsSheet(l10n: l10n),
     );
   }
 
@@ -275,136 +283,6 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _OtherToolsSheet extends StatelessWidget {
-  final AppLocalization l10n;
-  const _OtherToolsSheet({required this.l10n});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Text(
-            l10n.otherTools,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 16),
-          _ToolTile(
-            icon: Icons.anchor,
-            color: AppColors.brown,
-            textColor: Color.fromARGB(255, 83, 68, 52),
-            title: l10n.fishingLog,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const FishingLogScreen()));
-            },
-          ),
-          const SizedBox(height: 10),
-          _ToolTile(
-            icon: Icons.camera_alt_outlined,
-            color: AppColors.brown,
-            textColor: Color.fromARGB(255, 83, 68, 52),
-            title: l10n.fishRecognition,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const FishRecognitionScreen()));
-            },
-          ),
-          const SizedBox(height: 10),
-          _ToolTile(
-            icon: Icons.storefront_outlined,
-            color: AppColors.brown,
-            textColor: Color.fromARGB(255, 83, 68, 52),
-            title: l10n.marketplace,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const MarinerHarvestPage()));
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToolTile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final Color textColor;
-  final String title;
-  final VoidCallback onTap;
-
-  const _ToolTile({
-    required this.icon,
-    required this.color,
-    required this.textColor,
-    required this.title,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.18)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 14),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.chevron_right_rounded,
-                color: color.withValues(alpha: 0.5), size: 20),
-          ],
-        ),
       ),
     );
   }
