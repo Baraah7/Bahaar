@@ -75,8 +75,8 @@ class _SkyScannerViewState extends State<SkyScannerView> {
     if (frame.stars.hasStars) {
       final match = StarIdentifier.instance.identify(
         centroids:   frame.stars.stars!,
-        imageWidth:  1920,
-        imageHeight: 1080,
+        imageWidth:  frame.frameWidth,
+        imageHeight: frame.frameHeight,
         fovHDeg:     widget.service.fovHDeg,
       );
       if (match != null) {

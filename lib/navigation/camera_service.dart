@@ -75,6 +75,8 @@ class CameraFrameResult {
   final double              engineConfidence; // 0–100 from C++ engine
   final ImuTag              imuTag;
   final bool                motionBlurred;   // gyro exceeded threshold
+  final int                 frameWidth;
+  final int                 frameHeight;
 
   const CameraFrameResult({
     required this.stars,
@@ -82,6 +84,8 @@ class CameraFrameResult {
     required this.engineConfidence,
     required this.imuTag,
     required this.motionBlurred,
+    required this.frameWidth,
+    required this.frameHeight,
   });
 }
 
@@ -298,6 +302,8 @@ class CameraService {
       engineConfidence: 82.0,
       imuTag: imu,
       motionBlurred: false,
+      frameWidth:  _kTargetWidth,
+      frameHeight: _kTargetHeight,
     ));
   }
 
@@ -335,6 +341,8 @@ class CameraService {
         engineConfidence: 0.0,
         imuTag:           imu,
         motionBlurred:    true,
+        frameWidth:       image.width,
+        frameHeight:      image.height,
       ));
       return;
     }
@@ -357,6 +365,8 @@ class CameraService {
       engineConfidence: VisionBridge.instance.lastConfidence,
       imuTag:           imu,
       motionBlurred:    false,
+      frameWidth:       image.width,
+      frameHeight:      image.height,
     ));
   }
 

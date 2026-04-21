@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:bahaar/core/constants/app_colors.dart';
@@ -55,7 +56,6 @@ import 'package:bahaar/widgets/map/nav_mode_option.dart';
 import 'package:bahaar/widgets/map/navigation_status_indicator.dart';
 import 'package:bahaar/widgets/map/offline_banner.dart';
 import 'package:bahaar/widgets/map/route_calculating_overlay.dart';
-import 'package:bahaar/widgets/map/step_chip.dart';
 import 'package:bahaar/widgets/map/zoom_controls.dart';
 import 'package:bahaar/widgets/navigation/active_navigation_overlay.dart';
 import 'package:bahaar/widgets/navigation/marina_marker_layer.dart';
@@ -133,6 +133,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
   bool _serviceEnabled = false;
   PermissionStatus _permissionStatus = PermissionStatus.denied;
   LocationData? _locationData;
+  StreamSubscription<LocationData>? _locationSubscription;
   bool _maskInitialized = false;
   bool _showDepthLegend = false;
   double _currentZoom = MapConstants.defaultZoom;
@@ -259,9 +260,40 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   void _onNavigationUpdate() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (!mounted) return;
+    final session = _navigationManager?.session;
+    final navLocation = session?.currentLocation;
+
+    setState(() {
+      if (navLocation != null) {
+        // Mirror live position into _locationData so the marker and other
+        // consumers (AIS CPA, exclusion zones) stay in sync.
+        _locationData = LocationData.fromMap({
+          'latitude': navLocation.latitude,
+          'longitude': navLocation.longitude,
+          'accuracy': _locationData?.accuracy,
+          'altitude': _locationData?.altitude,
+          'speed': session?.currentSpeed,
+          'speed_accuracy': null,
+          'heading': session?.currentBearing,
+          'time': DateTime.now().millisecondsSinceEpoch.toDouble(),
+          'isMock': false,
+          'verticalAccuracy': null,
+          'headingAccuracy': null,
+          'elapsedRealtimeNanos': null,
+          'elapsedRealtimeUncertaintyNanos': null,
+          'satelliteNumber': null,
+          'provider': null,
+        });
+      }
+
+      // Keep the polyline layer in sync when the session recalculates a new
+      // route after an off-route event.
+      if (session != null && _currentRoute != null &&
+          session.route.id != _currentRoute!.id) {
+        _currentRoute = session.route;
+      }
+    });
   }
 
   void _onAisUpdate() {
@@ -319,6 +351,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   @override
   void dispose() {
+    _locationSubscription?.cancel();
     _navigationManager?.removeListener(_onNavigationUpdate);
     _navigationManager?.dispose();
     _featureEditState.removeListener(_onFeatureEditUpdate);
@@ -405,6 +438,15 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ));
         }
       }
+
+      // Continuously update position so the user marker stays live
+      _locationSubscription = _location.onLocationChanged.listen((data) {
+        if (!mounted) return;
+        setState(() => _locationData = data);
+        if (data.latitude != null && data.longitude != null) {
+          _checkExclusionZones(LatLng(data.latitude!, data.longitude!));
+        }
+      });
     } catch (e) {
       log('Error getting location: $e');
       if (mounted) setState(() {});
@@ -1204,52 +1246,95 @@ class _IntegratedMapState extends State<IntegratedMap> {
     final l10n = MapLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.chooseNavType,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.42,
+        minChildSize: 0.28,
+        maxChildSize: 0.75,
+        builder: (_, scrollController) => Column(
+          children: [
+            // Drag handle + title row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.chooseNavType,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Scroll-down / collapse button
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    tooltip: 'Collapse',
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              NavModeOption(
-                icon: Icons.directions_boat,
-                title: l10n.landToSea,
-                subtitle: l10n.landToSeaSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startLandToSeaMode();
-                },
+            ),
+            const Divider(height: 1),
+            // Scrollable options
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  NavModeOption(
+                    icon: Icons.directions_boat,
+                    title: l10n.landToSea,
+                    subtitle: l10n.landToSeaSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startLandToSeaMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  NavModeOption(
+                    icon: Icons.waves,
+                    title: l10n.seaToSea,
+                    subtitle: l10n.seaToSeaSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startSeaToSeaMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  NavModeOption(
+                    icon: Icons.home,
+                    title: l10n.returnSeaToLand,
+                    subtitle: l10n.returnSeaToLandSubtitle,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startSeaToLandMode();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(height: 8),
-              NavModeOption(
-                icon: Icons.waves,
-                title: l10n.seaToSea,
-                subtitle: l10n.seaToSeaSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startSeaToSeaMode();
-                },
-              ),
-              const SizedBox(height: 8),
-              NavModeOption(
-                icon: Icons.home,
-                title: l10n.returnSeaToLand,
-                subtitle: l10n.returnSeaToLandSubtitle,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _startSeaToLandMode();
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -2137,10 +2222,17 @@ class _IntegratedMapState extends State<IntegratedMap> {
             catches: TripService.instance.activeTrip!.catches,
           ),
 
-        // User location marker
-        if (_locationData != null)
+        // User location marker — arrow during active navigation, dot otherwise
+        if (_locationData != null && !(_navigationManager?.isNavigating ?? false))
           MarkerLayer(
             markers: [_buildUserLocationMarker()],
+          ),
+
+        // Navigation arrow marker — replaces the dot while navigating
+        if (_navigationManager?.isNavigating == true &&
+            _navigationManager?.session?.currentLocation != null)
+          MarkerLayer(
+            markers: [_buildNavigationArrowMarker()],
           ),
 
         // DS-1 celestial fix uncertainty circle + marker
@@ -2284,6 +2376,191 @@ class _IntegratedMapState extends State<IntegratedMap> {
         ],
       ),
     );
+  }
+
+  Marker _buildNavigationArrowMarker() {
+    final session = _navigationManager!.session!;
+    final pos = session.currentLocation!;
+    final bearing = session.currentBearing ?? 0.0;
+
+    return Marker(
+      point: pos,
+      width: 48,
+      height: 48,
+      rotate: false,
+      child: Transform.rotate(
+        angle: bearing * 3.14159265358979 / 180.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: const [
+              BoxShadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2)),
+            ],
+          ),
+          child: const Icon(Icons.navigation, color: Colors.white, size: 26),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationStatusIndicator(MapLocalizations l10n) {
+    final ready = _maskInitialized;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: ready ? Colors.green.shade600 : Colors.grey.shade500,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            ready ? l10n.navigationReady : l10n.loading,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapIconButton({
+    required IconData icon,
+    required String tooltip,
+    VoidCallback? onPressed,
+    bool isActive = false,
+    Color activeColor = AppColors.red,
+  }) {
+    final iconColor = onPressed == null
+        ? Colors.grey.shade400
+        : isActive
+            ? activeColor
+            : Colors.blueGrey.shade700;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Icon(icon, size: 22, color: iconColor),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButtonGroup(List<Widget> buttons) {
+    final children = <Widget>[];
+    for (int i = 0; i < buttons.length; i++) {
+      children.add(buttons[i]);
+      if (i < buttons.length - 1) {
+        children.add(Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Colors.grey.shade200,
+        ));
+      }
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: Colors.green),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.green)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildZoomControls() {
+    return _buildButtonGroup([
+      _buildMapIconButton(
+        icon: Icons.add,
+        tooltip: 'Zoom in',
+        onPressed: _mapReady
+            ? () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom + 1,
+                )
+            : null,
+      ),
+      _buildMapIconButton(
+        icon: Icons.remove,
+        tooltip: 'Zoom out',
+        onPressed: _mapReady
+            ? () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom - 1,
+                )
+            : null,
+      ),
+      _buildMapIconButton(
+        icon: Icons.my_location,
+        tooltip: 'My location',
+        onPressed: _mapReady && _locationData != null
+            ? () => _mapController.move(
+                  LatLng(
+                    _locationData!.latitude ?? MapConstants.defaultLatitude,
+                    _locationData!.longitude ?? MapConstants.defaultLongitude,
+                  ),
+                  14,
+                )
+            : null,
+      ),
+    ]);
   }
 
   // ============================================================

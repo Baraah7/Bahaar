@@ -234,7 +234,13 @@ class TripRecorder extends ChangeNotifier {
     if (_status == TripStatus.gpsLost) _status = TripStatus.active;
 
     _recomputeRoutes();
-    _maybeSaveDistanceTrigger(pos);
+
+    // Seed _lastRecordedPos on first fix so distance-trigger works immediately
+    if (_lastRecordedPos == null) {
+      _saveWaypoint(_currentPos!, isPeriodic: false);
+    } else {
+      _maybeSaveDistanceTrigger(pos);
+    }
     notifyListeners();
   }
 
@@ -282,6 +288,12 @@ class TripRecorder extends ChangeNotifier {
   void _onCelestialFix() {
     final fix = CelestialFixNotifier.instance.fix;
     if (fix == null || _trip == null) return;
+
+    // Reject fixes older than 1 hour — guards against stale data after app restart
+    if (DateTime.now().toUtc().difference(fix.timestamp).abs() >
+        const Duration(hours: 1)) {
+      return;
+    }
 
     _lastGoodGpsPos        = fix.position;
     _lastGoodGpsTime       = fix.timestamp;

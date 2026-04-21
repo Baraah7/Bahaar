@@ -308,9 +308,10 @@ class VisionBridge {
       );
     }
 
-    // rc == number of stars (0..DS1_MAX_STARS)
+    // rc == number of stars (0..DS1_MAX_STARS); clamp to buffer size for safety
+    final count = rc.clamp(0, kDs1MaxStars);
     final stars = List<StarCentroid>.generate(
-      rc,
+      count,
       (i) => StarCentroid(_pool!.starX[i], _pool!.starY[i]),
       growable: false,
     );
