@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
 
 /// Widget for displaying navigation route as colored polylines
@@ -13,35 +14,65 @@ class RoutePolylineLayer extends StatelessWidget {
   final NavigationRoute route;
   final int? activeSegmentIndex;
   final bool showMarkers;
+  final LatLng? userLocation;
 
   const RoutePolylineLayer({
     super.key,
     required this.route,
     this.activeSegmentIndex,
     this.showMarkers = true,
+    this.userLocation,
   });
+
+  /// Returns geometry trimmed from the point closest to [user] forward.
+  List<LatLng> _trimFromUser(List<LatLng> geometry, LatLng user) {
+    if (geometry.length < 2) return geometry;
+    int closest = 0;
+    double minDist = double.infinity;
+    for (int i = 0; i < geometry.length; i++) {
+      final dlat = geometry[i].latitude - user.latitude;
+      final dlng = geometry[i].longitude - user.longitude;
+      final d = dlat * dlat + dlng * dlng;
+      if (d < minDist) {
+        minDist = d;
+        closest = i;
+      }
+    }
+    return geometry.sublist(closest);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isNavigating = userLocation != null && activeSegmentIndex != null;
+
     return Stack(
       children: [
-        // Draw all route segments
-        ...route.segments.asMap().entries.map((entry) {
+        // Draw remaining route segments only
+        ...route.segments.asMap().entries
+            .where((e) => !isNavigating || e.key >= activeSegmentIndex!)
+            .map((entry) {
           final index = entry.key;
           final segment = entry.value;
           final isActive = activeSegmentIndex == index;
+
+          // For the active segment, trim the already-traveled portion
+          final pts = (isActive && userLocation != null)
+              ? _trimFromUser(segment.geometry, userLocation!)
+              : segment.geometry;
+
+          if (pts.length < 2) return const SizedBox.shrink();
 
           return PolylineLayer(
             polylines: [
               // White border for contrast
               Polyline(
-                points: segment.geometry,
+                points: pts,
                 strokeWidth: isActive ? 10.0 : 6.0,
                 color: Colors.white,
               ),
               // Colored segment line
               Polyline(
-                points: segment.geometry,
+                points: pts,
                 strokeWidth: isActive ? 7.0 : 4.0,
                 color: _getSegmentColor(segment.type),
                 borderStrokeWidth: isActive ? 2.0 : 0.0,

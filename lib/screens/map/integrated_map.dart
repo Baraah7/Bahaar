@@ -1979,6 +1979,9 @@ class _IntegratedMapState extends State<IntegratedMap> {
             route: _currentRoute!,
             activeSegmentIndex: _navigationManager?.session?.currentSegmentIndex,
             showMarkers: true,
+            userLocation: _navigationManager?.isNavigating == true
+                ? _navigationManager?.session?.currentLocation
+                : null,
           ),
 
         // Breadcrumb trail (during active navigation)
@@ -2784,19 +2787,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
               ),
             ),
 
-          // Route stats card (when route is calculated but not navigating)
-          if (_currentRoute != null && !(_navigationManager?.isNavigating ?? false))
-            Positioned(
-              bottom: 80,
-              left: 16,
-              right: 16,
-              child: RouteStatsCard(
-                route: _currentRoute!,
-                onCancel: _clearRoute,
-                onStartNavigation: _startNavigation,
-              ),
-            ),
-
           // Active navigation overlay (when navigating)
           if (_navigationManager?.session != null)
             ActiveNavigationOverlay(
@@ -2894,6 +2884,19 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 foregroundColor: Colors.white,
                 icon: const Icon(Icons.add_circle_outline),
                 label: Text(l10n.logCatch),
+              ),
+            ),
+
+          // Route stats card — top of screen, above all other overlays
+          if (_currentRoute != null && !(_navigationManager?.isNavigating ?? false))
+            Positioned(
+              top: 80,
+              left: 16,
+              right: 16,
+              child: RouteStatsCard(
+                route: _currentRoute!,
+                onCancel: _clearRoute,
+                onStartNavigation: _startNavigation,
               ),
             ),
 
