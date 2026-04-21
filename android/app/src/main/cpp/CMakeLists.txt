@@ -22,8 +22,7 @@ endif()
 
 # OpenCV Android SDK requires OpenCV_DIR to point at the jni folder;
 # find_package then locates the ABI-specific config inside it.
-set(OpenCV_DIR "${OPENCV_DIR}")
-
+set(OpenCV_DIR "C:/OpenCV-android-sdk/sdk/native/jni")
 find_package(OpenCV REQUIRED COMPONENTS core imgproc)
 
 # ── Shared library ────────────────────────────────────────────────────────────

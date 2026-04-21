@@ -102,7 +102,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = MarketplaceLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
     final authProvider = ref.watch(authProviderProvider);
     final user = authProvider.currentAppUser;
     final fullName = user != null
@@ -338,7 +338,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   ) async {
     final authProvider = ref.read(authProviderProvider);
     final user = authProvider.currentAppUser;
-    final l10n = MarketplaceLocalizations.of(context)!;
+    final l10n = MarketplaceLocalizations.of(context);
     final lang = Localizations.localeOf(context).languageCode;
 
     if (user == null) {
@@ -370,7 +370,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
       showDialog(
         context: context,
         builder: (ctx) {
-          final dl10n = MarketplaceLocalizations.of(ctx)!;
+          final dl10n = MarketplaceLocalizations.of(ctx);
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: Row(
@@ -460,7 +460,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
   Future<void> _deleteListing(FishListing listing) async {
     await _marketplaceService.removeListing(listing.id);
     if (mounted) {
-      final l10n = MarketplaceLocalizations.of(context)!;
+      final l10n = MarketplaceLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.listingDeleted),
