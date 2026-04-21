@@ -10,7 +10,8 @@ class FishingLogLocalizations {
 
   String get localeName => _locale.languageCode;
 
-  String get fishingLog => _isAr ? 'سجل الصيد' : 'Fishing Log';
+  String get fishingLog => _isAr ? 'السجل' : 'Log';
+  String get searchTrips => _isAr ? 'البحث باسم الرحلة...' : 'Search by trip title...';
   String get tripDetailTitle => _isAr ? 'تفاصيل الرحلة' : 'Trip Detail';
   String get tripStart => _isAr ? 'البداية' : 'Start';
   String get tripEnd => _isAr ? 'النهاية' : 'End';

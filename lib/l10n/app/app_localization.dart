@@ -25,7 +25,7 @@ class AppLocalization {
   String get done => _isAr ? 'تم' : 'Done';
   String get delete => _isAr ? 'حذف' : 'Delete';
   String get welcomeToBahaar => _isAr ? 'مرحباً بك في بحار' : 'Welcome to Bahaar';
-  String get fishingMap => _isAr ? 'الخريطة' : 'Fishing Map';
+  String get fishingMap => _isAr ? 'الخريطة' : 'Map';
   String get fishingMapSubtitle => _isAr ? 'خريطة تفاعلية مع ألوان العمق' : 'Interactive map with depth colors';
   String get weather => _isAr ? 'الطقس' : 'Weather';
   String get weatherSubtitle => _isAr ? 'تحقق من طقس البحر' : 'Check marine weather';
@@ -34,7 +34,7 @@ class AppLocalization {
   String get marinerHarvest => _isAr ? 'حصاد البحار' : 'Mariner Harvest';
   String get marinerHarvestSubtitle => _isAr ? 'شراء وبيع الأسماك الطازجة' : 'Buy & sell fresh fish';
   String get marketplace => _isAr ? 'السوق' : 'Marketplace';
-  String get fishingLog => _isAr ? 'سجل الصيد' : 'Fishing Log';
+  String get fishingLog => _isAr ? 'السجل' : 'Log';
   String get signOut => _isAr ? 'تسجيل الخروج' : 'Sign Out';
   String get signIn => _isAr ? 'تسجيل الدخول' : 'Sign In';
   String get signUp => _isAr ? 'إنشاء حساب' : 'Sign Up';

@@ -12,7 +12,7 @@ class MapLocalizations {
 
   String get cancel => _isAr ? 'إلغاء' : 'Cancel';
   String get reset => _isAr ? 'إعادة تعيين' : 'Reset';
-  String get fishingMap => _isAr ? 'الخريطة' : 'Fishing Map';
+  String get fishingMap => _isAr ? 'الخريطة' : 'Map';
   String get mapLayers => _isAr ? 'طبقات الخريطة' : 'Map Layers';
   String get depthVisualization => _isAr ? 'تصور العمق' : 'Depth Visualization';
   String get showDepthLayer => _isAr ? 'عرض طبقة العمق' : 'Show depth layer';

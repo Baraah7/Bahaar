@@ -1,6 +1,7 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/fishing/trip_model.dart';
@@ -38,6 +39,7 @@ class _SellFishFormState extends State<SellFishForm> {
 
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
+  bool _isUploading = false;
 
   FishType _selectedFishType = FishType.hamour;
   FishCondition _selectedCondition = FishCondition.fresh;
@@ -78,21 +80,54 @@ class _SellFishFormState extends State<SellFishForm> {
     super.dispose();
   }
 
+  Future<String?> _uploadToStorage(String localPath, String folder) async {
+    final uid = widget.currentUserId ?? 'unknown';
+    final ext = localPath.split('.').last;
+    final name = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+    final ref = FirebaseStorage.instance.ref('marketplace/$folder/$uid/$name');
+    await ref.putFile(File(localPath));
+    return ref.getDownloadURL();
+  }
+
   Future<void> _pickFishImages() async {
     final images = await _imagePicker.pickMultiImage();
-    if (images.isNotEmpty) {
-      setState(() {
-        _fishImages.addAll(images.map((img) => img.path));
-      });
+    if (images.isEmpty) return;
+    setState(() => _isUploading = true);
+    try {
+      for (final img in images) {
+        final url = await _uploadToStorage(img.path, 'fish_images');
+        if (url != null) setState(() => _fishImages.add(url));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Failed to upload image. Please try again.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } finally {
+      setState(() => _isUploading = false);
     }
   }
 
   Future<void> _pickBenefitPayImage() async {
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _benefitPayImage = image.path;
-      });
+    if (image == null) return;
+    setState(() => _isUploading = true);
+    try {
+      final url = await _uploadToStorage(image.path, 'benefitpay');
+      if (url != null) setState(() => _benefitPayImage = url);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Failed to upload image. Please try again.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } finally {
+      setState(() => _isUploading = false);
     }
   }
 
@@ -607,7 +642,7 @@ class _SellFishFormState extends State<SellFishForm> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         image: DecorationImage(
-                          image: FileImage(File(entry.value)),
+                          image: NetworkImage(entry.value),
                           fit: BoxFit.cover,
                         ),
                         boxShadow: [
@@ -644,7 +679,7 @@ class _SellFishFormState extends State<SellFishForm> {
                 );
               }),
               GestureDetector(
-                onTap: _pickFishImages,
+                onTap: _isUploading ? null : _pickFishImages,
                 child: Container(
                   width: 100,
                   height: 100,
@@ -655,25 +690,33 @@ class _SellFishFormState extends State<SellFishForm> {
                       color: const Color(0xFF0E7490).withValues(alpha: 0.2),
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_rounded,
-                        size: 28,
-                        color: const Color(0xFF0E7490).withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _l10n.addPhoto,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF0E7490),
-                          fontWeight: FontWeight.w500,
+                  child: _isUploading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_rounded,
+                              size: 28,
+                              color: const Color(0xFF0E7490).withValues(alpha: 0.6),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _l10n.addPhoto,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF0E7490),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -693,7 +736,7 @@ class _SellFishFormState extends State<SellFishForm> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               image: DecorationImage(
-                image: FileImage(File(_benefitPayImage!)),
+                image: NetworkImage(_benefitPayImage!),
                 fit: BoxFit.contain,
               ),
               color: Colors.grey.shade50,

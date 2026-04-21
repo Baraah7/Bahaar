@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/navigation/sidereal_time.dart';
 import 'package:bahaar/navigation/corrections.dart';
 import 'package:bahaar/navigation/confidence_engine.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
@@ -12,6 +11,7 @@ import 'package:bahaar/navigation/camera_service.dart';
 import 'package:bahaar/navigation/dead_reckoning.dart';
 import 'package:bahaar/navigation/star_identifier.dart';
 import 'package:bahaar/screens/celestial navigation/sky_scanner_view.dart';
+import 'package:bahaar/l10n/celestial_navigation/celestial_navigation_localizations.dart';
 
 class CelestialNavigationScreen extends StatefulWidget {
   /// Optional controller used to switch to the map tab when the user taps
@@ -120,101 +120,6 @@ class _CelestialNavigationScreenState
     } finally {
       if (mounted) setState(() => _gpsLoading = false);
     }
-  }
-
-  // ── Celestial body positions ──────────────────────────────────────────────
-
-  /// Sun azimuth and altitude for [pos] at [utc].
-  /// Uses the same NOAA-derived math as CelestialCalculator.
-  _AzAlt _sunPosition(LatLng pos, DateTime utc) {
-    final jd = _jd(utc);
-    final t = (jd - 2451545.0) / 36525.0;
-
-    // Sun apparent ecliptic longitude
-    final m = _r(357.52911 + t * (35999.05029 - 0.0001537 * t));
-    final l0 = 280.46646 + t * (36000.76983 + t * 0.0003032);
-    final c = math.sin(m) * (1.914602 - t * (0.004817 + 0.000014 * t))
-        + math.sin(2 * m) * (0.019993 - 0.000101 * t)
-        + math.sin(3 * m) * 0.000289;
-    final lambda = _r(l0 + c - 0.00569
-        - 0.00478 * math.sin(_r(125.04 - 1934.136 * t)));
-
-    // Obliquity
-    final eps = _r(23.0
-        + (26.0 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60
-        + 0.00256 * math.cos(_r(125.04 - 1934.136 * t)));
-
-    final lambdaR = lambda * math.pi / 180;
-    final epsR = eps * math.pi / 180;
-
-    // Declination
-    final dec = math.asin(math.sin(epsR) * math.sin(lambdaR));
-    // Right ascension (degrees)
-    final ra = math.atan2(
-            math.cos(epsR) * math.sin(lambdaR), math.cos(lambdaR)) *
-        180 / math.pi;
-
-    // GMST → LHA
-    final gmst = SiderealTime.gmst(utc) ?? 0.0;
-    final lha = _r(gmst + pos.longitude - ra) * math.pi / 180;
-    final latR = pos.latitude * math.pi / 180;
-
-    final sinAlt = math.sin(latR) * math.sin(dec)
-        + math.cos(latR) * math.cos(dec) * math.cos(lha);
-    final alt = math.asin(sinAlt) * 180 / math.pi;
-
-    final az = math.atan2(
-          -math.cos(dec) * math.sin(lha),
-          math.sin(dec) * math.cos(latR)
-              - math.cos(dec) * math.cos(lha) * math.sin(latR),
-        ) * 180 / math.pi;
-
-    return _AzAlt(_norm360(az), alt);
-  }
-
-  /// Moon azimuth and altitude using the same simplified model as
-  /// CelestialCalculator._moonAltitude, extended with azimuth.
-  _AzAlt _moonPosition(LatLng pos, DateTime utc) {
-    final jd = _jd(utc);
-    final t = (jd - 2451545.0) / 36525.0;
-
-    final L = (218.316 + 13.176396 * (jd - 2451545.0)) % 360;
-    final mAngle = _r((134.963 + 13.064993 * (jd - 2451545.0)) % 360);
-    final F = _r((93.272 + 13.229350 * (jd - 2451545.0)) % 360);
-
-    final lambda = L + 6.289 * math.sin(mAngle);
-    final beta = 5.128 * math.sin(F);
-
-    final eps = _r(23.0
-        + (26.0 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60);
-
-    final lambdaR = lambda * math.pi / 180;
-    final betaR = beta * math.pi / 180;
-    final epsR = eps * math.pi / 180;
-
-    final ra = math.atan2(
-            math.sin(lambdaR) * math.cos(epsR)
-                - math.tan(betaR) * math.sin(epsR),
-            math.cos(lambdaR)) *
-        180 / math.pi;
-    final dec = math.asin(math.sin(betaR) * math.cos(epsR)
-        + math.cos(betaR) * math.sin(epsR) * math.sin(lambdaR));
-
-    final gmst = SiderealTime.gmst(utc) ?? 0.0;
-    final lha = _r(gmst + pos.longitude - ra) * math.pi / 180;
-    final latR = pos.latitude * math.pi / 180;
-
-    final sinAlt = math.sin(latR) * math.sin(dec)
-        + math.cos(latR) * math.cos(dec) * math.cos(lha);
-    final alt = math.asin(sinAlt.clamp(-1.0, 1.0)) * 180 / math.pi;
-
-    final az = math.atan2(
-          -math.cos(dec) * math.sin(lha),
-          math.sin(dec) * math.cos(latR)
-              - math.cos(dec) * math.cos(lha) * math.sin(latR),
-        ) * 180 / math.pi;
-
-    return _AzAlt(_norm360(az), alt);
   }
 
   // ── Sight reduction ───────────────────────────────────────────────────────
@@ -368,133 +273,98 @@ class _CelestialNavigationScreenState
     );
   }
 
-  // ── UI helpers ────────────────────────────────────────────────────────────
-
-  static double _jd(DateTime dt) {
-    int y = dt.year, m = dt.month;
-    final d = dt.day
-        + dt.hour / 24.0
-        + dt.minute / 1440.0
-        + dt.second / 86400.0;
-    if (m <= 2) {
-      y -= 1;
-      m += 12;
-    }
-    final a = y ~/ 100;
-    final b = 2 - a + (a ~/ 4);
-    return (365.25 * (y + 4716)).floor() +
-        (30.6001 * (m + 1)).floor() +
-        d +
-        b -
-        1524.5;
-  }
-
-  static double _r(double deg) => deg * math.pi / 180.0;
-  static double _norm360(double deg) {
-    final r = deg % 360.0;
-    return r < 0 ? r + 360.0 : r;
-  }
-
-  String _fmtGmst(double? deg) {
-    if (deg == null) return '--';
-    final h = SiderealTime.degreesToHours(deg);
-    final hours = h.floor();
-    final mins = ((h - hours) * 60).floor();
-    final secs = (((h - hours) * 60 - mins) * 60).round();
-    return '${hours.toString().padLeft(2, '0')}h '
-        '${mins.toString().padLeft(2, '0')}m '
-        '${secs.toString().padLeft(2, '0')}s';
-  }
-
-  String _fmtDeg(double deg) => '${deg.toStringAsFixed(2)}°';
-
-  String _fmtAzAlt(_AzAlt? aa) {
-    if (aa == null) return '--';
-    return 'Az ${aa.azimuth.toStringAsFixed(1)}°  Alt ${aa.altitude.toStringAsFixed(1)}°';
-  }
 
   // ── Steps card ────────────────────────────────────────────────────────────
 
-  Widget _buildStepsCard() {
-    final steps = [
-      ['Go outside at night', 'Find a spot away from city lights with a clear view of the sky'],
-      ['Hold device steady', 'Hold your phone horizontally with the camera pointing upward'],
-      ['Tap Start Sky Scan', 'Press the button below to open the camera and begin detection'],
-      ['Stay still 5–10 seconds', 'Keep the device stable while the engine detects stars'],
-      ['Review the results', 'Check the detected star count and confidence score below'],
-    ];
+  Widget _buildStepsCard(CelestialNavigationLocalizations l10n) {
+    final steps = l10n.steps;
 
-    return Card(
-      elevation: 2,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.list_alt_outlined, size: 18, color: AppColors.primary),
-                const SizedBox(width: 8),
-                const Text(
-                  'How to Use',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: AppColors.primary),
-                ),
-              ],
-            ),
-            const Divider(height: 16),
-            ...steps.asMap().entries.map((entry) {
-              final i = entry.key;
-              final step = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${i + 1}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(step[0],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 13)),
-                          const SizedBox(height: 2),
-                          Text(step[1],
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54,
-                                  height: 1.4)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.white.withValues(alpha: 0.12),
+            AppColors.white.withValues(alpha: 0.12),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.list_alt_outlined, size: 22, color: Colors.white),
+              const SizedBox(width: 10),
+              Text(
+                l10n.howToUse,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Divider(color: Colors.white.withValues(alpha: 0.15), height: 1),
+          const SizedBox(height: 14),
+          ...steps.asMap().entries.map((entry) {
+            final i = entry.key;
+            final step = entry.value;
+            final isLast = i == steps.length - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(step[0],
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: Colors.white)),
+                        const SizedBox(height: 2),
+                        Text(step[1],
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.6),
+                                height: 1.4)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -503,148 +373,342 @@ class _CelestialNavigationScreenState
 
   @override
   Widget build(BuildContext context) {
-    final gmst = SiderealTime.gmst(_nowUtc);
-    final lst = (_gpsPosition != null && gmst != null)
-        ? SiderealTime.localSiderealTime(gmst, _gpsPosition!.longitude)
-        : null;
-    final sunPos =
-        _gpsPosition != null ? _sunPosition(_gpsPosition!, _nowUtc) : null;
-    final moonPos =
-        _gpsPosition != null ? _moonPosition(_gpsPosition!, _nowUtc) : null;
-
+    final l10n = CelestialNavigationLocalizations.of(context);
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.explore, size: 20),
-            SizedBox(width: 8),
-            Text('DS-1  Celestial Navigation',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        centerTitle: true,
-        actions: [
-          if (_postedFix != null && widget.pageController != null)
-            IconButton(
-              icon: const Icon(Icons.map_outlined),
-              tooltip: 'Fix is live on map',
-              onPressed: () => widget.pageController!.animateToPage(
-                1,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              ),
+      backgroundColor: const Color(0xFF0A0F1E),
+      body: CustomScrollView(
+        slivers: [
+          // ── Header ──────────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _buildHeader(context, l10n)),
+
+          // ── Content ─────────────────────────────────────────────────────
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Spoofing banner
+                if (CelestialFixNotifier.instance.spoofingAlert) ...[
+                  _SpoofingBanner(
+                    onDismiss: () {
+                      CelestialFixNotifier.instance.clearFix();
+                      setState(() => _postedFix = null);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // How-to steps
+                _buildStepsCard(l10n),
+                const SizedBox(height: 16),
+
+                // Sky scanner
+                _buildScannerCard(l10n),
+                const SizedBox(height: 16),
+
+                // Scan results (when available)
+                if (_detectedStars > 0) _buildResultsCard(l10n),
+              ]),
             ),
+          ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          // ── Spoofing banner (if active) ─────────────────────────────────
-          if (CelestialFixNotifier.instance.spoofingAlert)
-            _SpoofingBanner(
-              onDismiss: () {
-                CelestialFixNotifier.instance.clearFix();
-                setState(() => _postedFix = null);
-              },
-            ),
+    );
+  }
 
-          // ── How-to steps ────────────────────────────────────────────────
-          _buildStepsCard(),
-          const SizedBox(height: 12),
-
-          // ── Sky Scanner ─────────────────────────────────────────────────
-          _SectionCard(
-            title: 'Sky Scanner (DS-1 Camera)',
-            icon: Icons.camera_alt_outlined,
+  Widget _buildHeader(BuildContext context, CelestialNavigationLocalizations l10n) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0D1B3E), Color(0xFF0A0F1E)],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_scannerError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    _scannerError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  icon: const Icon(Icons.videocam_outlined, size: 20),
-                  label: Text(
-                    _detectedStars > 0 ? 'Scan Again' : 'Start Sky Scan',
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600),
-                  ),
-                  onPressed: _openScanner,
+              // Back button row
+              Row(
+                children: [
+                  if (Navigator.canPop(context))
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white70, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  const Spacer(),
+                  if (_postedFix != null && widget.pageController != null)
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            Colors.white.withValues(alpha: 0.12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                      ),
+                      icon: const Icon(Icons.map_outlined, size: 16),
+                      label: Text(l10n.viewOnMap,
+                          style: const TextStyle(fontSize: 12)),
+                      onPressed: () => widget.pageController!.animateToPage(
+                        1,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Icon + title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      child: const Icon(Icons.explore_rounded,
+                          color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.celestialNavigation,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.starBasedPositionFixing,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.55),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              if (_detectedStars > 0) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.15)),
-                  ),
-                  child: Column(
-                    children: [
-                      _Row('Stars detected', '$_detectedStars'),
-                      _Row('Engine confidence',
-                          '${_engineConfidence.toStringAsFixed(1)} %'),
-                      _Row('IMU drift', '${_imuDrift.toStringAsFixed(3)} °/s'),
-                      _Row('Horizon',
-                          _horizonDetected
-                              ? 'Detected  ${_horizonAngle.toStringAsFixed(1)}°'
-                              : 'Not detected'),
-                    ],
-                  ),
+              const SizedBox(height: 20),
+              // GPS status pill
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    _StatusPill(
+                      icon: Icons.gps_fixed_rounded,
+                      label: _gpsLoading
+                          ? l10n.gettingGps
+                          : _gpsPosition != null
+                              ? '${_gpsPosition!.latitude.toStringAsFixed(3)}°, '
+                                  '${_gpsPosition!.longitude.toStringAsFixed(3)}°'
+                              : l10n.gpsUnavailable,
+                      active: _gpsPosition != null && !_gpsLoading,
+                    ),
+                    const SizedBox(width: 8),
+                    _StatusPill(
+                      icon: Icons.star_rounded,
+                      label: _detectedStars > 0
+                          ? l10n.starsDetectedCount(_detectedStars)
+                          : l10n.noScanYet,
+                      active: _detectedStars > 0,
+                    ),
+                  ],
                 ),
-                if (_identifiedStarNames.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  const Text('Identified Stars',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black54)),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: _identifiedStarNames.map((name) {
-                      return Chip(
-                        label: Text(name,
-                            style: const TextStyle(fontSize: 11)),
-                        backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.1),
-                        side: BorderSide(
-                            color: AppColors.primary.withValues(alpha: 0.3)),
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      );
-                    }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScannerCard(CelestialNavigationLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.white.withValues(alpha: 0.12),
+            AppColors.white.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: AppColors.white.withValues(alpha: 0.1),
+        //     blurRadius: 20,
+        //     offset: const Offset(0, 8),
+        //   ),
+        // ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.camera_alt_outlined,
+                  color: Colors.white, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                l10n.skyScanner,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              if (_detectedStars > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ] else
-                const Text(
-                  'Point the camera at the night sky and tap Start Sky Scan.',
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                  child: Text(
+                    l10n.confidencePct(_engineConfidence.toStringAsFixed(0)),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
+                  ),
                 ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 6),
+          Text(
+            l10n.scannerDescription,
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
+          ),
+          if (_scannerError != null) ...[
+            const SizedBox(height: 8),
+            Text(_scannerError!,
+                style:
+                    const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
+          ],
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent.withValues(alpha: 0.45),
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.videocam_rounded, size: 20),
+              label: Text(
+                _detectedStars > 0 ? l10n.scanAgain : l10n.startSkyScan,
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              onPressed: _openScanner,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsCard(CelestialNavigationLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.analytics_outlined,
+                  color: Colors.white70, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                l10n.scanResults,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _DarkRow(l10n.starsDetected, '$_detectedStars'),
+          _DarkRow(l10n.confidence, '${_engineConfidence.toStringAsFixed(1)}%'),
+          _DarkRow(l10n.imuDrift, '${_imuDrift.toStringAsFixed(3)} °/s'),
+          _DarkRow(
+            l10n.horizon,
+            _horizonDetected
+                ? l10n.horizonDetectedAngle(_horizonAngle.toStringAsFixed(1))
+                : l10n.notDetected,
+          ),
+          if (_identifiedStarNames.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(l10n.identifiedStars,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: _identifiedStarNames.map((name) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: Colors.amber, size: 10),
+                      const SizedBox(width: 4),
+                      Text(name,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 11)),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -661,193 +725,70 @@ class _CelestialNavigationScreenState
       '${dt.second.toString().padLeft(2, '0')} UTC';
 }
 
-// ─── Helper data class ────────────────────────────────────────────────────────
-
-class _AzAlt {
-  final double azimuth;
-  final double altitude;
-  const _AzAlt(this.azimuth, this.altitude);
-}
-
 // ─── Reusable UI components ───────────────────────────────────────────────────
 
-class _SectionCard extends StatelessWidget {
-  final String title;
+class _StatusPill extends StatelessWidget {
   final IconData icon;
-  final List<Widget> children;
-  const _SectionCard(
-      {required this.title, required this.icon, required this.children});
+  final String label;
+  final bool active;
+  const _StatusPill({required this.icon, required this.label, required this.active});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 18, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 14),
-            ...children,
-          ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: active
+            ? Colors.greenAccent.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: active
+              ? Colors.greenAccent.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.15),
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              size: 12,
+              color: active ? Colors.greenAccent : Colors.white38),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: active ? Colors.greenAccent : Colors.white54,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _Row extends StatelessWidget {
+class _DarkRow extends StatelessWidget {
   final String label;
   final String value;
-  const _Row(this.label, this.value);
+  const _DarkRow(this.label, this.value);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
           Text(value,
               style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoRow(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          const Icon(Icons.circle, size: 6, color: AppColors.accent),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text('$label: $value',
-                style: const TextStyle(fontSize: 12)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NumField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final String hint;
-  const _NumField(
-      {required this.label, required this.controller, required this.hint});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: TextField(
-        controller: controller,
-        keyboardType:
-            const TextInputType.numberWithOptions(decimal: true, signed: true),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          isDense: true,
-          border: const OutlineInputBorder(),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.primary),
-          ),
-          labelStyle: const TextStyle(fontSize: 12),
-        ),
-        style: const TextStyle(fontSize: 13),
-      ),
-    );
-  }
-}
-
-class _ConfidenceBar extends StatelessWidget {
-  final ConfidenceResult result;
-  const _ConfidenceBar({required this.result});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = result.color;
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Score: ${result.score}/100',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: color, fontSize: 15),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  result.decision == FixDecision.fix
-                      ? 'FIX ACCEPTED'
-                      : result.decision == FixDecision.lowConfidenceWarning
-                          ? 'LOW CONFIDENCE'
-                          : 'REJECTED',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: result.score / 100,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: AlwaysStoppedAnimation(color),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(result.reason,
-              style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -871,11 +812,10 @@ class _SpoofingBanner extends StatelessWidget {
         children: [
           const Icon(Icons.warning_amber, color: Colors.white),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Text(
-              '⚠ GPS SPOOFING ALERT\nCelestial fix diverges from GPS by > 2 NM. '
-              'Do not rely on GPS position.',
-              style: TextStyle(color: Colors.white, fontSize: 12),
+              CelestialNavigationLocalizations.of(context).spoofingAlert,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
           IconButton(

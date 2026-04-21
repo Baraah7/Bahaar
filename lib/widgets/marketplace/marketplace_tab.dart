@@ -172,94 +172,108 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.filter_list_rounded, size: 13, color: const Color(0xFF0D4F54)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${[
-                            if (_selectedTypeFilter != null) 1,
-                            if (_selectedConditionFilter != null) 1,
-                            if (_minPrice != null || _maxPrice != null) 1,
-                          ].length} ${l10n.filtersActive}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF0D4F54),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedTypeFilter = null;
-                        _selectedConditionFilter = null;
-                        _minPrice = null;
-                        _maxPrice = null;
-                      });
-                    },
+                  Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.red.withValues(alpha: 0.2)),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.close_rounded, size: 13, color: AppColors.red.withValues(alpha: 0.8)),
-                          const SizedBox(width: 3),
-                          Text(
-                            l10n.clearFilters,
-                            style: TextStyle(
-                              color: AppColors.red.withValues(alpha: 0.8),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          const Icon(Icons.filter_list_rounded, size: 13, color: Color(0xFF0D4F54)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              '${[
+                                if (_selectedTypeFilter != null) 1,
+                                if (_selectedConditionFilter != null) 1,
+                                if (_minPrice != null || _maxPrice != null) 1,
+                              ].length} ${l10n.filtersActive}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0D4F54),
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedTypeFilter = null;
+                          _selectedConditionFilter = null;
+                          _minPrice = null;
+                          _maxPrice = null;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.red.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.close_rounded, size: 13, color: AppColors.red.withValues(alpha: 0.8)),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                l10n.clearFilters,
+                                style: TextStyle(
+                                  color: AppColors.red.withValues(alpha: 0.8),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildFilterChip(
-                  label: l10n.type,
-                  value: _selectedTypeFilter?.localizedName(lang),
-                  icon: Icons.phishing_rounded,
-                  onTap: () => _showTypeFilterSheet(l10n),
+                Expanded(
+                  child: _buildFilterChip(
+                    label: l10n.type,
+                    value: _selectedTypeFilter?.localizedName(lang),
+                    icon: Icons.phishing_rounded,
+                    onTap: () => _showTypeFilterSheet(l10n),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: l10n.condition,
-                  value: _selectedConditionFilter?.localizedName(lang),
-                  icon: Icons.verified_rounded,
-                  onTap: () => _showConditionFilterSheet(l10n),
+                Expanded(
+                  child: _buildFilterChip(
+                    label: l10n.condition,
+                    value: _selectedConditionFilter?.localizedName(lang),
+                    icon: Icons.verified_rounded,
+                    onTap: () => _showConditionFilterSheet(l10n),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: l10n.priceRange,
-                  value: priceChipValue,
-                  icon: Icons.attach_money_rounded,
-                  onTap: () => _showPriceFilterSheet(l10n),
+                Expanded(
+                  child: _buildFilterChip(
+                    label: l10n.priceRange,
+                    value: priceChipValue,
+                    icon: Icons.attach_money_rounded,
+                    onTap: () => _showPriceFilterSheet(l10n),
+                  ),
                 ),
               ],
             ),
@@ -280,7 +294,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 27, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(14),
@@ -298,22 +312,26 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
           ],
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 16, color: isActive ? Colors.white : Colors.grey.shade500),
-            const SizedBox(width: 6),
-            Text(
-              isActive ? '$label: $value' : label,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.grey.shade700,
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                isActive ? '$label: $value' : label,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey.shade700,
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             if (isActive) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 16, color: Colors.white.withValues(alpha: 0.8)),
+                  size: 14, color: Colors.white.withValues(alpha: 0.8)),
             ],
           ],
         ),

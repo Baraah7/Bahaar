@@ -30,10 +30,12 @@ class _CatchFormState extends State<CatchForm> {
   final _speciesCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _speciesFocus = FocusNode();
 
   bool _locating = false;
   LatLng? _location;
   bool _mapPinned = false;
+  bool _isOtherSelected = false;
 
   static const _teal = Color(0xFF0D4F54);
   static const _tealLight = Color(0xFF0E7490);
@@ -63,6 +65,7 @@ class _CatchFormState extends State<CatchForm> {
     _speciesCtrl.dispose();
     _weightCtrl.dispose();
     _notesCtrl.dispose();
+    _speciesFocus.dispose();
     super.dispose();
   }
 
@@ -90,6 +93,33 @@ class _CatchFormState extends State<CatchForm> {
         _mapPinned = true;
       });
     }
+  }
+
+  Widget _chip(String label, bool isSelected, Color color) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? color : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isSelected ? color : Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected ? color.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.04),
+            blurRadius: isSelected ? 8 : 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.grey.shade700,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+    );
   }
 
   void _submit() {
@@ -186,56 +216,38 @@ class _CatchFormState extends State<CatchForm> {
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       child: Row(
-                        children: _quickSpecies.map((s) {
-                          final name = _isAr ? s.$1 : s.$2;
-                          final isSelected = _speciesCtrl.text == name;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _speciesCtrl.text = name),
-                              child: AnimatedContainer(
-                                duration:
-                                    const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isSelected ? _teal : Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? _teal
-                                        : Colors.grey.shade200,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isSelected
-                                          ? _teal.withValues(alpha: 0.2)
-                                          : Colors.black
-                                              .withValues(alpha: 0.04),
-                                      blurRadius: isSelected ? 8 : 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.grey.shade700,
-                                    fontSize: 12,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
+                        children: [
+                          ..._quickSpecies.map((s) {
+                            final name = _isAr ? s.$1 : s.$2;
+                            final isSelected = !_isOtherSelected && _speciesCtrl.text == name;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: GestureDetector(
+                                onTap: () => setState(() {
+                                  _speciesCtrl.text = name;
+                                  _isOtherSelected = false;
+                                }),
+                                child: _chip(name, isSelected, _teal),
                               ),
+                            );
+                          }),
+                          // Others chip
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isOtherSelected = true;
+                                _speciesCtrl.text = '';
+                              });
+                              Future.delayed(const Duration(milliseconds: 50),
+                                  () => _speciesFocus.requestFocus());
+                            },
+                            child: _chip(
+                              _isAr ? 'أخرى' : 'Others',
+                              _isOtherSelected,
+                              AppColors.brown,
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -248,9 +260,12 @@ class _CatchFormState extends State<CatchForm> {
                         children: [
                           _CardField(
                             controller: _speciesCtrl,
+                            focusNode: _speciesFocus,
                             icon: Icons.set_meal_outlined,
-                            iconColor: _tealLight,
-                            label: _l10n.speciesNameLabel,
+                            iconColor: _isOtherSelected ? AppColors.brown : _tealLight,
+                            label: _isOtherSelected
+                                ? (_isAr ? 'اسم السمكة' : 'Fish name')
+                                : _l10n.speciesNameLabel,
                             validator: (v) =>
                                 (v == null || v.trim().isEmpty)
                                     ? _l10n.speciesRequired
@@ -433,6 +448,7 @@ class _CatchFormState extends State<CatchForm> {
 
 class _CardField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final IconData icon;
   final Color iconColor;
   final String label;
@@ -443,6 +459,7 @@ class _CardField extends StatelessWidget {
 
   const _CardField({
     required this.controller,
+    this.focusNode,
     required this.icon,
     required this.iconColor,
     required this.label,
@@ -472,6 +489,7 @@ class _CardField extends StatelessWidget {
           Expanded(
             child: TextFormField(
               controller: controller,
+              focusNode: focusNode,
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               validator: validator,
