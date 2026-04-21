@@ -25,7 +25,7 @@ class AppLocalization {
   String get done => _isAr ? 'تم' : 'Done';
   String get delete => _isAr ? 'حذف' : 'Delete';
   String get welcomeToBahaar => _isAr ? 'مرحباً بك في بحار' : 'Welcome to Bahaar';
-  String get fishingMap => _isAr ? 'خريطة الصيد' : 'Fishing Map';
+  String get fishingMap => _isAr ? 'الخريطة' : 'Fishing Map';
   String get fishingMapSubtitle => _isAr ? 'خريطة تفاعلية مع ألوان العمق' : 'Interactive map with depth colors';
   String get weather => _isAr ? 'الطقس' : 'Weather';
   String get weatherSubtitle => _isAr ? 'تحقق من طقس البحر' : 'Check marine weather';
@@ -107,4 +107,13 @@ class AppLocalization {
   // Profile
   String get profile => _isAr ? 'الملف الشخصي' : 'Profile';
   String get guestUser => _isAr ? 'مستخدم ضيف' : 'Guest User';
+
+  // Bottom nav
+  String get otherTools => _isAr ? 'أدوات أخرى' : 'Other Tools';
+
+  // About app popup
+  String get aboutAppTitle => _isAr ? 'بـحّـــار' : 'Bahaar';
+  String get aboutAppDescription => _isAr
+      ? 'بحار هو تطبيق مساعدة صيد متكامل مصمم للصيادين في البحرين. يوفر خرائط صيد تفاعلية، تنبؤات جوية بحرية، التعرف على الأسماك بالذكاء الاصطناعي، سوقاً لبيع وشراء الأسماك الطازجة، تسجيل رحلات الصيد، وأدوات الملاحة الفلكية.'
+      : 'Bahaar is a comprehensive fishing assistant app designed for fishermen in Bahrain. It offers interactive fishing maps, marine weather forecasts, AI-powered fish recognition, a marketplace to buy and sell fresh fish, fishing trip logging, and celestial navigation tools.';
 }

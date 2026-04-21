@@ -53,7 +53,7 @@ class FishCard extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          height: 120,
+          height: 150,
           decoration: BoxDecoration(
             gradient: listing.primaryImageUrl != null
                 ? null

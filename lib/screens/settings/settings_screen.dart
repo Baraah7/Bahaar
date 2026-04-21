@@ -22,10 +22,10 @@ class SettingsScreen extends ConsumerWidget {
     final isGuest = firebaseUser?.isAnonymous ?? true;
 
     return GradientScreen(
-      expandedHeight: 120,
+      expandedHeight: 140,
       flexContent: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,

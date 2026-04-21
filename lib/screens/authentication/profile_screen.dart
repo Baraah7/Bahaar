@@ -34,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
         : (user.email ?? '');
 
     return GradientScreen(
-      expandedHeight: 200,
+      expandedHeight: 220,
       actions: [
         if (!user.isGuest)
           IconButton(
@@ -49,7 +49,7 @@ class ProfileScreen extends ConsumerWidget {
       ],
       flexContent: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,

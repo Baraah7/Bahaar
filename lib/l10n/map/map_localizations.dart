@@ -12,7 +12,7 @@ class MapLocalizations {
 
   String get cancel => _isAr ? 'إلغاء' : 'Cancel';
   String get reset => _isAr ? 'إعادة تعيين' : 'Reset';
-  String get fishingMap => _isAr ? 'خريطة الصيد' : 'Fishing Map';
+  String get fishingMap => _isAr ? 'الخريطة' : 'Fishing Map';
   String get mapLayers => _isAr ? 'طبقات الخريطة' : 'Map Layers';
   String get depthVisualization => _isAr ? 'تصور العمق' : 'Depth Visualization';
   String get showDepthLayer => _isAr ? 'عرض طبقة العمق' : 'Show depth layer';
@@ -23,6 +23,8 @@ class MapLocalizations {
   String get marineReservesReefs => _isAr ? 'المحميات البحرية والشعاب' : 'Marine Reserves & Reefs';
   String get mpaRestrictedArea => _isAr ? 'منطقة MPA / مقيدة' : 'MPA / Restricted Area';
   String get oilGasExclusion => _isAr ? 'منطقة النفط والغاز المحظورة' : 'Oil & Gas Exclusion';
+  String get oilExclusion    => _isAr ? 'منطقة النفط المحظورة' : 'Oil Exclusion Zone';
+  String get gasExclusion    => _isAr ? 'منطقة الغاز المحظورة' : 'Gas Exclusion Zone';
   String get safetyBuffersVisible => _isAr ? 'مخازن السلامة مرئية' : 'Safety buffers visible';
   String get safetyRulesApplyWhenHidden => _isAr ? 'قواعد السلامة تُطبق عند الإخفاء' : 'Safety rules apply when hidden';
   String get fishingSpotSuggestions => _isAr ? 'اقتراحات أماكن الصيد' : 'Fishing Spot Suggestions';
@@ -98,4 +100,27 @@ class MapLocalizations {
   String get couldNotFindMarineRoute      => _isAr ? 'تعذر إيجاد مسار بحري من الميناء'   : 'Could not find marine route from port';
   String get loading                      => _isAr ? 'جاري التحميل...'                    : 'Loading...';
   String get logCatch                     => _isAr ? 'تسجيل صيد'                          : 'Log Catch';
+
+  // Depth legend
+  String get depthLegendTitle  => _isAr ? 'عمق الماء'       : 'Water Depth';
+  String get depthLandCoast    => _isAr ? 'يابسة / ساحل'    : 'Land / Coast';
+  String get depthVeryShallow  => _isAr ? 'ضحل جداً'        : 'Very Shallow';
+  String get depthShallow      => _isAr ? 'ضحل'             : 'Shallow';
+  String get depthModerate     => _isAr ? 'متوسط'           : 'Moderate';
+  String get depthDeep         => _isAr ? 'عميق'            : 'Deep';
+  String get depthVeryDeep     => _isAr ? 'عميق جداً'       : 'Very Deep';
+  String get depthAbyssal      => _isAr ? 'قاع الهاوية'     : 'Abyssal';
+  String get depthUltraDeep    => _isAr ? 'فائق العمق'      : 'Ultra Deep';
+
+  // Land start validation
+  String get startPointInProtectedArea => _isAr
+      ? 'لا يمكن تحديد نقطة البداية داخل منطقة محمية'
+      : 'Cannot set start point inside a protected area';
+
+  // SOS dialog
+  String get sosSendAlert      => _isAr ? 'إرسال نداء استغاثة؟' : 'Send SOS Alert?';
+  String get sosDialogBody     => _isAr
+      ? 'سيتم الاتصال بخدمات الطوارئ فوراً.\n\nاستخدم هذا فقط في حالات الطوارئ الحقيقية.'
+      : 'This will call emergency services immediately.\n\nOnly use in a genuine emergency.';
+  String get sosSend           => _isAr ? 'إرسال نداء الاستغاثة' : 'SEND SOS';
 }

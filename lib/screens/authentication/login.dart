@@ -51,11 +51,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final submitted = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.tan.withValues(alpha: 0.80),
+        backgroundColor: AppColors.tan,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.forgotPassword,
-          style: const TextStyle(color: Color.fromARGB(255, 65, 53, 39), fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Color.fromARGB(255, 65, 53, 39), 
+            fontSize: 18, 
+            fontWeight: FontWeight.bold
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -63,7 +67,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             Text(
               l10n.forgotPasswordHint,
-              style: TextStyle(color: Color.fromARGB(255, 65, 53, 39), fontSize: 13, height: 1.5),
+              style: TextStyle(
+                color: Color.fromARGB(255, 65, 53, 39), 
+                fontSize: 16, 
+                height: 1.5
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -72,9 +80,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               style: const TextStyle(color: Color.fromARGB(255, 99, 81, 59)),
               decoration: InputDecoration(
                 hintText: l10n.enterEmail,
-                hintStyle: TextStyle(color: const Color.fromARGB(255, 99, 81, 59).withValues(alpha: 0.45)),
+                hintStyle: TextStyle(color: const Color.fromARGB(255, 99, 81, 59).withValues(alpha: 0.55)),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.08),
+                fillColor: Colors.white.withValues(alpha: 0.2),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -87,11 +95,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(app.cancel, style: TextStyle(color: Color.fromARGB(255, 65, 53, 39).withValues(alpha: 0.6))),
+            child: Text(app.cancel, 
+            style: TextStyle(
+              fontSize: 16,
+              color: Color.fromARGB(255, 65, 53, 39).withValues(alpha: 0.6)
+              )),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.sendResetLink, style: const TextStyle(color: Color.fromARGB(255, 99, 81, 59), fontWeight: FontWeight.bold)),
+            child: Text(l10n.sendResetLink, 
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color.fromARGB(255, 99, 81, 59), 
+              fontWeight: FontWeight.bold
+            )),
           ),
         ],
       ),
@@ -151,14 +168,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
 
                         // ── Hero ─────────────────────────────────────────────
-                        const SizedBox(height: 65),
+                        const SizedBox(height: 120),
                         Center(
                           child: Image.asset(
                             'assets/logo/appIcon.png',
                             width: 82, height: 82, fit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 50),
                         Center(
                           child: Text(
                             app.appName,
@@ -178,7 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Zain',
-                              fontSize: 15,
+                              fontSize: 16,
                               color: Colors.white.withValues(alpha: 0.70),
                               height: 1.6,
                             ),
@@ -209,7 +226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
                                     size: 18,
-                                    color: Colors.grey.shade700,
+                                    color: Colors.white.withValues(alpha: 0.6),
                                   ),
                                   onPressed: () =>
                                       setState(() => _obscure = !_obscure),
@@ -229,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               l10n.forgotPassword,
                               style: TextStyle(
                                 fontFamily: 'Zain',
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.white.withValues(alpha: 0.70),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -246,7 +263,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           onPressed: auth.isLoading ? null : _handleLogin,
                         ),
 
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 30),
 
                         // ── OR divider ────────────────────────────────────────
                         Row(children: [
@@ -258,14 +275,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 color: Colors.white.withValues(alpha: 0.75),
-                                fontSize: 14,
+                                fontSize: 16,
                               ),
                             ),
                           ),
                           Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.14))),
                         ]),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 30),
 
                         // ── Continue as Guest ─────────────────────────────────
                         Center(
@@ -275,7 +292,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               l10n.continueAsGuest,
                               style: TextStyle(
                                 fontFamily: 'Zain',
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.white.withValues(alpha: 0.75),
                                 decoration: TextDecoration.underline,
                                 decorationColor: Colors.white,
@@ -294,7 +311,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               l10n.dontHaveAccount,
                               style: TextStyle(
                                 fontFamily: 'Zain',
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.white.withValues(alpha: 0.75),
                               ),
                             ),
@@ -308,7 +325,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 l10n.signUp,
                                 style: TextStyle(
                                   fontFamily: 'Zain',
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   color: AppColors.tan.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.bold,
                                 ),

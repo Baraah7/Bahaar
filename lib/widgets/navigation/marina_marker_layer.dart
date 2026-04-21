@@ -25,8 +25,8 @@ class MarinaMarkerLayer extends StatelessWidget {
 
         return Marker(
           point: marina.location,
-          width: isHighlighted ? 60 : 40,
-          height: isHighlighted ? 60 : 40,
+          width: isHighlighted ? 72 : 52,
+          height: isHighlighted ? 72 : 52,
           child: GestureDetector(
             onTap: () => onMarinaTapped?.call(marina),
             child: Stack(
@@ -50,7 +50,7 @@ class MarinaMarkerLayer extends StatelessWidget {
                   child: Icon(
                     _getMarinaIcon(marina.type),
                     color: Colors.white,
-                    size: isHighlighted ? 32 : 24,
+                    size: isHighlighted ? 36 : 28,
                   ),
                 ),
 

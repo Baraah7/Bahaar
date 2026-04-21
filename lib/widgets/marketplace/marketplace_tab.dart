@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
@@ -75,7 +76,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.65,
+                        childAspectRatio: 0.75,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
                       ),
@@ -172,7 +173,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 3),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
@@ -208,21 +209,21 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                       });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade200),
+                        border: Border.all(color: AppColors.red.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.close_rounded, size: 13, color: Colors.red.shade600),
+                          Icon(Icons.close_rounded, size: 13, color: AppColors.red.withValues(alpha: 0.8)),
                           const SizedBox(width: 3),
                           Text(
                             l10n.clearFilters,
                             style: TextStyle(
-                              color: Colors.red.shade700,
+                              color: AppColors.red.withValues(alpha: 0.8),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -279,17 +280,17 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 27, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF0D4F54) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: isActive ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isActive ? const Color(0xFF0D4F54) : Colors.grey.shade200,
+            color: isActive ? AppColors.primary : Colors.grey.shade200,
           ),
           boxShadow: [
             BoxShadow(
               color: isActive
-                  ? const Color(0xFF0D4F54).withValues(alpha: 0.2)
+                  ? AppColors.primary.withValues(alpha: 0.2)
                   : Colors.black.withValues(alpha: 0.04),
               blurRadius: isActive ? 8 : 6,
               offset: const Offset(0, 2),

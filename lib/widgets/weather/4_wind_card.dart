@@ -2,14 +2,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../models/weather/current_weather_model.dart';
 import 'styles.dart';
-import 'weather_l10n_helper.dart';
+import 'package:bahaar/l10n/weather/weather_localizations.dart';
 
 class WeatherWindCard extends StatelessWidget {
   final CurrentWeatherModel wind;
-  final WeatherL10nHelper helper;
+  final WeatherLocalizations l10n;
 
   const WeatherWindCard(
-      {super.key, required this.wind, required this.helper});
+      {super.key, required this.wind, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class WeatherWindCard extends StatelessWidget {
                     Icon(Icons.air,
                         color: WeatherStyles.white(0.7), size: 20),
                     const SizedBox(width: 8),
-                    Text(helper.l10n.wind,
+                    Text(l10n.wind,
                         style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -46,7 +46,7 @@ class WeatherWindCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      helper.n(wind.windKph.round()),
+                      l10n.n(wind.windKph.round()),
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 42,
@@ -56,7 +56,7 @@ class WeatherWindCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(helper.kmh,
+                      child: Text(l10n.kmh,
                           style: TextStyle(
                               color: WeatherStyles.white(0.7),
                               fontSize: 16)),
@@ -88,7 +88,7 @@ class WeatherWindCard extends StatelessWidget {
                         color: WeatherStyles.white(0.5), size: 14),
                     const SizedBox(width: 6),
                     Text(
-                      '${helper.l10n.weatherGusts} ${helper.n(wind.gustKph.round())} ${helper.kmh}',
+                      '${l10n.weatherGusts} ${l10n.n(wind.gustKph.round())} ${l10n.kmh}',
                       style: TextStyle(
                           color: WeatherStyles.white(0.6),
                           fontSize: 14),

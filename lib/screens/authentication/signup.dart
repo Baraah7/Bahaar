@@ -118,7 +118,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Zain',
-                              fontSize: 15,
+                              fontSize: 16,
                               color: Colors.white.withValues(alpha: 0.70),
                               height: 1.6,
                             ),
@@ -226,7 +226,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               style: TextStyle(
                                 fontFamily: 'Zain',
                                 color: Colors.white.withValues(alpha: 0.75),
-                                fontSize: 14,
+                                fontSize: 16,
                               ),
                             ),
                           ),
@@ -243,7 +243,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               l10n.alreadyHaveAccount,
                               style: TextStyle(
                                 fontFamily: 'Zain',
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.white.withValues(alpha: 0.75),
                               ),
                             ),
@@ -253,7 +253,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 app.logIn,
                                 style: TextStyle(
                                   fontFamily: 'Zain',
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   color: AppColors.tan.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -287,14 +287,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 14,
+                      size: 16,
                       color: Colors.white.withValues(alpha: 0.70)),
                   const SizedBox(width: 4),
                   Text(
                     l10n.backButton,
                     style: TextStyle(
                       fontFamily: 'Zain',
-                      fontSize: 14,
+                      fontSize: 16,
                       color: Colors.white.withValues(alpha: 0.70),
                       fontWeight: FontWeight.w500,
                     ),

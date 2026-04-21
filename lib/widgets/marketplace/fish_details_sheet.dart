@@ -1,12 +1,14 @@
 ﻿import 'dart:io';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../app_start.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
-import 'buildSellerCard.dart';
-import 'buildPaymentOption.dart';
+import 'seller_card.dart';
+import 'payment_option.dart';
 
 /// Returns the right ImageProvider depending on whether the path is a
 /// remote https:// URL (Firebase Storage) or a local file path.
@@ -173,8 +175,9 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                             icon: const Icon(Icons.delete_outline_rounded, size: 18),
                             label: Text(_l10n.deleteListing),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red.shade600,
-                              side: BorderSide(color: Colors.red.shade300),
+                              foregroundColor: AppColors.red,
+                              backgroundColor: AppColors.red.withValues(alpha: 0.1),
+                              side: BorderSide(color: AppColors.red.withOpacity(0.3)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -229,23 +232,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _contactSeller(),
-                            icon: const Icon(Icons.phone_outlined, size: 18),
-                            label: Text(_l10n.contactSeller),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF0D4F54),
-                              side: const BorderSide(color: Color(0xFF0E7490)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
                             ),
                           ),
                         ),
@@ -639,6 +625,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             keyboardType: TextInputType.phone,
             validator: (value) {
               if (value == null || value.isEmpty) return _l10n.pleaseEnterPhoneNumber;
+              if (!RegExp(r'^\d{8}$').hasMatch(value.trim())) return _l10n.phoneEightDigits;
               return null;
             },
           ),
@@ -727,6 +714,24 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         widget.listing.benefitPayIban!,
                         style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF0D4F54)),
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 18, color: Color(0xFF0E7490)),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: 'Copy IBAN',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: widget.listing.benefitPayIban!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('IBAN copied'),
+                            backgroundColor: const Color(0xFF0D4F54),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -906,34 +911,89 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: EdgeInsets.zero,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.delete_outline_rounded, color: Colors.red.shade600),
-            const SizedBox(width: 10),
-            Text(_l10n.deleteListing),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.red.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 32),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _l10n.deleteListing,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              child: Column(
+                children: [
+                  Text(
+                    _l10n.confirmDeleteListing,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey.shade700,
+                            side: BorderSide(color: Colors.grey.shade300),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(_l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.red,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.pop(context);
+                            widget.onDelete?.call();
+                          },
+                          child: Text(_l10n.deleteListing, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        content: Text(_l10n.confirmDeleteListing),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(_l10n.cancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-              widget.onDelete?.call();
-            },
-            child: Text(_l10n.deleteListing),
-          ),
-        ],
       ),
     );
   }
@@ -1006,78 +1066,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         _selectedPayment = selectedMethod;
       });
     }, context: context);
-  }
-
-  void _contactSeller() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D4F54).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.phone_rounded, color: Color(0xFF0E7490), size: 22),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              _l10n.contactSeller,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        content: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildContactRow(Icons.person_outline, _l10n.name, widget.listing.sellerName),
-              Divider(height: 16, color: Colors.grey.shade200),
-              _buildContactRow(Icons.phone_outlined, _l10n.phone, widget.listing.sellerPhone),
-              if (widget.listing.sellerLocation != null) ...[
-                Divider(height: 16, color: Colors.grey.shade200),
-                _buildContactRow(Icons.location_on_outlined, _l10n.location, widget.listing.sellerLocation!),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D4F54),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Text(_l10n.close, style: const TextStyle(fontWeight: FontWeight.w600)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF0E7490)),
-        const SizedBox(width: 10),
-        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      ],
-    );
   }
 
   String _formatDate(DateTime date) {

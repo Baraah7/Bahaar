@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
@@ -53,7 +54,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
               heroTag: 'recenter_nav',
               onPressed: onRecenter,
               backgroundColor: Colors.white,
-              child: const Icon(Icons.my_location, color: Colors.blue),
+              child: const Icon(Icons.my_location, color: AppColors.primary),
             ),
           ),
 
@@ -301,7 +302,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 icon: Icons.straighten,
                 label: 'Distance',
                 value: _formatDistance(distanceRemaining),
-                color: Colors.blue,
+                color: AppColors.primary,
               ),
               _buildMetricItem(
                 icon: Icons.access_time,
@@ -313,7 +314,7 @@ class ActiveNavigationOverlay extends StatelessWidget {
                 icon: Icons.speed,
                 label: 'Speed',
                 value: NavigationConstants.formatSpeed(currentSpeed),
-                color: Colors.green,
+                color: AppColors.accent,
               ),
             ],
           ),
@@ -413,9 +414,9 @@ class ActiveNavigationOverlay extends StatelessWidget {
   Color _getSegmentColor(RouteSegmentType type) {
     switch (type) {
       case RouteSegmentType.land:
-        return Colors.blue;
+        return AppColors.primary;
       case RouteSegmentType.marine:
-        return Colors.cyan;
+        return AppColors.accent;
       case RouteSegmentType.transition:
         return Colors.orange;
     }

@@ -44,7 +44,7 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     final waypoints  = _recorder.waypoints;
     final currentPos = _recorder.currentPosition;
     final drFix      = _recorder.drFix;
-    final depPort    = _recorder.departurePort;
+    // final depPort    = _recorder.departurePort;
 
     // ── Build track polyline ─────────────────────────────────────────────
     final trackPoints = waypoints
@@ -79,12 +79,12 @@ class _TripTrackLayerState extends State<TripTrackLayer> {
     // ── Port markers ─────────────────────────────────────────────────────
     final portMarkers = <Marker>[];
     for (final route in _recorder.portRoutes) {
-      portMarkers.add(_portMarker(route.port, isDeparture: route.isDeparture));
+      // portMarkers.add(_portMarker(route.port, isDeparture: route.isDeparture));
     }
-    if (depPort != null &&
-        !_recorder.portRoutes.any((r) => r.port.id == depPort.id)) {
-      portMarkers.add(_portMarker(depPort, isDeparture: true));
-    }
+    // if (depPort != null &&
+    //     !_recorder.portRoutes.any((r) => r.port.id == depPort.id)) {
+    //   portMarkers.add(_portMarker(depPort, isDeparture: true));
+    // }
 
     // ── Current position marker ───────────────────────────────────────────
     final posMarkers = <Marker>[];

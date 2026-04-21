@@ -32,8 +32,6 @@ class LayerControlPanel extends StatefulWidget {
 }
 
 class _LayerControlPanelState extends State<LayerControlPanel> {
-  final Set<String> _expanded = {};
-
   @override
   void initState() {
     super.initState();
@@ -51,14 +49,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
   MapLocalizations get _l10n => MapLocalizations.of(context);
 
   MapLayerManager get lm => widget.layerManager;
-
-  bool _isExpanded(String key) => _expanded.contains(key);
-
-  void _toggleSection(String key) {
-    setState(() {
-      _expanded.contains(key) ? _expanded.remove(key) : _expanded.add(key);
-    });
-  }
 
   // ────────────────────────────────────────────
   // Build
@@ -95,6 +85,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     icon: Icons.water_drop_outlined,
                     color: AppColors.red,
                     isActive: lm.showDepthLayer,
+                    toggleValue: lm.showDepthLayer,
+                    onToggle: (val) => lm.showDepthLayer = val,
                     content: _buildDepthContent(),
                   ),
                   _buildSection(
@@ -103,6 +95,11 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     icon: Icons.shield_outlined,
                     color: AppColors.red,
                     isActive: lm.showProtectedZones || lm.showExclusionZones,
+                    toggleValue: lm.showProtectedZones || lm.showExclusionZones,
+                    onToggle: (val) {
+                      lm.showProtectedZones = val;
+                      lm.showExclusionZones = val;
+                    },
                     content: _buildProtectedAndExclusionContent(),
                   ),
                   _buildSection(
@@ -111,6 +108,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                     icon: Icons.place,
                     color: AppColors.red,
                     isActive: lm.showFishingSpots,
+                    toggleValue: lm.showFishingSpots,
+                    onToggle: (val) => lm.showFishingSpots = val,
                     content: _buildFishingSpotsContent(),
                   ),
                 ],
@@ -181,79 +180,57 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     required Color color,
     required bool isActive,
     required Widget content,
+    bool? toggleValue,
+    ValueChanged<bool>? onToggle,
   }) {
-    final expanded = _isExpanded(key);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: () => _toggleSection(key),
-          borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
-            decoration: BoxDecoration(
-              color: expanded ? color.withValues(alpha: 0.07) : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
+        Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? color.withValues(alpha: 0.12)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(
+                icon,
+                size: 15,
+                color: isActive ? color : Colors.grey.shade400,
+              ),
             ),
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? color.withValues(alpha: 0.12)
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 15,
-                    color: isActive ? color : Colors.grey.shade400,
-                  ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: isActive ? Colors.black87 : Colors.grey.shade500,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: isActive ? Colors.black87 : Colors.grey.shade500,
-                    ),
-                  ),
-                ),
-                if (isActive)
-                  Container(
-                    width: 7,
-                    height: 7,
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: Colors.grey.shade400,
-                ),
-              ],
+              ),
             ),
-          ),
+            if (onToggle != null)
+              Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: toggleValue ?? false,
+                  onChanged: onToggle,
+                  activeThumbColor: color,
+                  activeTrackColor: color.withValues(alpha: 0.3),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
         ),
-        if (expanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 6, right: 4, bottom: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [const SizedBox(height: 4), content],
-            ),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 6, right: 4, top: 4, bottom: 4),
+          child: content,
+        ),
         const SizedBox(height: 2),
       ],
     );
@@ -263,67 +240,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
   // Shared helpers
   // ────────────────────────────────────────────
 
-  Widget _buildToggleRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    String? subtitle,
-    required bool value,
-    ValueChanged<bool>? onChanged,
-  }) {
-    final active = value && onChanged != null;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: active
-                  ? iconColor.withValues(alpha: 0.12)
-                  : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: Icon(
-              icon,
-              size: 15,
-              color: active ? iconColor : Colors.grey.shade400,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: onChanged != null ? Colors.black87 : Colors.grey,
-                  ),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                  ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: iconColor,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ],
-      ),
-    );
-  }
-
   // ────────────────────────────────────────────
   // Section content builders
   // ────────────────────────────────────────────
@@ -332,15 +248,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildToggleRow(
-          icon: Icons.water_drop_outlined,
-          iconColor: AppColors.red,
-          label: _l10n.showDepthLayer,
-          value: lm.showDepthLayer,
-          onChanged: (val) => lm.showDepthLayer = val,
-        ),
         if (lm.showDepthLayer) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             _l10n.visualizationType,
             style: TextStyle(
@@ -412,54 +321,29 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
   }
 
   Widget _buildProtectedAndExclusionContent() {
-    final featureCount = widget.geoJsonBuilder != null
-        ? widget.geoJsonBuilder!.getFeatureCount('protected_zone') +
-            widget.geoJsonBuilder!.getFeatureCount('reef')
-        : 0;
+    final active = lm.showProtectedZones || lm.showExclusionZones;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildToggleRow(
-          icon: Icons.shield_outlined,
-          iconColor: AppColors.red,
-          label: _l10n.protectedZones,
-          subtitle: featureCount > 0
-              ? _l10n.featuresLoaded(featureCount)
-              : _l10n.marineReservesReefs,
-          value: lm.showProtectedZones,
-          onChanged: (val) => lm.showProtectedZones = val,
-        ),
-        if (lm.showProtectedZones) ...[
+        if (active) ...[
           const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.red.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _legendRow(AppColors.red.withValues(alpha: 0.5), _l10n.mpaRestrictedArea),
-                ],
-              ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.red.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.red.withValues(alpha: 0.15)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _legendRow(AppColors.red.withValues(alpha: 0.5), _l10n.mpaRestrictedArea),
+                _legendRow(Colors.orange.withValues(alpha: 0.7), _l10n.oilExclusion),
+                _legendRow(AppColors.brown.withValues(alpha: 0.8), _l10n.gasExclusion),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
         ],
-        _buildToggleRow(
-          icon: Icons.oil_barrel,
-          iconColor: AppColors.red,
-          label: _l10n.oilGasExclusion,
-          subtitle: lm.showExclusionZones
-              ? _l10n.safetyBuffersVisible
-              : _l10n.safetyRulesApplyWhenHidden,
-          value: lm.showExclusionZones,
-          onChanged: (val) => lm.showExclusionZones = val,
-        ),
       ],
     );
   }
@@ -468,16 +352,8 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildToggleRow(
-          icon: Icons.place,
-          iconColor: AppColors.red,
-          label: _l10n.showFishingSpots,
-          subtitle: _l10n.zonesMpasLocations,
-          value: lm.showFishingSpots,
-          onChanged: (val) => lm.showFishingSpots = val,
-        ),
         if (lm.showFishingSpots) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(

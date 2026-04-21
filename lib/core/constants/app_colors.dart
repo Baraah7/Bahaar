@@ -20,6 +20,9 @@ abstract final class AppColors {
   /// Pearl cream — scaffold backgrounds, cards
   static const cream      = Color(0xFFFAF7E8);
 
+  /// Green seaweed — success messages, positive badges
+  static const green      = Color.fromARGB(255, 53, 159, 132);
+
   // ── Convenience aliases ──────────────────────────────────────────────────
   static const white      = Colors.white;
   static const transparent = Colors.transparent;

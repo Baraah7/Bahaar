@@ -104,7 +104,7 @@ class AuthGradientButton extends StatelessWidget {
     return SizedBox(
       height: 54,
       child: Material(
-        color: Colors.transparent,
+        color: const Color.fromARGB(0, 255, 255, 255),
         borderRadius: BorderRadius.circular(27),
         child: InkWell(
           onTap: onPressed,
@@ -196,10 +196,10 @@ class AuthField extends StatelessWidget {
       obscureText: obscure,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontSize: 14, color: Color(0xFF0A2A30)),
+      style: const TextStyle(fontSize: 16, color: Colors.white),
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: TextStyle(fontSize: 13, color: AppColors.primary),
+        hintStyle: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.65)),
         prefixIcon: icon != null
             ? Icon(icon, size: 18, color: AppColors.accent)
             : null,
@@ -228,7 +228,7 @@ class AuthField extends StatelessWidget {
           borderRadius: BorderRadius.circular(27),
           borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFFF6B6B)),
+        errorStyle: const TextStyle(fontSize: 14, color: Color(0xFFFF6B6B)),
       ),
     );
   }

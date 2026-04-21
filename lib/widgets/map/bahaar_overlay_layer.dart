@@ -382,45 +382,42 @@ class _CatchDot extends StatelessWidget {
 // Spot marker layer — small blue dots (fishing prediction spots)
 // ---------------------------------------------------------------------------
 
-// Shared painter instance: no instance state, so all markers reuse one object.
-class _SpotDotPainter extends CustomPainter {
-  const _SpotDotPainter();
-
-  static final _fill = Paint()..color = const Color(0xFF1976D2); // blue 700
-  static final _border = Paint()
-    ..color = Colors.white
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.5;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2 - 0.75;
-    canvas.drawCircle(c, r, _fill);
-    canvas.drawCircle(c, r, _border);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter _) => false;
-}
-
 class _SpotMarkerLayer extends StatelessWidget {
   final void Function(Map<String, dynamic> spot) onSpotTapped;
   const _SpotMarkerLayer({required this.onSpotTapped});
 
+  Color _spotColor(Map<String, dynamic> spot) {
+    if (spot['mpa'] as bool? ?? false) return Colors.red.shade600;
+    return (spot['confidence'] as String? ?? 'medium') == 'high'
+        ? Colors.green.shade600
+        : Colors.orange.shade600;
+  }
+
   @override
   Widget build(BuildContext context) {
     final markers = kConfirmedSpots.map((spot) {
+      final color = _spotColor(spot);
       return Marker(
-        point: LatLng(
-          spot['lat'] as double,
-          spot['lng'] as double,
-        ),
-        width: 12,
-        height: 12,
+        point: LatLng(spot['lat'] as double, spot['lng'] as double),
+        width: 36,
+        height: 36,
         child: GestureDetector(
           onTap: () => onSpotTapped(spot),
-          child: const CustomPaint(painter: _SpotDotPainter()),
+          child: Container(
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.phishing, color: Colors.white, size: 18),
+          ),
         ),
       );
     }).toList();

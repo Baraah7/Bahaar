@@ -26,7 +26,6 @@ import 'package:bahaar/services/map/osrm_routing_service.dart';
 import 'package:bahaar/services/map/outline_edit_service.dart';
 import 'package:bahaar/services/marine_weather_service.dart';
 import 'package:bahaar/services/offline/connectivity_service.dart';
-import 'package:bahaar/services/sos_service.dart';
 import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/widgets/fishing_log/catch_form.dart';
@@ -46,6 +45,18 @@ import 'package:bahaar/widgets/map/layer_control_panel.dart';
 import 'package:bahaar/widgets/map/sos_button.dart';
 import 'package:bahaar/widgets/map/territorial_mask_layer.dart';
 import 'package:bahaar/widgets/map/territorial_outline_editor.dart';
+import 'package:bahaar/models/map/nav_mode.dart';
+import 'package:bahaar/models/map/port_point.dart';
+import 'package:bahaar/widgets/map/map_button_group.dart';
+import 'package:bahaar/widgets/map/map_icon_button.dart';
+import 'package:bahaar/widgets/map/map_left_toolbar.dart';
+import 'package:bahaar/widgets/map/nav_instructions_panel.dart';
+import 'package:bahaar/widgets/map/nav_mode_option.dart';
+import 'package:bahaar/widgets/map/navigation_status_indicator.dart';
+import 'package:bahaar/widgets/map/offline_banner.dart';
+import 'package:bahaar/widgets/map/route_calculating_overlay.dart';
+import 'package:bahaar/widgets/map/step_chip.dart';
+import 'package:bahaar/widgets/map/zoom_controls.dart';
 import 'package:bahaar/widgets/navigation/active_navigation_overlay.dart';
 import 'package:bahaar/widgets/navigation/marina_marker_layer.dart';
 import 'package:bahaar/widgets/navigation/route_polyline_layer.dart';
@@ -156,7 +167,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
   bool _showPortSelection = false;
 
   // Navigation mode
-  _NavMode? _navMode;
+  NavMode? _navMode;
 
   // Sea-to-sea state
   LatLng? _seaOrigin; // first tap in sea→sea mode
@@ -473,22 +484,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
       if (_maskInitialized) {
         final isNavigable = _navigationMask.isPointNavigable(targetLocation);
-        if (!isNavigable) {
-          final isOutside = targetLocation.longitude < _navigationMask.minLon ||
-              targetLocation.longitude > _navigationMask.maxLon ||
-              targetLocation.latitude < _navigationMask.minLat ||
-              targetLocation.latitude > _navigationMask.maxLat;
-          final msg = isOutside
-              ? 'Your location is outside the territorial water boundary'
-              : 'Your location appears to be on land';
-          log('Warning: $msg');
-          setState(() {
-            _outsideMaskWarning = msg;
-            _outsideMaskWarningDismissed = false;
-          });
-        } else {
-          log('Location validated: on navigable water');
-        }
+        log('Location validated: ${isNavigable ? "on navigable water" : "on land / outside bounds"}');
       }
 
       _mapController.move(targetLocation, 12);
@@ -530,7 +526,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
         '${isNavigable ? "navigable water" : isOutsideBounds ? "outside territorial bounds" : "land"}');
 
     // ── Sea→Sea mode ─────────────────────────────────────────────────────────
-    if (_navMode == _NavMode.seaToSea) {
+    if (_navMode == NavMode.seaToSea) {
       if (!isNavigable) {
         final msg = isOutsideBounds
             ? l10n.outsideTerritorialWaters
@@ -559,7 +555,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
     }
 
     // ── Sea→Land mode ─────────────────────────────────────────────────────────
-    if (_navMode == _NavMode.seaToLand) {
+    if (_navMode == NavMode.seaToLand) {
       // Port taps (land) are handled via proximity detection
       if (_showPortSelection && !isNavigable) {
         final tapScreen = tapPosition.relative;
@@ -627,7 +623,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
         }
       }
       // Land tap: allow setting a custom land origin
-      if (_navMode == _NavMode.landToSea) {
+      if (_navMode == NavMode.landToSea) {
+        final areaName = _getProtectedAreaAt(point);
+        if (areaName != null) {
+          _showMessage('${l10n.startPointInProtectedArea}: $areaName', Colors.red);
+          return;
+        }
         setState(() => _customLandOrigin = point);
         _showMessage(l10n.customOriginSet, Colors.blue);
       }
@@ -1218,7 +1219,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _NavModeOption(
+              NavModeOption(
                 icon: Icons.directions_boat,
                 title: l10n.landToSea,
                 subtitle: l10n.landToSeaSubtitle,
@@ -1228,7 +1229,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 },
               ),
               const SizedBox(height: 8),
-              _NavModeOption(
+              NavModeOption(
                 icon: Icons.waves,
                 title: l10n.seaToSea,
                 subtitle: l10n.seaToSeaSubtitle,
@@ -1238,7 +1239,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
                 },
               ),
               const SizedBox(height: 8),
-              _NavModeOption(
+              NavModeOption(
                 icon: Icons.home,
                 title: l10n.returnSeaToLand,
                 subtitle: l10n.returnSeaToLandSubtitle,
@@ -1256,7 +1257,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   void _startLandToSeaMode() {
     setState(() {
-      _navMode = _NavMode.landToSea;
+      _navMode = NavMode.landToSea;
       _showPortSelection = true;
       _currentRoute = null;
       _selectedPort = null;
@@ -1267,7 +1268,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   void _startSeaToSeaMode() {
     setState(() {
-      _navMode = _NavMode.seaToSea;
+      _navMode = NavMode.seaToSea;
       _showPortSelection = false;
       _currentRoute = null;
       _seaOrigin = null;
@@ -1278,7 +1279,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   void _startSeaToLandMode() {
     setState(() {
-      _navMode = _NavMode.seaToLand;
+      _navMode = NavMode.seaToLand;
       _showPortSelection = true;
       _currentRoute = null;
       _selectedPort = _returnPort; // pre-select saved port if available
@@ -1290,16 +1291,16 @@ class _IntegratedMapState extends State<IntegratedMap> {
   void _handlePortSelected(PortPoint port) {
     setState(() {
       _selectedPort = port;
-      if (_navMode == _NavMode.landToSea) {
+      if (_navMode == NavMode.landToSea) {
         _returnPort = port; // save for possible return trip
       }
     });
     _showMessage('Port selected: ${port.name}', Colors.blue);
 
     // Trigger route calculation when all inputs are ready
-    if (_navMode == _NavMode.landToSea && _seaDestination != null) {
+    if (_navMode == NavMode.landToSea && _seaDestination != null) {
       _calculatePortToSeaRoute();
-    } else if (_navMode == _NavMode.seaToLand &&
+    } else if (_navMode == NavMode.seaToLand &&
         _seaToLandOrigin != null &&
         _customLandDestination != null) {
       _calculateSeaToLandRoute();
@@ -1957,7 +1958,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
           ),
 
         // Port markers (visible when port selection is active or a port is selected)
-        if (_showPortSelection || _selectedPort != null || _navMode == _NavMode.seaToLand)
+        if (_showPortSelection || _selectedPort != null || _navMode == NavMode.seaToLand)
           MarkerLayer(
             markers: _availablePorts.map((port) {
               final isSelected = _selectedPort?.id == port.id;
@@ -2285,164 +2286,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
     );
   }
 
-  Widget _buildNavigationStatusIndicator(MapLocalizations l10n) {
-    final ready = _maskInitialized;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: ready ? Colors.green.shade600 : Colors.grey.shade500,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            ready ? l10n.navigationReady : l10n.loading,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapIconButton({
-    required IconData icon,
-    required String tooltip,
-    VoidCallback? onPressed,
-    bool isActive = false,
-    Color activeColor = AppColors.red,
-  }) {
-    final iconColor = onPressed == null
-        ? Colors.grey.shade400
-        : isActive
-            ? activeColor
-            : Colors.blueGrey.shade700;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: Icon(icon, size: 22, color: iconColor),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButtonGroup(List<Widget> buttons) {
-    final children = <Widget>[];
-    for (int i = 0; i < buttons.length; i++) {
-      children.add(buttons[i]);
-      if (i < buttons.length - 1) {
-        children.add(Divider(
-          height: 1,
-          thickness: 0.5,
-          color: Colors.grey.shade200,
-        ));
-      }
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Colors.green),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.green)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomControls() {
-    return _buildButtonGroup([
-      _buildMapIconButton(
-        icon: Icons.add,
-        tooltip: 'Zoom in',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom + 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.remove,
-        tooltip: 'Zoom out',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom - 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.my_location,
-        tooltip: 'My location',
-        onPressed: _mapReady && _locationData != null
-            ? () => _mapController.move(
-                  LatLng(
-                    _locationData!.latitude ?? MapConstants.defaultLatitude,
-                    _locationData!.longitude ?? MapConstants.defaultLongitude,
-                  ),
-                  14,
-                )
-            : null,
-      ),
-    ]);
-  }
-
   // ============================================================
   // Main Build Method
   // ============================================================
@@ -2508,7 +2351,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
           Positioned(
             top: 50,
             right: 10,
-            child: _buildNavigationStatusIndicator(l10n),
+            child: NavigationStatusIndicator(isReady: _maskInitialized, l10n: l10n),
           ),
 
           // Layer controls panel (top right, with outside-tap dismissal)
@@ -2546,39 +2389,6 @@ class _IntegratedMapState extends State<IntegratedMap> {
                       ),
                     ),
                   ],
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-
-          // Admin edit toolbar (when in edit mode)
-          ListenableBuilder(
-            listenable: _layerManager,
-            builder: (context, _) {
-              if (_layerManager.isAdminEditMode && _maskInitialized) {
-                return Positioned(
-                  top: 50,
-                  left: 10,
-                  child: AdminEditToolbar(
-                    layerManager: _layerManager,
-                    navigationMask: _navigationMask,
-                    onSave: _handleSaveMask,
-                    onReset: _handleResetMask,
-                    onClose: _exitAdminEditMode,
-                    onZoomIn: () {
-                      _mapController.move(
-                        _mapController.camera.center,
-                        _mapController.camera.zoom + 1,
-                      );
-                    },
-                    onZoomOut: () {
-                      _mapController.move(
-                        _mapController.camera.center,
-                        _mapController.camera.zoom - 1,
-                      );
-                    },
-                  ),
                 );
               }
               return const SizedBox.shrink();
@@ -2646,72 +2456,30 @@ class _IntegratedMapState extends State<IntegratedMap> {
                   _isOutlineEditMode) {
                 return const SizedBox.shrink();
               }
-              return Positioned(
-                top: 90,
-                left: 12,
-                child: Column(
-                  children: [
-                    _buildButtonGroup([
-                      _buildMapIconButton(
-                        icon: _layerManager.showLayerControls
-                            ? Icons.layers
-                            : Icons.layers_outlined,
-                        tooltip: 'Layers',
-                        onPressed: () => _layerManager.showLayerControls =
-                            !_layerManager.showLayerControls,
-                        isActive: _layerManager.showLayerControls,
-                      ),
-                      _buildMapIconButton(
-                        icon: _showDepthLegend
-                            ? Icons.legend_toggle
-                            : Icons.legend_toggle_outlined,
-                        tooltip: 'Depth legend',
-                        onPressed: () =>
-                            setState(() => _showDepthLegend = !_showDepthLegend),
-                        isActive: _showDepthLegend,
-                      ),
-                    ]),
-                    const SizedBox(height: 8),
-                    _buildButtonGroup([
-                      _buildMapIconButton(
-                        icon: Icons.explore,
-                        tooltip: 'Celestial Navigation (DS-1)',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const CelestialNavigationScreen(),
-                          ),
-                        ),
-                        isActive: CelestialFixNotifier.instance.fix != null,
-                        activeColor: const Color(0xFF0D47A1),
-                      ),
-                    ]),
-                    const SizedBox(height: 8),
-                    _buildButtonGroup([
-                      _buildMapIconButton(
-                        icon: _currentRoute != null || _navMode != null
-                            ? Icons.close
-                            : Icons.directions_boat_outlined,
-                        tooltip: _currentRoute != null
-                            ? 'Clear route'
-                            : _navMode != null
-                                ? 'Cancel navigation'
-                                : 'Navigate',
-                        onPressed: _maskInitialized
-                            ? () {
-                                if (_currentRoute != null || _navMode != null) {
-                                  _clearRoute();
-                                } else {
-                                  _openNavModeSelection();
-                                }
-                              }
-                            : null,
-                        isActive: _currentRoute != null || _navMode != null,
-                        activeColor: Colors.orange,
-                      ),
-                    ]),
-                  ],
+              return MapLeftToolbar(
+                showLayerControls: _layerManager.showLayerControls,
+                showDepthLegend: _showDepthLegend,
+                hasRoute: _currentRoute != null,
+                hasNavMode: _navMode != null,
+                maskInitialized: _maskInitialized,
+                celestialFixActive: CelestialFixNotifier.instance.fix != null,
+                onToggleLayers: () => _layerManager.showLayerControls =
+                    !_layerManager.showLayerControls,
+                onToggleLegend: () =>
+                    setState(() => _showDepthLegend = !_showDepthLegend),
+                onOpenCelestial: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CelestialNavigationScreen(),
+                  ),
                 ),
+                onToggleNav: () {
+                  if (_currentRoute != null || _navMode != null) {
+                    _clearRoute();
+                  } else {
+                    _openNavModeSelection();
+                  }
+                },
               );
             },
           ),
@@ -2763,96 +2531,16 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
           // Navigation instructions panel (shown during any active nav mode)
           if (_navMode != null && _currentRoute == null)
-            Positioned(
-              top: 90,
-              left: 68,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 16, color: Colors.blue),
-                        const SizedBox(width: 6),
-                        Text(
-                          _navMode == _NavMode.seaToSea
-                              ? l10n.seaToSea
-                              : _navMode == _NavMode.seaToLand
-                                  ? l10n.returnSeaToLand
-                                  : l10n.landToSea,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Dynamic step instruction
-                    Text(
-                      _navMode == _NavMode.seaToSea
-                          ? _seaOrigin == null
-                              ? l10n.stepTapSeaDeparture
-                              : _seaDestination == null
-                                  ? l10n.stepTapSeaDestination
-                                  : l10n.calculatingRoute
-                          : _navMode == _NavMode.seaToLand
-                              ? _seaToLandOrigin == null
-                                  ? l10n.stepTapSeaDeparture
-                                  : _selectedPort == null
-                                      ? l10n.stepTapPortDock
-                                      : _customLandDestination == null
-                                          ? l10n.stepTapLandDestination
-                                          : l10n.calculatingRoute
-                              // landToSea
-                              : _selectedPort == null
-                                  ? l10n.stepTapPort
-                                  : _seaDestination == null
-                                      ? l10n.stepTapSeaDestination
-                                      : l10n.calculatingRoute,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    // Confirmed steps summary
-                    if (_navMode == _NavMode.landToSea && _customLandOrigin != null) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.location_on, l10n.customOriginSet),
-                    ],
-                    if (_seaOrigin != null && _navMode == _NavMode.seaToSea) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.radio_button_checked, l10n.departureSet),
-                    ],
-                    if (_seaToLandOrigin != null && _navMode == _NavMode.seaToLand) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.radio_button_checked, l10n.seaDepartureSet),
-                    ],
-                    if (_selectedPort != null) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.anchor, '${l10n.portLabel}: ${_selectedPort!.name}'),
-                    ],
-                    if (_returnPort != null && _navMode == _NavMode.seaToLand && _selectedPort == null) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.history, '${l10n.lastPort}: ${_returnPort!.name}'),
-                    ],
-                    if (_customLandDestination != null) ...[
-                      const SizedBox(height: 6),
-                      _buildStepChip(Icons.home, l10n.landDestinationSet),
-                    ],
-                  ],
-                ),
-              ),
+            NavInstructionsPanel(
+              navMode: _navMode!,
+              l10n: l10n,
+              seaOrigin: _seaOrigin,
+              seaDestination: _seaDestination,
+              seaToLandOrigin: _seaToLandOrigin,
+              selectedPort: _selectedPort,
+              returnPort: _returnPort,
+              customLandDestination: _customLandDestination,
+              customLandOrigin: _customLandOrigin,
             ),
 
 
@@ -2911,55 +2599,11 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
           // Route calculation loading indicator
           if (_isCalculatingRoute)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.5),
-                child: Center(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.calculatingRoute,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            RouteCalculatingOverlay(label: l10n.calculatingRoute),
 
           // Offline indicator banner (top centre)
           if (!ConnectivityService.instance.isOnline)
-            Positioned(
-              top: 8,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade700.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.wifi_off, color: Colors.white, size: 14),
-                      const SizedBox(width: 6),
-                      Text(l10n.offlineMapCached,
-                          style: const TextStyle(color: Colors.white, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            OfflineBanner(label: l10n.offlineMapCached),
 
           // Log Catch FAB — only visible during an active trip
           if (TripService.instance.hasActiveTrip)
@@ -2980,21 +2624,36 @@ class _IntegratedMapState extends State<IntegratedMap> {
           Positioned(
             bottom: 16,
             left: 16,
-            child: SosButton(
-              onSosConfirmed: () => SosService().sendSos(
-                position: _locationData?.latitude != null && _locationData?.longitude != null
-                    ? LatLng(_locationData!.latitude!, _locationData!.longitude!)
-                    : const LatLng(26.2235, 50.5876),
-                heading: _locationData?.heading?.toDouble(),
-              ),
-            ),
+            child: const SosButton(),
           ),
 
           // Zoom controls (bottom right)
           Positioned(
             bottom: 16,
             right: 16,
-            child: _buildZoomControls(),
+            child: MapZoomControls(
+              onZoomIn: _mapReady
+                  ? () => _mapController.move(
+                        _mapController.camera.center,
+                        _mapController.camera.zoom + 1,
+                      )
+                  : null,
+              onZoomOut: _mapReady
+                  ? () => _mapController.move(
+                        _mapController.camera.center,
+                        _mapController.camera.zoom - 1,
+                      )
+                  : null,
+              onMyLocation: _mapReady && _locationData != null
+                  ? () => _mapController.move(
+                        LatLng(
+                          _locationData!.latitude ?? MapConstants.defaultLatitude,
+                          _locationData!.longitude ?? MapConstants.defaultLongitude,
+                        ),
+                        14,
+                      )
+                  : null,
+            ),
           ),
         ],
       ),
@@ -3002,80 +2661,3 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 }
 
-/// Navigation mode
-enum _NavMode { landToSea, seaToSea, seaToLand }
-
-/// Option tile used in the nav-mode bottom sheet
-class _NavModeOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _NavModeOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.blue.shade700, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey.shade600)),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.grey.shade400),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Port point for marine navigation
-class PortPoint {
-  final String id;
-  final String name;
-  final LatLng location;
-  final String description;
-  final List<String> facilities;
-
-  const PortPoint({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.description,
-    this.facilities = const [],
-  });
-}

@@ -129,18 +129,35 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ),
           ),
           child: SafeArea(
-            child: hasError
-                ? AppEmptyState(
-                    icon: Icons.error_outline_rounded,
-                    title: FishRecognitionLocalizations.of(context).failedToLoadModel,
-                    message: classificationState.error,
-                    buttonText: FishRecognitionLocalizations.of(context).tryAgain,
-                    onButtonPressed: () => ref.read(fishClassificationProvider.notifier).initialize(),
-                    iconColor: Colors.white,
-                  )
-                : !isInitialized
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (Navigator.canPop(context))
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                Expanded(
+                  child: hasError
+                      ? AppEmptyState(
+                          icon: Icons.error_outline_rounded,
+                          title: FishRecognitionLocalizations.of(context)
+                              .failedToLoadModel,
+                          message: classificationState.error,
+                          buttonText: FishRecognitionLocalizations.of(context)
+                              .tryAgain,
+                          onButtonPressed: () => ref
+                              .read(fishClassificationProvider.notifier)
+                              .initialize(),
+                          iconColor: Colors.white,
+                        )
+                      : !isInitialized
                     ? AppLoadingView(message: l10n.loadingRecognitionModel, color: Colors.white)
                     : _buildMainContent(context, classificationState, l10n),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -167,7 +184,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               if (classificationState.result != null) ...[
                 _buildResultCard(context, classificationState.result!, l10n),
                 const SizedBox(height: 16),
-                _buildFishInfoCard(classificationState.result!),
+                _buildFishInfoCard(classificationState.result!, l10n),
               ],
               if (classificationState.error != null)
                 _buildErrorCard(classificationState.error!),
@@ -412,8 +429,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                           const SizedBox(width: 6),
                           Text(
                             isConfident
-                                ? 'High Confidence'
-                                : 'Low Confidence',
+                                ? l10n.highConfidence
+                                : l10n.lowConfidence,
                             style: TextStyle(
                               fontSize: 14,
                               color: isConfident
@@ -511,9 +528,58 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     },
   };
 
-  Widget _buildFishInfoCard(dynamic result) {
-    final info = _fishInfo[result.className];
+  static const _fishInfoAr = {
+    'Gilt-Head Bream': {
+      'scientific': 'Sparus aurata',
+      'habitat': 'المياه الساحلية والبحيرات',
+      'size': '٢٠ – ٥٠ سم',
+      'season': 'الربيع والخريف',
+      'diet': 'الرخويات والقشريات وقنافذ البحر',
+      'flavor': 'لحم أبيض خفيف ولذيذ',
+      'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، الساحل الأطلسي',
+      'nutrition': 'غني بالبروتين وأوميغا-3 وفيتامين B12 وD',
+      'fact': 'يُميّز بالشريط الذهبي بين عينيه — ومنه جاء اسمه "ذهبي الرأس". يُعدّ من أكثر الأسماك قيمةً في أسواق الأسماك البحرينية والخليجية.',
+    },
+    'Hourse Mackerel': {
+      'scientific': 'Trachurus trachurus',
+      'habitat': 'أعالي البحار والمياه الساحلية',
+      'size': '١٥ – ٣٠ سم',
+      'season': 'الصيف',
+      'diet': 'الأسماك الصغيرة والعوالق والقشريات',
+      'flavor': 'لحم متماسك ودهني قليلاً',
+      'popular_in': 'بحر العرب، البحر الأبيض المتوسط، شرق الأطلسي',
+      'nutrition': 'غني بأحماض أوميغا-3 والسيلينيوم وفيتامين B12',
+      'fact': 'يتنقل في أسراب كبيرة وسريعة الحركة قرب السطح. يُعدّ من أهم أنواع الأسماك التجارية على مستوى العالم.',
+    },
+    'Sea Bass': {
+      'scientific': 'Dicentrarchus labrax',
+      'habitat': 'المياه الساحلية والمصبّات',
+      'size': '٣٠ – ٦٠ سم',
+      'season': 'الربيع والصيف',
+      'diet': 'الأسماك والقشريات والرأسقدميات',
+      'flavor': 'لحم أبيض طري وخفيف',
+      'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، السواحل الأوروبية',
+      'nutrition': 'مصدر ممتاز للبروتين الخفيف والفوسفور والبوتاسيوم',
+      'fact': 'سمكة صيد مرغوبة تُعرف بمقاومتها الشديدة عند اصطيادها. يمكن أن تعيش حتى ١٥ عامًا، وتُعدّ من أبرز مأكولات البحر الخليجية.',
+    },
+    'Shrimp': {
+      'scientific': 'أنواع متعددة',
+      'habitat': 'المياه الساحلية الضحلة وأحراش الأعشاب البحرية',
+      'size': '٥ – ٢٠ سم',
+      'season': 'طوال العام',
+      'diet': 'الطحالب والعوالق والمواد العضوية',
+      'flavor': 'حلو وطري',
+      'popular_in': 'الخليج العربي، خاصةً البحرين والكويت',
+      'nutrition': 'قليل السعرات، غني باليود والبروتين ومضادات الأكسدة',
+      'fact': 'تمتلك البحرين تقليدًا عريقًا في صيد الروبيان. يُعدّ روبيان الخليج (المعروف محليًا بـ"روبيان") من أجود أنواعه في العالم وركيزة أساسية في المطبخ البحريني.',
+    },
+  };
+
+  Widget _buildFishInfoCard(dynamic result, FishRecognitionLocalizations l10n) {
+    final isAr = l10n.localeName == 'ar';
+    final info = (isAr ? _fishInfoAr : _fishInfo)[result.className];
     if (info == null) return const SizedBox.shrink();
+    final enInfo = _fishInfo[result.className]!;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -525,14 +591,13 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 18),
               const SizedBox(width: 8),
-              const Text(
-                'Fish Info',
-                style: TextStyle(
+              Text(
+                l10n.fishInfo,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -541,7 +606,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  info['scientific']!,
+                  enInfo['scientific']!,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.55),
                     fontSize: 12,
@@ -554,36 +619,23 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
           ),
           const SizedBox(height: 14),
 
-          // Basic details grid
           _InfoGrid(items: [
-            _InfoItem(Icons.place_outlined, 'Habitat', info['habitat']!),
-            _InfoItem(Icons.straighten_rounded, 'Size', info['size']!),
-            _InfoItem(Icons.wb_sunny_outlined, 'Best Season', info['season']!),
-            _InfoItem(Icons.restaurant_outlined, 'Diet', info['diet']!),
-            _InfoItem(Icons.star_outline_rounded, 'Flavor', info['flavor']!),
+            _InfoItem(Icons.place_outlined,       l10n.labelHabitat, info['habitat']!),
+            _InfoItem(Icons.straighten_rounded,   l10n.labelSize,    info['size']!),
+            _InfoItem(Icons.wb_sunny_outlined,    l10n.labelSeason,  info['season']!),
+            _InfoItem(Icons.restaurant_outlined,  l10n.labelDiet,    info['diet']!),
+            _InfoItem(Icons.star_outline_rounded, l10n.labelFlavor,  info['flavor']!),
           ]),
 
           const SizedBox(height: 14),
           Divider(color: Colors.white.withValues(alpha: 0.15), height: 1),
           const SizedBox(height: 14),
 
-          // Popular regions
-          _InfoRow(
-            icon: Icons.public_rounded,
-            label: 'Popular In',
-            value: info['popular_in']!,
-          ),
+          _InfoRow(icon: Icons.public_rounded,          label: l10n.labelPopularIn, value: info['popular_in']!),
           const SizedBox(height: 10),
-
-          // Nutrition
-          _InfoRow(
-            icon: Icons.favorite_outline_rounded,
-            label: 'Nutrition',
-            value: info['nutrition']!,
-          ),
+          _InfoRow(icon: Icons.favorite_outline_rounded, label: l10n.labelNutrition, value: info['nutrition']!),
           const SizedBox(height: 14),
 
-          // Fun fact banner
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -743,7 +795,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Reanalyze',
+                      l10n.reanalyze,
                       style: TextStyle(
                         color: classificationState.isLoading
                             ? Colors.grey
