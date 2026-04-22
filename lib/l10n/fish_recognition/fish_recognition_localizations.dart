@@ -28,8 +28,12 @@ class FishRecognitionLocalizations {
   String get failedToSelectImage => _isAr ? 'فشل تحديد الصورة' : 'Failed to select image';
   String get modelNotReady => _isAr ? 'النموذج غير جاهز' : 'Model not ready';
   String get classificationFailed => _isAr ? 'فشل التصنيف' : 'Classification failed';
-  String get highConfidence => _isAr ? 'ثقة عالية' : 'High Confidence';
-  String get lowConfidence  => _isAr ? 'ثقة منخفضة' : 'Low Confidence';
+  String get highConfidence  => _isAr ? 'ثقة عالية'    : 'High Confidence';
+  String get lowConfidence   => _isAr ? 'ثقة منخفضة'   : 'Low Confidence';
+  String get unknownFish     => _isAr ? 'لا أعرف'       : 'I Don\'t Know';
+  String get unknownFishHint => _isAr
+      ? 'الثقة منخفضة جداً للتعرف على هذه السمكة. حاول التقاط صورة أوضح وأقرب مع إضاءة جيدة.'
+      : 'Confidence is too low to identify this fish. Try a closer, well-lit photo with a clear view of the fish.';
   String get reanalyze      => _isAr ? 'إعادة التحليل' : 'Reanalyze';
   String get fishInfo       => _isAr ? 'معلومات السمكة' : 'Fish Info';
   String get labelHabitat   => _isAr ? 'الموطن' : 'Habitat';

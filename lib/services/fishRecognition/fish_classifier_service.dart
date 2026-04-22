@@ -8,6 +8,7 @@ class FishClassification {
   final double confidence;
   final DateTime timestamp;
   final double threshold = 0.7;
+  static const double _unknownThreshold = 0.55;
 
   // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
@@ -26,8 +27,8 @@ class FishClassification {
   // Get Arabic name for the fish class
   String get arabicName => _arabicNames[className] ?? className;
 
-  // Check if classification is confident (using default threshold)
   bool get isConfident => confidence >= threshold;
+  bool get isUnknown => confidence < _unknownThreshold;
 
   Map<String, dynamic> toJson() {
     return {

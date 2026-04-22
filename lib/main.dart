@@ -9,6 +9,7 @@ import 'package:bahaar/screens/marketplace/marketplace.dart';
 import 'package:bahaar/screens/settings/settings_screen.dart';
 import 'package:bahaar/screens/settings/emergency_screen.dart';
 import 'package:bahaar/screens/authentication/profile_screen.dart';
+import 'package:bahaar/screens/laws/fishing_laws_screen.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/screens/fishing log/fishing_log_screen.dart';
 import 'package:bahaar/screens/fish recognition/fish_recognition_screen.dart';
@@ -140,6 +141,9 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               } else if (value == 'profile') {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              } else if (value == 'laws') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const FishingLawsScreen()));
               }
             },
             itemBuilder: (ctx) {
@@ -174,6 +178,16 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                         color: AppColors.primary, size: 22),
                     const SizedBox(width: 12),
                     Text(pl10n.profile,
+                        style: const TextStyle(color: AppColors.primary)),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'laws',
+                  child: Row(children: [
+                    const Icon(Icons.gavel_outlined,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 12),
+                    Text(ml10n.fishingLaws,
                         style: const TextStyle(color: AppColors.primary)),
                   ]),
                 ),

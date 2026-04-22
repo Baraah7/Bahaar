@@ -182,9 +182,13 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               _buildImagePreview(classificationState, l10n),
               const SizedBox(height: 20),
               if (classificationState.result != null) ...[
-                _buildResultCard(context, classificationState.result!, l10n),
-                const SizedBox(height: 16),
-                _buildFishInfoCard(classificationState.result!, l10n),
+                if (classificationState.result!.isUnknown)
+                  _buildUnknownCard(classificationState.result!, l10n)
+                else ...[
+                  _buildResultCard(context, classificationState.result!, l10n),
+                  const SizedBox(height: 16),
+                  _buildFishInfoCard(classificationState.result!, l10n),
+                ],
               ],
               if (classificationState.error != null)
                 _buildErrorCard(classificationState.error!),
@@ -662,6 +666,127 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUnknownCard(dynamic result, FishRecognitionLocalizations l10n) {
+    final confidence = result.confidence as double;
+    final percentage = (confidence * 100).toInt();
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // Question mark circle
+                SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: Stack(
+                    children: [
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: CircularProgressIndicator(
+                          value: confidence,
+                          strokeWidth: 6,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB0BEC5)),
+                          strokeCap: StrokeCap.round,
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          '$percentage%',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFB0BEC5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.unknownFish,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.help_outline_rounded,
+                              size: 18, color: Color(0xFFB0BEC5)),
+                          const SizedBox(width: 6),
+                          Text(
+                            l10n.lowConfidence,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFFB0BEC5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.camera_enhance_outlined,
+                      color: Color(0xFFFFD54F), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.unknownFishHint,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.85),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

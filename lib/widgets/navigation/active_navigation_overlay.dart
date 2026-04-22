@@ -55,8 +55,37 @@ class ActiveNavigationOverlay extends StatelessWidget {
           Positioned(
             top: 16,
             left: 16,
-            right: 16,
+            right: 72, // leave room for the exit button
             child: SafeArea(child: _buildInstructionCard(context)),
+          ),
+
+        // Persistent exit button — always visible while navigating
+        if (!isArriving && onEndNavigation != null)
+          Positioned(
+            top: 16,
+            right: 16,
+            child: SafeArea(
+              child: GestureDetector(
+                onTap: onEndNavigation,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.close_rounded,
+                      size: 22, color: Colors.red),
+                ),
+              ),
+            ),
           ),
 
         // Compact metrics strip — fits between SOS (left) and zoom controls (right)
@@ -116,9 +145,72 @@ class ActiveNavigationOverlay extends StatelessWidget {
 
   /// Instruction card — shown while navigating toward the next waypoint
   Widget _buildInstructionCard(BuildContext context) {
-    // If session is completed but arrival card hasn't shown yet, show nothing
     final nextWaypoint = session.nextWaypoint;
-    if (nextWaypoint == null) return const SizedBox.shrink();
+
+    // No more explicit waypoints — show a live compass heading to the destination
+    if (nextWaypoint == null) {
+      final loc = session.currentLocation;
+      final dest = session.route.destination;
+      final compass = loc != null
+          ? _bearingToCompass(_computeBearing(loc, dest))
+          : null;
+      final distToDest = loc != null
+          ? _calculateDistanceToPoint(loc, dest)
+          : session.distanceRemaining;
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.navigation_rounded,
+                  color: AppColors.accent, size: 30),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatDistance(distToDest),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    compass != null
+                        ? 'Head $compass toward destination'
+                        : 'Continue toward destination',
+                    style: const TextStyle(
+                        fontSize: 13, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     final distanceToWaypoint = _calculateDistanceToWaypoint(nextWaypoint);
     final icon = _getWaypointIcon(nextWaypoint.type);
@@ -172,21 +264,6 @@ class ActiveNavigationOverlay extends StatelessWidget {
               ],
             ),
           ),
-          if (onEndNavigation != null) ...[
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onEndNavigation,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.close, size: 18, color: Colors.grey.shade600),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -386,6 +463,18 @@ class ActiveNavigationOverlay extends StatelessWidget {
   // ============================================================
   // Helper Methods
   // ============================================================
+
+  double _calculateDistanceToPoint(LatLng from, LatLng to) {
+    const r = 6371000.0;
+    final lat1 = from.latitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final dLat = (to.latitude - from.latitude) * math.pi / 180;
+    final dLon = (to.longitude - from.longitude) * math.pi / 180;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) *
+            math.sin(dLon / 2) * math.sin(dLon / 2);
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  }
 
   double _calculateDistanceToWaypoint(Waypoint waypoint) {
     final loc = session.currentLocation;

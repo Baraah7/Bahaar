@@ -46,12 +46,16 @@ class NavigationSession {
   // Get estimated time remaining (seconds)
   int get timeRemaining {
     final remaining = distanceRemaining;
-    // Use actual GPS speed when valid (> 0.5 m/s to avoid division by near-zero)
     final speed = currentSpeed;
     if (speed != null && speed > 0.5) {
       return (remaining / speed).round();
     }
-    // Fall back to average boat speed (10 knots = 5.14 m/s)
+    // Scale the route's pre-computed ETA by the remaining distance fraction
+    // so the progress card matches the RouteStatsCard at navigation start.
+    if (route.totalDistance > 0 && route.estimatedDuration > 0) {
+      final fraction = (remaining / route.totalDistance).clamp(0.0, 1.0);
+      return (route.estimatedDuration * fraction).round();
+    }
     const averageSpeed = 5.14;
     return (remaining / averageSpeed).round();
   }

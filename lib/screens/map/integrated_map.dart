@@ -9,6 +9,7 @@ import 'package:bahaar/models/map/feature_edit_state.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_screen.dart';
@@ -84,7 +85,10 @@ class IntegratedMap extends StatefulWidget {
   State<IntegratedMap> createState() => _IntegratedMapState();
 }
 
-class _IntegratedMapState extends State<IntegratedMap> {
+class _IntegratedMapState extends State<IntegratedMap>
+    with AutomaticKeepAliveClientMixin<IntegratedMap> {
+  @override
+  bool get wantKeepAlive => true;
   // Controllers and services
   final MapController _mapController = MapController();
   final Location _location = Location();
@@ -1116,6 +1120,12 @@ class _IntegratedMapState extends State<IntegratedMap> {
       return;
     }
 
+    // Reject if the land origin is actually on water
+    if (_maskInitialized && _navigationMask.isPointNavigable(landOrigin)) {
+      _showMessage('Starting point must be on land, not on water.', Colors.orange);
+      return;
+    }
+
     setState(() {
       _isCalculatingRoute = true;
       _currentRoute = null;
@@ -1181,7 +1191,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
         destination: _seaDestination!,
         geometry: combinedGeometry,
         segments: segments,
-        waypoints: [],
+        waypoints: _buildRouteWaypoints(segments),
         totalDistance: totalDistance,
         estimatedDuration: totalDuration,
         validation: RouteValidation(
@@ -1226,6 +1236,62 @@ class _IntegratedMapState extends State<IntegratedMap> {
     }
   }
 
+  /// Generate minimal waypoints from route segments so that the navigation
+  /// overlay always has a [nextWaypoint] to display instructions against.
+  /// Creates start + marina-transition + end waypoints.
+  List<Waypoint> _buildRouteWaypoints(List<RouteSegment> segments) {
+    if (segments.isEmpty) return [];
+
+    double cumDist = 0;
+    for (final s in segments) cumDist += s.distance;
+    final totalDist = cumDist;
+
+    final waypoints = <Waypoint>[];
+    final firstSegType = segments.first.type == SegmentType.land
+        ? RouteSegmentType.land
+        : RouteSegmentType.marine;
+
+    // Start waypoint (index 0 — skipped by nextWaypoint getter)
+    waypoints.add(Waypoint(
+      id: 'wp_start',
+      location: segments.first.geometry.first,
+      type: WaypointType.start,
+      distanceFromStart: 0,
+      instruction: 'Start navigation',
+      segmentType: firstSegType,
+    ));
+
+    // Marina-transition waypoints between adjacent segments
+    double segDist = 0;
+    for (int i = 0; i < segments.length - 1; i++) {
+      segDist += segments[i].distance;
+      final toSea = segments[i + 1].type == SegmentType.marine;
+      waypoints.add(Waypoint(
+        id: 'wp_transition_$i',
+        location: segments[i + 1].geometry.first,
+        type: toSea ? WaypointType.marinaEntry : WaypointType.marinaExit,
+        distanceFromStart: segDist,
+        instruction: toSea ? 'Launch boat at port' : 'Dock at port',
+        segmentType: RouteSegmentType.transition,
+      ));
+    }
+
+    // End waypoint
+    final lastSegType = segments.last.type == SegmentType.land
+        ? RouteSegmentType.land
+        : RouteSegmentType.marine;
+    waypoints.add(Waypoint(
+      id: 'wp_end',
+      location: segments.last.geometry.last,
+      type: WaypointType.end,
+      distanceFromStart: totalDist,
+      instruction: 'Arrived at destination',
+      segmentType: lastSegType,
+    ));
+
+    return waypoints;
+  }
+
   void _clearRoute() {
     setState(() {
       _currentRoute = null;
@@ -1254,14 +1320,30 @@ class _IntegratedMapState extends State<IntegratedMap> {
   }
 
   void _startSeaToSeaMode() {
+    LatLng? gpsSeaOrigin;
+    if (_locationData != null && _maskInitialized) {
+      final candidate = LatLng(
+        _locationData!.latitude ?? MapConstants.defaultLatitude,
+        _locationData!.longitude ?? MapConstants.defaultLongitude,
+      );
+      if (_navigationMask.isPointNavigable(candidate)) {
+        gpsSeaOrigin = candidate;
+      }
+    }
+
     setState(() {
       _navMode = NavMode.seaToSea;
       _showPortSelection = false;
       _currentRoute = null;
-      _seaOrigin = null;
+      _seaOrigin = gpsSeaOrigin;
       _seaDestination = null;
     });
-    _showMessage(MapLocalizations.of(context).tapSeaDeparture, Colors.blue);
+
+    if (gpsSeaOrigin != null) {
+      _showMessage('Departure set to your location. Now tap your destination.', Colors.blue);
+    } else {
+      _showMessage(MapLocalizations.of(context).tapSeaDeparture, Colors.blue);
+    }
   }
 
   void _startSeaToLandMode() {
@@ -1325,13 +1407,14 @@ class _IntegratedMapState extends State<IntegratedMap> {
         return;
       }
 
+      final seaSegments = [marineSegment];
       final route = NavigationRoute(
         id: 'route_${DateTime.now().millisecondsSinceEpoch}',
         origin: _seaOrigin!,
         destination: _seaDestination!,
         geometry: marineSegment.geometry,
-        segments: [marineSegment],
-        waypoints: [],
+        segments: seaSegments,
+        waypoints: _buildRouteWaypoints(seaSegments),
         totalDistance: marineSegment.distance,
         estimatedDuration: marineSegment.duration,
         validation: RouteValidation(
@@ -1425,7 +1508,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
         destination: _customLandDestination!,
         geometry: combinedGeometry,
         segments: segments,
-        waypoints: [],
+        waypoints: _buildRouteWaypoints(segments),
         totalDistance: totalDistance,
         estimatedDuration: totalDuration,
         validation: RouteValidation(
@@ -2482,6 +2565,7 @@ class _IntegratedMapState extends State<IntegratedMap> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     final l10n = MapLocalizations.of(context);
 
     return Scaffold(

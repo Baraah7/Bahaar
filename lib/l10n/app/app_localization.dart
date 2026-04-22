@@ -108,6 +108,9 @@ class AppLocalization {
   String get profile => _isAr ? 'الملف الشخصي' : 'Profile';
   String get guestUser => _isAr ? 'مستخدم ضيف' : 'Guest User';
 
+  // Fishing laws
+  String get fishingLaws => _isAr ? 'قوانين الصيد' : 'Fishing Laws';
+
   // Bottom nav
   String get otherTools => _isAr ? 'أدوات أخرى' : 'Other Tools';
 

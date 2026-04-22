@@ -1,6 +1,7 @@
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/app/app_localization.dart';
 import 'package:bahaar/providers/language/language_provider.dart';
+import 'package:bahaar/screens/authentication/login.dart';
 import 'package:bahaar/screens/authentication/profile_screen.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
 import 'package:bahaar/widgets/common/card_divider.dart';
@@ -119,10 +120,17 @@ class SettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 36),
 
-            // ── Sign Out ───────────────────────────────────────────
+            // ── Sign In / Sign Out ────────────────────────────────
             _SignOutButton(
-              onTap: () => _confirmSignOut(context, ref, l10n),
-              label: l10n.signOut,
+              isSignIn: isGuest,
+              label: isGuest ? l10n.signIn : l10n.signOut,
+              onTap: isGuest
+                  ? () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const LoginScreen()),
+                      )
+                  : () => _confirmSignOut(context, ref, l10n),
             ),
           ],
         ),
@@ -392,23 +400,31 @@ class _LangOption extends StatelessWidget {
 class _SignOutButton extends StatelessWidget {
   final VoidCallback onTap;
   final String label;
+  final bool isSignIn;
 
-  const _SignOutButton({required this.onTap, required this.label});
+  const _SignOutButton({
+    required this.onTap,
+    required this.label,
+    this.isSignIn = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final color = isSignIn ? AppColors.primary : AppColors.red;
+    final icon = isSignIn ? Icons.login_rounded : Icons.logout_rounded;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.red.withValues(alpha: 0.10),
+          color: color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.red.withValues(alpha: 0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.red.withValues(alpha: 0.08),
+              color: color.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -417,12 +433,12 @@ class _SignOutButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout_rounded, color: AppColors.red, size: 20),
+            Icon(icon, color: color, size: 20),
             const SizedBox(width: 10),
             Text(
               label,
               style: TextStyle(
-                color: AppColors.red,
+                color: color,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
