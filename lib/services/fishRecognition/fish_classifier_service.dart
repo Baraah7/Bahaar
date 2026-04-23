@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -7,8 +8,9 @@ class FishClassification {
   final String className;
   final double confidence;
   final DateTime timestamp;
-  final double threshold = 0.7;
-  static const double _unknownThreshold = 0.55;
+  static const double confidenceThreshold = 0.70;
+  final double threshold = confidenceThreshold;
+  static const double _unknownThreshold = confidenceThreshold;
 
   // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
@@ -107,14 +109,15 @@ class FishClassifierService {
       _interpreter!.run(input, output);
 
       final scores = output[0];
-      int bestIndex = 0;
-      for (int i = 1; i < scores.length; i++) {
-        if (scores[i] > scores[bestIndex]) bestIndex = i;
-      }
+      final bestIndex = scores.indexOf(scores.reduce(max));
+      final confidence = scores[bestIndex];
+      final className = confidence < FishClassification.confidenceThreshold
+          ? 'Unknown / Not a fish'
+          : _labels![bestIndex];
 
       return FishClassification(
-        className: _labels![bestIndex],
-        confidence: scores[bestIndex],
+        className: className,
+        confidence: confidence,
         timestamp: DateTime.now(),
       );
     } catch (e) {
