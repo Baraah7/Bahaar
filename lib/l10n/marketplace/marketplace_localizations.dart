@@ -105,8 +105,8 @@ class MarketplaceLocalizations {
   String get total => _isAr ? 'الإجمالي' : 'Total';
   String get payment => _isAr ? 'الدفع' : 'Payment';
   String get kgUnit => _isAr ? 'كجم' : 'kg';
-  String get bdUnit => _isAr ? 'BD' : 'BD';
-  String get bdPerKg => _isAr ? 'BD/كجم' : 'BD/kg';
+  String get bdUnit => _isAr ? 'د.ب.' : 'BD';
+  String get bdPerKg => _isAr ? 'د.ب./كجم' : 'BD/kg';
   String get sellerLabel => _isAr ? 'البائع' : 'Seller';
   String get rejectionReason => _isAr ? 'السبب' : 'Reason';
   String get waitingForSellerToAccept => _isAr ? 'في انتظار قبول البائع لطلبك' : 'Waiting for seller to accept your order';
@@ -123,7 +123,7 @@ class MarketplaceLocalizations {
   String get confirmDeleteListing => _isAr ? 'إزالة هذه القائمة من السوق؟' : 'Remove this listing from the marketplace?';
   String get listingDeleted => _isAr ? 'تم حذف القائمة' : 'Listing deleted';
   String get or => _isAr ? 'أو' : 'OR';
-  String get priceRange => _isAr ? 'نطاق السعر' : 'Price Range';
+  String get priceRange => _isAr ? 'السعر' : 'Price';
   String priceRangeFilter(String min, String max) => _isAr
       ? 'السعر: $min–$max BD/كجم'
       : 'Price: $min–$max BD/kg';

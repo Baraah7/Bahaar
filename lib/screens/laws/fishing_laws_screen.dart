@@ -1,58 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 
-class FishingLawsScreen extends StatefulWidget {
+class FishingLawsScreen extends StatelessWidget {
   const FishingLawsScreen({super.key});
 
   @override
-  State<FishingLawsScreen> createState() => _FishingLawsScreenState();
-}
-
-class _FishingLawsScreenState extends State<FishingLawsScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.cream,
-        title: const Text('قوانين الصيد / Fishing Laws',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(
+          isAr ? 'قوانين الصيد' : 'Fishing Laws',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.cream,
-          labelColor: AppColors.cream,
-          unselectedLabelColor: AppColors.cream.withValues(alpha: 0.6),
-          tabs: const [
-            Tab(text: 'العربية'),
-            Tab(text: 'English'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _ArabicLaws(),
-          _EnglishLaws(),
-        ],
-      ),
+      body: isAr ? const _ArabicLaws() : const _EnglishLaws(),
     );
   }
 }
