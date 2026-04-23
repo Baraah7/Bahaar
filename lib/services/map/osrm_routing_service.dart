@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 
 /// Service for interfacing with OSRM (Open Source Routing Machine) for land-based routing
 class OsrmRoutingService {
@@ -112,13 +112,34 @@ class OsrmRoutingService {
         .map((coord) => LatLng(coord[1] as double, coord[0] as double))
         .toList();
 
+    // Extract turn-by-turn steps from the first leg (land segments only)
+    final steps = _parseSteps(route);
+
     return RouteSegment(
       type: type,
       geometry: points,
       distance: distance,
       duration: duration,
       transportMode: profile.transportMode,
+      steps: steps,
     );
+  }
+
+  /// Parses the steps list from an OSRM route object.
+  List<OsrmStep> _parseSteps(Map<String, dynamic> route) {
+    try {
+      final legs = route['legs'] as List?;
+      if (legs == null || legs.isEmpty) return [];
+      final leg = legs[0] as Map<String, dynamic>;
+      final rawSteps = leg['steps'] as List?;
+      if (rawSteps == null) return [];
+      return rawSteps
+          .map((s) => OsrmStep.fromJson(s as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      log('OSRM: Failed to parse steps: $e');
+      return [];
+    }
   }
 
   /// Get multiple route alternatives between two points
@@ -180,12 +201,15 @@ class OsrmRoutingService {
         .map((coord) => LatLng(coord[1] as double, coord[0] as double))
         .toList();
 
+    final steps = _parseSteps(routeData);
+
     return RouteSegment(
       type: type,
       geometry: points,
       distance: distance,
       duration: duration,
       transportMode: profile.transportMode,
+      steps: steps,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' as math;
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:bahaar/models/ais_model.dart';
@@ -1236,17 +1237,17 @@ class _IntegratedMapState extends State<IntegratedMap>
     }
   }
 
-  /// Generate minimal waypoints from route segments so that the navigation
-  /// overlay always has a [nextWaypoint] to display instructions against.
-  /// Creates start + marina-transition + end waypoints.
+  /// Generate waypoints from route segments for the navigation overlay.
+  /// Inserts OSRM turn waypoints for land segments and compass-heading
+  /// intermediate waypoints for marine segments so the overlay always has
+  /// something meaningful to display.
   List<Waypoint> _buildRouteWaypoints(List<RouteSegment> segments) {
     if (segments.isEmpty) return [];
 
-    double cumDist = 0;
-    for (final s in segments) cumDist += s.distance;
-    final totalDist = cumDist;
-
     final waypoints = <Waypoint>[];
+    double distAcc = 0;
+    int timeAcc = 0;
+
     final firstSegType = segments.first.type == SegmentType.land
         ? RouteSegmentType.land
         : RouteSegmentType.marine;
@@ -1261,19 +1262,102 @@ class _IntegratedMapState extends State<IntegratedMap>
       segmentType: firstSegType,
     ));
 
-    // Marina-transition waypoints between adjacent segments
-    double segDist = 0;
-    for (int i = 0; i < segments.length - 1; i++) {
-      segDist += segments[i].distance;
-      final toSea = segments[i + 1].type == SegmentType.marine;
-      waypoints.add(Waypoint(
-        id: 'wp_transition_$i',
-        location: segments[i + 1].geometry.first,
-        type: toSea ? WaypointType.marinaEntry : WaypointType.marinaExit,
-        distanceFromStart: segDist,
-        instruction: toSea ? 'Launch boat at port' : 'Dock at port',
-        segmentType: RouteSegmentType.transition,
-      ));
+    for (int i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      final isLast = i == segments.length - 1;
+
+      if (segment.type == SegmentType.marine && segment.geometry.length >= 2) {
+        // Sample intermediate compass-heading waypoints every 500 m along the
+        // marine segment so the overlay shows directional progress at sea.
+        const sampleInterval = 500.0; // metres
+        double accumulated = 0.0;
+        double nextSample = sampleInterval;
+        int wpIdx = 0;
+        for (int g = 0; g < segment.geometry.length - 1; g++) {
+          final from = segment.geometry[g];
+          final to = segment.geometry[g + 1];
+          final segLen = _haversineMeters(from, to);
+          accumulated += segLen;
+          if (accumulated >= nextSample) {
+            final bearing = _bearingBetween(from, to);
+            final compass = _compassFromBearing(bearing);
+            final frac = accumulated / segment.distance;
+            final t = (timeAcc + frac * segment.duration).round();
+            waypoints.add(Waypoint(
+              id: 'wp_marine_${i}_$wpIdx',
+              location: to,
+              type: WaypointType.intermediate,
+              distanceFromStart: distAcc + accumulated,
+              instruction: 'Head $compass',
+              estimatedTime: t,
+              segmentType: RouteSegmentType.marine,
+            ));
+            wpIdx++;
+            nextSample += sampleInterval;
+          }
+        }
+      }
+
+      if (segment.type == SegmentType.land && segment.steps.isNotEmpty) {
+        // Insert turn-by-turn waypoints from OSRM steps.
+        // Skip steps that are less than 30 m from the last waypoint to
+        // prevent GPS drift from rapidly cycling through very close turns.
+        double stepDistAcc = 0;
+        for (int s = 0; s < segment.steps.length; s++) {
+          final step = segment.steps[s];
+          final type = step.maneuverType;
+          if (type == 'depart' || type == 'arrive') {
+            stepDistAcc += step.distance;
+            continue;
+          }
+          // Filter out waypoints that are too close to the previous one.
+          if (waypoints.isNotEmpty) {
+            final prev = waypoints.last;
+            final dLat = step.location.latitude - prev.location.latitude;
+            final dLon = step.location.longitude - prev.location.longitude;
+            final distSq = dLat * dLat + dLon * dLon;
+            // 30 m ≈ 0.00027 degrees → 0.00027² ≈ 7.3e-8
+            if (distSq < 7.3e-8) {
+              stepDistAcc += step.distance;
+              continue;
+            }
+          }
+          final instruction = _buildStepInstruction(step);
+          final stepTime = (segment.duration > 0 && segment.distance > 0)
+              ? (stepDistAcc / segment.distance * segment.duration).round()
+              : 0;
+          waypoints.add(Waypoint(
+            id: 'wp_step_${i}_$s',
+            location: step.location,
+            type: WaypointType.turn,
+            distanceFromStart: distAcc + stepDistAcc,
+            instruction: instruction,
+            estimatedTime: timeAcc + stepTime,
+            segmentType: RouteSegmentType.land,
+          ));
+          stepDistAcc += step.distance;
+        }
+      }
+
+      if (!isLast) {
+        distAcc += segment.distance;
+        timeAcc += segment.duration;
+
+        // Marina-transition waypoint between adjacent segments
+        final toSea = segments[i + 1].type == SegmentType.marine;
+        waypoints.add(Waypoint(
+          id: 'wp_transition_$i',
+          location: segment.geometry.last,
+          type: toSea ? WaypointType.marinaEntry : WaypointType.marinaExit,
+          distanceFromStart: distAcc,
+          instruction: toSea ? 'Launch boat at port' : 'Dock at port',
+          estimatedTime: timeAcc,
+          segmentType: RouteSegmentType.transition,
+        ));
+      } else {
+        distAcc += segment.distance;
+        timeAcc += segment.duration;
+      }
     }
 
     // End waypoint
@@ -1284,12 +1368,92 @@ class _IntegratedMapState extends State<IntegratedMap>
       id: 'wp_end',
       location: segments.last.geometry.last,
       type: WaypointType.end,
-      distanceFromStart: totalDist,
+      distanceFromStart: distAcc,
       instruction: 'Arrived at destination',
+      estimatedTime: timeAcc,
       segmentType: lastSegType,
     ));
 
     return waypoints;
+  }
+
+  /// Converts an OSRM step's maneuver into a human-readable instruction.
+  String _buildStepInstruction(OsrmStep step) {
+    final type = step.maneuverType ?? '';
+    final modifier = step.maneuverModifier ?? '';
+    final street = step.streetName != null ? ' onto ${step.streetName}' : '';
+
+    switch (type) {
+      case 'turn':
+        if (modifier == 'left') return 'Turn left$street';
+        if (modifier == 'right') return 'Turn right$street';
+        if (modifier == 'sharp left') return 'Turn sharply left$street';
+        if (modifier == 'sharp right') return 'Turn sharply right$street';
+        if (modifier == 'slight left') return 'Keep left$street';
+        if (modifier == 'slight right') return 'Keep right$street';
+        return 'Turn$street';
+      case 'new name':
+        return 'Continue$street';
+      case 'merge':
+        if (modifier == 'left') return 'Merge left$street';
+        if (modifier == 'right') return 'Merge right$street';
+        return 'Merge$street';
+      case 'on ramp':
+        return 'Take the ramp$street';
+      case 'off ramp':
+        return 'Take the exit$street';
+      case 'fork':
+        if (modifier == 'left') return 'Keep left at the fork$street';
+        if (modifier == 'right') return 'Keep right at the fork$street';
+        return 'Take the fork$street';
+      case 'end of road':
+        if (modifier == 'left') return 'Turn left at the end of the road$street';
+        if (modifier == 'right') return 'Turn right at the end of the road$street';
+        return 'At the end of the road$street';
+      case 'roundabout':
+      case 'rotary':
+        if (modifier.isNotEmpty) return 'Take the roundabout, exit $modifier$street';
+        return 'Take the roundabout$street';
+      case 'roundabout turn':
+        if (modifier == 'left') return 'At the roundabout, turn left$street';
+        if (modifier == 'right') return 'At the roundabout, turn right$street';
+        return 'Continue through the roundabout$street';
+      case 'continue':
+        return 'Continue straight$street';
+      default:
+        if (street.isNotEmpty) return 'Continue$street';
+        return 'Continue straight';
+    }
+  }
+
+  double _haversineMeters(LatLng a, LatLng b) {
+    const r = 6371000.0;
+    final lat1 = a.latitude * math.pi / 180;
+    final lat2 = b.latitude * math.pi / 180;
+    final dLat = (b.latitude - a.latitude) * math.pi / 180;
+    final dLon = (b.longitude - a.longitude) * math.pi / 180;
+    final x = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) *
+            math.sin(dLon / 2) * math.sin(dLon / 2);
+    return r * 2 * math.atan2(math.sqrt(x), math.sqrt(1 - x));
+  }
+
+  double _bearingBetween(LatLng from, LatLng to) {
+    final lat1 = from.latitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final dLon = (to.longitude - from.longitude) * math.pi / 180;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    return (math.atan2(y, x) * 180 / math.pi + 360) % 360;
+  }
+
+  String _compassFromBearing(double bearing) {
+    const dirs = [
+      'North', 'North-East', 'East', 'South-East',
+      'South', 'South-West', 'West', 'North-West'
+    ];
+    return dirs[((bearing + 22.5) / 45).floor() % 8];
   }
 
   void _clearRoute() {

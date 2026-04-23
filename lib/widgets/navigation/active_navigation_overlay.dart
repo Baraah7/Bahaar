@@ -4,6 +4,7 @@ import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/services/map/navigation_voice_service.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -14,7 +15,8 @@ import 'package:latlong2/latlong.dart';
 /// - Bottom progress card with metrics
 /// - Recalculating indicator
 /// - End navigation button
-class ActiveNavigationOverlay extends StatelessWidget {
+/// - Voice announcements via [NavigationVoiceService]
+class ActiveNavigationOverlay extends StatefulWidget {
   final NavigationSession session;
   final VoidCallback? onEndNavigation;
   final VoidCallback? onRecenter;
@@ -27,6 +29,55 @@ class ActiveNavigationOverlay extends StatelessWidget {
     this.onRecenter,
     this.isRecalculating = false,
   });
+
+  @override
+  State<ActiveNavigationOverlay> createState() =>
+      _ActiveNavigationOverlayState();
+}
+
+class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
+  final NavigationVoiceService _voice = NavigationVoiceService();
+  int? _lastAnnouncedWaypointIndex;
+  bool? _lastRecalculating;
+
+  // Expose widget properties via getters for the existing helper methods.
+  NavigationSession get session => widget.session;
+  bool get isRecalculating => widget.isRecalculating;
+
+  @override
+  void initState() {
+    super.initState();
+    _voice.init();
+  }
+
+  @override
+  void didUpdateWidget(ActiveNavigationOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Speak "Recalculating route" when recalculation starts.
+    if (widget.isRecalculating && _lastRecalculating != true) {
+      _voice.speak('Recalculating route');
+    }
+    _lastRecalculating = widget.isRecalculating;
+
+    // Speak the new instruction when the waypoint index advances.
+    final idx = widget.session.currentWaypointIndex;
+    if (_lastAnnouncedWaypointIndex != idx) {
+      _lastAnnouncedWaypointIndex = idx;
+      _voice.resetApproach();
+      final next = widget.session.nextWaypoint;
+      if (next != null) {
+        final instruction = _directionInstruction(next, widget.session.currentLocation);
+        _voice.speak(instruction);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _voice.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +111,13 @@ class ActiveNavigationOverlay extends StatelessWidget {
           ),
 
         // Persistent exit button — always visible while navigating
-        if (!isArriving && onEndNavigation != null)
+        if (!isArriving && widget.onEndNavigation != null)
           Positioned(
             top: 16,
             right: 16,
             child: SafeArea(
               child: GestureDetector(
-                onTap: onEndNavigation,
+                onTap: widget.onEndNavigation,
                 child: Container(
                   width: 48,
                   height: 48,
@@ -217,6 +268,10 @@ class ActiveNavigationOverlay extends StatelessWidget {
     final color = _getSegmentColor(nextWaypoint.segmentType);
     final directionText = _directionInstruction(nextWaypoint, session.currentLocation);
 
+    // Announce approach when within 200 m (fires once per waypoint).
+    _voice.announceApproach(
+        nextWaypoint.id, directionText, distanceToWaypoint);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -318,9 +373,9 @@ class ActiveNavigationOverlay extends StatelessWidget {
               ],
             ),
           ),
-          if (onEndNavigation != null)
+          if (widget.onEndNavigation != null)
             TextButton(
-              onPressed: onEndNavigation,
+              onPressed: widget.onEndNavigation,
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
