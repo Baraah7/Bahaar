@@ -15,6 +15,7 @@ class OrderCard extends StatelessWidget {
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
   final VoidCallback? onCancel;
+  final VoidCallback? onResell;
   final void Function(String imagePath)? onViewPaymentProof;
 
   const OrderCard({
@@ -27,6 +28,7 @@ class OrderCard extends StatelessWidget {
     this.onReject,
     this.onComplete,
     this.onCancel,
+    this.onResell,
     this.onViewPaymentProof,
   });
 
@@ -102,7 +104,7 @@ class OrderCard extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: const Color(0xFF0D4F54).withValues(alpha: 0.8),
+                          color: const Color(0xFF1E293B).withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -163,6 +165,8 @@ class OrderCard extends StatelessWidget {
                   _buildCompleteButton(),
                 if (!isSeller && order.status == OrderStatus.pending)
                   _buildCancelButton(),
+                if (isSeller && order.status == OrderStatus.cancelled)
+                  _buildCancelledSellerSection(),
               ],
             ),
           ),
@@ -197,7 +201,7 @@ class OrderCard extends StatelessWidget {
             .entries
             .map((e) => Column(
                   children: [
-                    if (e.key > 0) Divider(height: 10, color: Colors.grey.shade200),
+                    if (e.key > 0) Divider(height: 20, color: Colors.grey.shade200),
                     _buildInfoRow(e.value.icon, e.value.text),
                   ],
                 ))
@@ -225,7 +229,7 @@ class OrderCard extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF0E7490)),
+        Icon(icon, size: 16, color: const Color(0xFF374151)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -238,45 +242,97 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildPaymentProofSection() {
+    final url = order.paymentProofImageUrl!;
+    final ImageProvider imageProvider =
+        url.startsWith('http') ? NetworkImage(url) : FileImage(File(url)) as ImageProvider;
+
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.blue.shade50,
+          color: AppColors.brown.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue.shade100),
+          border: Border.all(color: AppColors.brown.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long_rounded, size: 15, color: Colors.blue.shade700),
+                Icon(Icons.receipt_long_rounded, size: 15, color: AppColors.brown),
                 const SizedBox(width: 6),
                 Text(
                   l10n.paymentProof,
-                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue.shade700, fontSize: 13),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.brown, fontSize: 13),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => onViewPaymentProof?.call(order.paymentProofImageUrl!),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(order.paymentProofImageUrl!),
-                  height: 110,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
+              onTap: () => onViewPaymentProof?.call(url),
+              child: SizedBox(
+                width: double.infinity,
+                height: 120,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 4),
-            Text(l10n.tapToViewFullImage, style: TextStyle(color: Colors.blue.shade400, fontSize: 11)),
+            Text(l10n.tapToViewFullImage, style: TextStyle(color: AppColors.brown, fontSize: 11)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCancelledSellerSection() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.buyerCancelledOrder,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onResell,
+              icon: const Icon(Icons.refresh_rounded, size: 17),
+              label: Text(l10n.resellListing),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -342,6 +398,7 @@ class OrderCard extends StatelessWidget {
               label: Text(l10n.reject),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.red.withValues(alpha: 0.8),
+                backgroundColor: AppColors.red.withValues(alpha: 0.12),
                 side: BorderSide(color: AppColors.red.withValues(alpha: 0.3)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -350,27 +407,17 @@ class OrderCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF059669), Color(0xFF34D399)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ElevatedButton.icon(
-                onPressed: onAccept,
-                icon: const Icon(Icons.check_rounded, size: 17),
-                label: Text(l10n.accept),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
+            child: OutlinedButton.icon(
+              onPressed: onAccept,
+              icon: const Icon(Icons.check_rounded, size: 17),
+              label: Text(l10n.accept),
+              style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.green.withValues(alpha: 0.8),
+              backgroundColor: AppColors.green.withValues(alpha: 0.12),
+              side: BorderSide(color: AppColors.green.withValues(alpha: 0.3)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             ),
           ),
         ],

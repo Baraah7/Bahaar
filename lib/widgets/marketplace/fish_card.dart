@@ -187,37 +187,60 @@ class FishCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          _buildBadge('$weightStr ${l10n.kgUnit}', Icons.scale_rounded),
-          _buildBadge('$priceStr ${l10n.bdPerKg}', Icons.sell_rounded),
+          const SizedBox(height: 8),  
+          Row(
+            children: [
+              Expanded(child: _buildBadge(weightStr, l10n.kgUnit, Icons.scale_rounded)),
+              const SizedBox(width: 6),
+              Expanded(child: _buildBadge(priceStr, l10n.bdPerKg, Icons.sell_rounded)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBadge(String text, IconData icon) {
+  Widget _buildBadge(String value, String unit, IconData icon) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      // decoration: BoxDecoration(
-      //   // color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-      //   borderRadius: BorderRadius.circular(8),
-      // ),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF0E7490)),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF0D4F54),
-                fontWeight: FontWeight.w600,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: const Color(0xFF0E7490)),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF0D4F54),
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            ],
+          ),
+          Text(
+            unit,
+            style: TextStyle(
+              fontSize: 10,
+              color: const Color(0xFF0D4F54).withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
+              height: 1.2,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

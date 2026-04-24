@@ -1,6 +1,5 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
@@ -39,13 +38,15 @@ class _SellFishFormState extends State<SellFishForm> {
 
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
-  bool _isUploading = false;
 
   FishType _selectedFishType = FishType.hamour;
   FishCondition _selectedCondition = FishCondition.fresh;
   final Set<PaymentMethod> _acceptedPayments = {PaymentMethod.cash};
   final List<String> _fishImages = [];
   String? _benefitPayImage;
+
+  bool _isSubmitting = false;
+  bool _isPicking = false;
 
   final _weightController = TextEditingController();
   final _priceController = TextEditingController();
@@ -80,55 +81,38 @@ class _SellFishFormState extends State<SellFishForm> {
     super.dispose();
   }
 
-  Future<String?> _uploadToStorage(String localPath, String folder) async {
-    final uid = widget.currentUserId ?? 'unknown';
-    final ext = localPath.split('.').last;
-    final name = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-    final ref = FirebaseStorage.instance.ref('marketplace/$folder/$uid/$name');
-    await ref.putFile(File(localPath));
-    return ref.getDownloadURL();
-  }
-
   Future<void> _pickFishImages() async {
-    final images = await _imagePicker.pickMultiImage();
-    if (images.isEmpty) return;
-    setState(() => _isUploading = true);
+    if (_isPicking) return;
+    _isPicking = true;
     try {
-      for (final img in images) {
-        final url = await _uploadToStorage(img.path, 'fish_images');
-        if (url != null) setState(() => _fishImages.add(url));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Failed to upload image. Please try again.'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
+      final images = await _imagePicker.pickMultiImage();
+      if (images.isEmpty) return;
+      setState(() {
+        for (final img in images) {
+          _fishImages.add(img.path);
+        }
+      });
     } finally {
-      setState(() => _isUploading = false);
+      _isPicking = false;
     }
   }
 
   Future<void> _pickBenefitPayImage() async {
-    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (image == null) return;
-    setState(() => _isUploading = true);
+    if (_isPicking) return;
+    _isPicking = true;
     try {
-      final url = await _uploadToStorage(image.path, 'benefitpay');
-      if (url != null) setState(() => _benefitPayImage = url);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Failed to upload image. Please try again.'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+      setState(() => _benefitPayImage = image.path);
     } finally {
-      setState(() => _isUploading = false);
+      _isPicking = false;
     }
+  }
+
+  Future<String> _uploadFile(String localPath, String storagePath) async {
+    final ref = FirebaseStorage.instance.ref(storagePath);
+    await ref.putFile(File(localPath));
+    return ref.getDownloadURL();
   }
 
   /// Pre-fill form fields from a catch log entry.
@@ -395,6 +379,10 @@ class _SellFishFormState extends State<SellFishForm> {
                   setState(() {
                     if (isSelected && _acceptedPayments.length > 1) {
                       _acceptedPayments.remove(method);
+                      if (method == PaymentMethod.benefitPay) {
+                        _benefitPayImage = null;
+                        _ibanController.clear();
+                      }
                     } else {
                       _acceptedPayments.add(method);
                     }
@@ -559,31 +547,41 @@ class _SellFishFormState extends State<SellFishForm> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _submitForm,
+              onPressed: _isSubmitting ? null : _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0D4F54),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFF0D4F54).withValues(alpha: 0.6),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add_business_rounded, size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    _l10n.postListing,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.add_business_rounded, size: 20),
+                        const SizedBox(width: 10),
+                        Text(
+                          _l10n.postListing,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -642,7 +640,7 @@ class _SellFishFormState extends State<SellFishForm> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         image: DecorationImage(
-                          image: NetworkImage(entry.value),
+                          image: FileImage(File(entry.value)),
                           fit: BoxFit.cover,
                         ),
                         boxShadow: [
@@ -679,7 +677,7 @@ class _SellFishFormState extends State<SellFishForm> {
                 );
               }),
               GestureDetector(
-                onTap: _isUploading ? null : _pickFishImages,
+                onTap: _pickFishImages,
                 child: Container(
                   width: 100,
                   height: 100,
@@ -690,33 +688,25 @@ class _SellFishFormState extends State<SellFishForm> {
                       color: const Color(0xFF0E7490).withValues(alpha: 0.2),
                     ),
                   ),
-                  child: _isUploading
-                      ? const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_photo_alternate_rounded,
-                              size: 28,
-                              color: const Color(0xFF0E7490).withValues(alpha: 0.6),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _l10n.addPhoto,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF0E7490),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_photo_alternate_rounded,
+                        size: 28,
+                        color: const Color(0xFF0E7490).withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _l10n.addPhoto,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF0E7490),
+                          fontWeight: FontWeight.w500,
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -736,7 +726,7 @@ class _SellFishFormState extends State<SellFishForm> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               image: DecorationImage(
-                image: NetworkImage(_benefitPayImage!),
+                image: FileImage(File(_benefitPayImage!)),
                 fit: BoxFit.contain,
               ),
               color: Colors.grey.shade50,
@@ -778,24 +768,24 @@ class _SellFishFormState extends State<SellFishForm> {
           border: Border.all(color: const Color(0xFF0E7490).withValues(alpha: 0.2)),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.qr_code_rounded, size: 28, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
-            const SizedBox(height: 8),
-            Text(
-              _l10n.uploadBenefitPayQRCode,
-              style: TextStyle(
-                color: Color(0xFF0E7490),
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.qr_code_rounded, size: 28, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
+                  const SizedBox(height: 8),
+                  Text(
+                    _l10n.uploadBenefitPayQRCode,
+                    style: TextStyle(
+                      color: Color(0xFF0E7490),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    _l10n.buyersWillSeeThis,
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              _l10n.buyersWillSeeThis,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -887,11 +877,9 @@ class _SellFishFormState extends State<SellFishForm> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              final nav = Navigator.of(context);
-              await FirebaseAuth.instance.signOut();
-              nav.pushAndRemoveUntil(
+              Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const AppStart()),
                 (_) => false,
               );
@@ -903,7 +891,7 @@ class _SellFishFormState extends State<SellFishForm> {
     );
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (widget.isGuest || widget.currentUserId == null) {
       _showLoginRequired();
       return;
@@ -924,7 +912,29 @@ class _SellFishFormState extends State<SellFishForm> {
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      final uid = widget.currentUserId!;
+      final ts = DateTime.now().millisecondsSinceEpoch;
+
+      // Upload fish images to Firebase Storage
+      final uploadedImageUrls = <String>[];
+      for (var i = 0; i < _fishImages.length; i++) {
+        final path = _fishImages[i];
+        final ext = path.split('.').last;
+        final url = await _uploadFile(path, 'marketplace/listings/$uid/${ts}_$i.$ext');
+        uploadedImageUrls.add(url);
+      }
+
+      // Upload BenefitPay QR image
+      String? benefitPayUrl;
+      if (_benefitPayImage != null) {
+        final ext = _benefitPayImage!.split('.').last;
+        benefitPayUrl = await _uploadFile(_benefitPayImage!, 'marketplace/benefitpay/$uid/$ts.$ext');
+      }
+
       final listing = FishListing(
         id: '',
         fishType: _selectedFishType,
@@ -938,8 +948,10 @@ class _SellFishFormState extends State<SellFishForm> {
         description: _descriptionController.text.isEmpty
             ? null
             : _descriptionController.text,
-        imageUrls: _fishImages,
-        benefitPayImageUrl: _benefitPayImage,
+        imageUrls: uploadedImageUrls,
+        benefitPayImageUrl: _acceptedPayments.contains(PaymentMethod.benefitPay)
+            ? benefitPayUrl
+            : null,
         benefitPayIban: _acceptedPayments.contains(PaymentMethod.benefitPay) &&
                 _ibanController.text.trim().isNotEmpty
             ? _ibanController.text.trim()
@@ -949,7 +961,7 @@ class _SellFishFormState extends State<SellFishForm> {
             ? null
             : _catchLocationController.text,
         catchDate: DateTime.now(),
-        sellerId: widget.currentUserId!,
+        sellerId: uid,
         sellerName: _sellerNameController.text,
         sellerPhone: _sellerPhoneController.text,
         sellerLocation: _sellerLocationController.text.isEmpty
@@ -967,15 +979,30 @@ class _SellFishFormState extends State<SellFishForm> {
       _catchLocationController.clear();
       _customFishNameController.clear();
       _ibanController.clear();
-      setState(() {
-        _selectedFishType = FishType.hamour;
-        _selectedCondition = FishCondition.fresh;
-        _acceptedPayments.clear();
-        _acceptedPayments.add(PaymentMethod.cash);
-        _fishImages.clear();
-        _benefitPayImage = null;
-        _selectedCatchId = null;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedFishType = FishType.hamour;
+          _selectedCondition = FishCondition.fresh;
+          _acceptedPayments.clear();
+          _acceptedPayments.add(PaymentMethod.cash);
+          _fishImages.clear();
+          _benefitPayImage = null;
+          _selectedCatchId = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_l10n.failedToUploadImage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 }

@@ -16,89 +16,102 @@ class WeatherWindCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: WeatherStyles.cardDecoration(),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: CustomPaint(
-                painter: CompassPainter(wind.windDegree.toDouble())),
-          ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compassSize = (constraints.maxWidth * 0.27).clamp(75.0, 100.0);
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: compassSize,
+                height: compassSize,
+                child: CustomPaint(
+                    painter: CompassPainter(wind.windDegree.toDouble())),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.air,
-                        color: WeatherStyles.white(0.7), size: 20),
-                    const SizedBox(width: 8),
-                    Text(l10n.wind,
-                        style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      l10n.n(wind.windKph.round()),
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 42,
-                          fontWeight: FontWeight.w300,
-                          height: 1),
-                    ),
-                    const SizedBox(width: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(l10n.kmh,
-                          style: TextStyle(
-                              color: WeatherStyles.white(0.7),
-                              fontSize: 16)),
-                    ),
-                    const SizedBox(width: 12),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: WeatherStyles.accent
-                              .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(wind.windDir,
+                    Row(
+                      children: [
+                        Icon(Icons.air,
+                            color: WeatherStyles.white(0.7), size: 14),
+                        const SizedBox(width: 6),
+                        Text(l10n.wind,
                             style: const TextStyle(
-                                color: WeatherStyles.accent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600)),
-                      ),
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          l10n.n(wind.windKph.round()),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w300,
+                              height: 1),
+                        ),
+                        const SizedBox(width: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: Text(l10n.kmh,
+                              style: TextStyle(
+                                  color: WeatherStyles.white(0.7),
+                                  fontSize: 14)),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: WeatherStyles.accent
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(wind.windDir,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: WeatherStyles.accent,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.waves,
+                            color: WeatherStyles.white(0.5), size: 13),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            '${l10n.weatherGusts} ${l10n.n(wind.gustKph.round())} ${l10n.kmh}',
+                            style: TextStyle(
+                                color: WeatherStyles.white(0.6),
+                                fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.waves,
-                        color: WeatherStyles.white(0.5), size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${l10n.weatherGusts} ${l10n.n(wind.gustKph.round())} ${l10n.kmh}',
-                      style: TextStyle(
-                          color: WeatherStyles.white(0.6),
-                          fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

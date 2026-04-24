@@ -116,6 +116,9 @@ class MarketplaceLocalizations {
   String get cancelOrder => _isAr ? 'إلغاء الطلب' : 'Cancel Order';
   String get confirmCancelOrder => _isAr ? 'هل أنت متأكد أنك تريد إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?';
   String get orderCancelled => _isAr ? 'تم إلغاء الطلب' : 'Order cancelled';
+  String get resellListing => _isAr ? 'إعادة عرض للبيع' : 'Resell';
+  String get buyerCancelledOrder => _isAr ? 'قام المشتري بإلغاء هذا الطلب' : 'Buyer cancelled this order';
+  String get listingRelistedSuccess => _isAr ? 'تمت إعادة عرض السمك للبيع' : 'Listing is now available again';
   String get benefitPayIban => _isAr ? 'IBAN للـ Benefit Pay' : 'Benefit Pay IBAN';
   String get enterIban => _isAr ? 'أدخل رقم IBAN' : 'Enter IBAN number';
   String get ibanOrQrRequired => _isAr ? 'يرجى رفع رمز QR أو إدخال رقم IBAN' : 'Please upload QR code or enter IBAN number';
@@ -138,6 +141,7 @@ class MarketplaceLocalizations {
   String get phoneEightDigits => _isAr ? 'يجب أن يتكون رقم الهاتف من 8 أرقام' : 'Phone number must be 8 digits';
   String get selectLocationFirst => _isAr ? 'يرجى تحديد موقع أولاً' : 'Please select a location first';
   String get unexpectedError => _isAr ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred';
+  String get failedToUploadImage => _isAr ? 'فشل رفع الصورة. يرجى المحاولة مرة أخرى' : 'Failed to upload image. Please try again';
   String get fresh => _isAr ? 'طازج' : 'Fresh';
   String get frozen => _isAr ? 'مجمد' : 'Frozen';
   String get live => _isAr ? 'حي' : 'Live';

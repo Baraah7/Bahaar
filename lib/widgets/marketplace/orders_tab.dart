@@ -254,30 +254,45 @@ class _OrdersList extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cream,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(l10n.rejectOrder),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.areYouSureRejectOrder),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                labelText: l10n.reasonOptional,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+        title: Text(l10n.rejectOrder, style: const TextStyle(color: AppColors.brown)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.areYouSureRejectOrder, style: const TextStyle(fontSize: 16, color: AppColors.brown)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  labelStyle: const TextStyle(color: AppColors.brown),
+                  labelText: l10n.reasonOptional,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.tan),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.tan),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.tan, width: 2),
+                  ),
                 ),
+                maxLines: 3,
+                minLines: 2,
+                style: const TextStyle(fontSize: 14, color: AppColors.brown),
               ),
-              maxLines: 2,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel, style: const TextStyle(fontSize: 16),),
+            child: Text(l10n.cancel, style: const TextStyle(fontSize: 16, color: AppColors.brown),),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -291,8 +306,8 @@ class _OrdersList extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(l10n.orderRejected),
-                    backgroundColor: Colors.orange,
+                    content: Text(l10n.orderRejected, style: const TextStyle(color: Colors.white)),
+                    backgroundColor: AppColors.red,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -301,7 +316,7 @@ class _OrdersList extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.red,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -316,13 +331,14 @@ class _OrdersList extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cream,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(l10n.cancelOrder),
-        content: Text(l10n.confirmCancelOrder),
+        title: Text(l10n.cancelOrder, style: const TextStyle(color: AppColors.brown)),
+        content: Text(l10n.confirmCancelOrder, style: const TextStyle(color: AppColors.brown)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
+            child: Text(l10n.cancel, style: const TextStyle(color: AppColors.brown)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -331,7 +347,7 @@ class _OrdersList extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(l10n.orderCancelled),
+                    content: Text(l10n.orderCancelled, style: const TextStyle(color: Colors.white)),
                     backgroundColor: AppColors.red,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
@@ -358,7 +374,7 @@ class _OrdersList extends StatelessWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.orderCompleted),
+          content: Text(l10n.orderCompleted, style: const TextStyle(color: Colors.white)),
           backgroundColor: Colors.blue,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -368,57 +384,64 @@ class _OrdersList extends StatelessWidget {
   }
 
   void _showPaymentProofFullScreen(BuildContext context, String imagePath) {
+    final ImageProvider imageProvider = imagePath.startsWith('http')
+        ? NetworkImage(imagePath) as ImageProvider
+        : FileImage(File(imagePath));
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.7,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.paymentProof,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.grey.shade100,
-                          ),
-                        ),
-                      ],
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.82,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.paymentProof,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
-                  ),
-                  Flexible(
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey.shade100,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: InteractiveViewer(
-                      child: Image.file(
-                        File(imagePath),
+                      child: Image(
+                        image: imageProvider,
                         fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(Icons.broken_image_outlined, size: 48, color: Colors.grey),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
