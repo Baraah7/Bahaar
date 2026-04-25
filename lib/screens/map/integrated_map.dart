@@ -32,7 +32,7 @@ import 'package:bahaar/services/marine_weather_service.dart';
 import 'package:bahaar/services/offline/connectivity_service.dart';
 import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
-import 'package:bahaar/widgets/fishing_log/catch_form.dart';
+import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
 import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
 import 'package:bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
@@ -2416,7 +2416,12 @@ class _IntegratedMapState extends State<IntegratedMap>
   }
 
   Future<void> _logCatchFromMap() async {
-    final result = await CatchForm.show(context);
+    final result = await showModalBottomSheet<CatchEditResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const CatchEditSheet(entry: null),
+    );
     if (result == null || !mounted) return;
 
     // Resolve catch location: prefer form location, fall back to current GPS
@@ -3047,21 +3052,6 @@ class _IntegratedMapState extends State<IntegratedMap>
           if (!ConnectivityService.instance.isOnline)
             OfflineBanner(label: l10n.offlineMapCached),
 
-          // Log Catch FAB — only visible during an active trip
-          if (TripService.instance.hasActiveTrip)
-            Positioned(
-              bottom: 90,
-              right: 16,
-              child: FloatingActionButton.extended(
-                heroTag: 'logCatch',
-                onPressed: _logCatchFromMap,
-                backgroundColor: const Color(0xFF0D4F54),
-                foregroundColor: Colors.white,
-                icon: const Icon(Icons.add_circle_outline),
-                label: Text(l10n.logCatch),
-              ),
-            ),
-
           // Route stats card — top of screen, above all other overlays
           if (_currentRoute != null && !(_navigationManager?.isNavigating ?? false))
             Positioned(
@@ -3107,6 +3097,9 @@ class _IntegratedMapState extends State<IntegratedMap>
                         ),
                         14,
                       )
+                  : null,
+              onLogCatch: TripService.instance.hasActiveTrip
+                  ? _logCatchFromMap
                   : null,
             ),
           ),

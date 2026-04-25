@@ -6,6 +6,7 @@ import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -45,11 +46,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       if (catchTime == null || !mounted) return;
     }
 
-    final result = await showModalBottomSheet<_CatchEditResult>(
+    final result = await showModalBottomSheet<CatchEditResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CatchEditSheet(entry: null),
+      builder: (_) => CatchEditSheet(entry: null),
     );
     if (result == null || !mounted) return;
 
@@ -98,11 +99,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _editCatch(CatchEntry entry) async {
-    final result = await showModalBottomSheet<_CatchEditResult>(
+    final result = await showModalBottomSheet<CatchEditResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CatchEditSheet(entry: entry),
+      builder: (_) => CatchEditSheet(entry: entry),
     );
     if (result == null || !mounted) return;
 
@@ -198,18 +199,27 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             Expanded(
               child: _catches.isEmpty
                   ? _EmptyState(l10n: l10n)
-                  : ListView.separated(
+                  : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                      itemCount: _catches.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (_, i) => _CatchCard(
-                        entry: _catches[i],
-                        index: i,
-                        l10n: l10n,
-                        locale: locale,
-                        onEdit: () => _editCatch(_catches[i]),
-                        onDelete: () => _deleteCatch(_catches[i]),
-                      ),
+                      children: [
+                        _CatchesMapView(catches: _catches),
+                        const SizedBox(height: 16),
+                        ...List.generate(
+                          _catches.length,
+                          (i) => Padding(
+                            padding: EdgeInsets.only(
+                                bottom: i < _catches.length - 1 ? 12 : 0),
+                            child: _CatchCard(
+                              entry: _catches[i],
+                              index: i,
+                              l10n: l10n,
+                              locale: locale,
+                              onEdit: () => _editCatch(_catches[i]),
+                              onDelete: () => _deleteCatch(_catches[i]),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
             ),
             Padding(
@@ -653,32 +663,177 @@ class _ActionBtn extends StatelessWidget {
   }
 }
 
+// ── Catches map view ─────────────────────────────────────────────────────────
+
+class _CatchesMapView extends StatelessWidget {
+  final List<CatchEntry> catches;
+  const _CatchesMapView({required this.catches});
+
+  @override
+  Widget build(BuildContext context) {
+    // Compute center as average of all catch locations
+    final lats = catches.map((c) => c.latitude);
+    final lons = catches.map((c) => c.longitude);
+    final centerLat = lats.reduce((a, b) => a + b) / lats.length;
+    final centerLon = lons.reduce((a, b) => a + b) / lons.length;
+
+    final markers = catches.map((c) => Marker(
+      point: LatLng(c.latitude, c.longitude),
+      width: 32,
+      height: 32,
+      child: GestureDetector(
+        onTap: () => _showInfo(context, c),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF8F00),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.phishing, color: Colors.white, size: 14),
+        ),
+      ),
+    )).toList();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        height: 200,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(centerLat, centerLon),
+            initialZoom: catches.length == 1 ? 13.0 : 11.0,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.bahaar.app',
+            ),
+            MarkerLayer(markers: markers),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showInfo(BuildContext context, CatchEntry c) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF8F00),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.phishing, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    c.species,
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (c.weightKg != null)
+              _MapInfoRow(Icons.scale_rounded, '${c.weightKg!.toStringAsFixed(1)} kg'),
+            _MapInfoRow(
+              Icons.access_time_rounded,
+              '${c.timestamp.toLocal().hour.toString().padLeft(2, '0')}:${c.timestamp.toLocal().minute.toString().padLeft(2, '0')}',
+            ),
+            _MapInfoRow(
+              Icons.location_on_rounded,
+              '${c.latitude.toStringAsFixed(4)}, ${c.longitude.toStringAsFixed(4)}',
+            ),
+            if (c.notes != null && c.notes!.isNotEmpty)
+              _MapInfoRow(Icons.notes_rounded, c.notes!),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MapInfoRow(this.icon, this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(color: Colors.grey.shade800, fontSize: 14)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Catch edit sheet ──────────────────────────────────────────────────────────
 
-class _CatchEditResult {
+class CatchEditResult {
   final String species;
   final double? weightKg;
   final String? notes;
   final LatLng? location;
-  const _CatchEditResult(
+  const CatchEditResult(
       {required this.species, this.weightKg, this.notes, this.location});
 }
 
-class _CatchEditSheet extends StatefulWidget {
+class CatchEditSheet extends StatefulWidget {
   final CatchEntry? entry;
-  const _CatchEditSheet({required this.entry});
+  const CatchEditSheet({super.key, required this.entry});
 
   @override
-  State<_CatchEditSheet> createState() => _CatchEditSheetState();
+  State<CatchEditSheet> createState() => CatchEditSheetState();
 }
 
-class _CatchEditSheetState extends State<_CatchEditSheet> {
+class CatchEditSheetState extends State<CatchEditSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _speciesCtrl;
   late final TextEditingController _weightCtrl;
   late final TextEditingController _notesCtrl;
-  late final TextEditingController _latCtrl;
-  late final TextEditingController _lonCtrl;
+  LatLng? _pickedLocation;
   bool _mapPinned = false;
 
   static const _quickSpeciesKeys = [
@@ -702,10 +857,7 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
     _speciesCtrl = TextEditingController(text: e?.species ?? '');
     _weightCtrl = TextEditingController(text: e?.weightKg?.toString() ?? '');
     _notesCtrl = TextEditingController(text: e?.notes ?? '');
-    _latCtrl = TextEditingController(
-        text: e != null ? e.latitude.toStringAsFixed(6) : '');
-    _lonCtrl = TextEditingController(
-        text: e != null ? e.longitude.toStringAsFixed(6) : '');
+    if (e != null) _pickedLocation = LatLng(e.latitude, e.longitude);
   }
 
   @override
@@ -713,26 +865,15 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
     _speciesCtrl.dispose();
     _weightCtrl.dispose();
     _notesCtrl.dispose();
-    _latCtrl.dispose();
-    _lonCtrl.dispose();
     super.dispose();
   }
 
-  LatLng? _parseLocation() {
-    final lat = double.tryParse(_latCtrl.text.trim());
-    final lon = double.tryParse(_lonCtrl.text.trim());
-    if (lat != null && lon != null) return LatLng(lat, lon);
-    return null;
-  }
-
   Future<void> _pickOnMap() async {
-    final current = _parseLocation();
     final picked =
-        await LocationPickerScreen.open(context, initial: current);
+        await LocationPickerScreen.open(context, initial: _pickedLocation);
     if (picked != null && mounted) {
       setState(() {
-        _latCtrl.text = picked.latitude.toStringAsFixed(6);
-        _lonCtrl.text = picked.longitude.toStringAsFixed(6);
+        _pickedLocation = picked;
         _mapPinned = true;
       });
     }
@@ -761,11 +902,11 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pop(_CatchEditResult(
+    Navigator.of(context).pop(CatchEditResult(
       species: _speciesCtrl.text.trim(),
       weightKg: double.tryParse(_weightCtrl.text.trim()),
       notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-      location: _parseLocation(),
+      location: _pickedLocation,
     ));
   }
 
@@ -900,100 +1041,39 @@ class _CatchEditSheetState extends State<_CatchEditSheet> {
               ),
               const SizedBox(height: 18),
 
-              // Location header
-              Row(
-                children: [
-                  Icon(Icons.location_on_rounded,
-                      color: AppColors.primary, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.latitude.replaceAll(RegExp(r'\(.*\)'), '').trim(),
-                    style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600),
+              // Pin on map button
+              GestureDetector(
+                onTap: _pickOnMap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: _pickOnMap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.map_outlined,
-                              color: AppColors.accent, size: 14),
-                          const SizedBox(width: 4),
-                          Text(l10n.pinOnMap,
-                              style: TextStyle(
-                                  color: AppColors.accent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _latCtrl,
-                      decoration: _dec(l10n.latitude, null),
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true, signed: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
-                      ],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final d = double.tryParse(v.trim());
-                        if (d == null || d < -90 || d > 90) return '!';
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lonCtrl,
-                      decoration: _dec(l10n.longitude, null),
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true, signed: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^-?\d*\.?\d*'))
-                      ],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final d = double.tryParse(v.trim());
-                        if (d == null || d < -180 || d > 180) return '!';
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (_mapPinned) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.check_circle_rounded,
-                        size: 12, color: Colors.green.shade600),
-                    const SizedBox(width: 4),
-                    Text(l10n.locationPinned,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.map_outlined, color: AppColors.accent, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        _mapPinned
+                            ? l10n.locationPinned
+                            : l10n.pinOnMap,
                         style: TextStyle(
-                            color: Colors.green.shade600, fontSize: 11)),
-                  ],
+                            color: AppColors.accent,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      if (_mapPinned) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.check_circle_rounded,
+                            size: 14, color: Colors.green.shade600),
+                      ],
+                    ],
+                  ),
                 ),
-              ],
+              ),
               const SizedBox(height: 22),
 
               // Save button

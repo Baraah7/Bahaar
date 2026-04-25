@@ -347,18 +347,105 @@ class CatchMarkerLayer extends StatelessWidget {
   final List<CatchEntry> catches;
   const CatchMarkerLayer({super.key, required this.catches});
 
+  void _showCatchInfo(BuildContext context, CatchEntry c) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF8F00),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.phishing, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    c.species,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (c.weightKg != null)
+              _CatchInfoRow(Icons.scale_rounded, '${c.weightKg!.toStringAsFixed(1)} kg'),
+            _CatchInfoRow(
+              Icons.access_time_rounded,
+              '${c.timestamp.toLocal().hour.toString().padLeft(2, '0')}:${c.timestamp.toLocal().minute.toString().padLeft(2, '0')}',
+            ),
+            _CatchInfoRow(
+              Icons.location_on_rounded,
+              '${c.latitude.toStringAsFixed(4)}, ${c.longitude.toStringAsFixed(4)}',
+            ),
+            if (c.notes != null && c.notes!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              _CatchInfoRow(Icons.notes_rounded, c.notes!),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (catches.isEmpty) return const SizedBox.shrink();
     final markers = catches
         .map((c) => Marker(
               point: c.location,
-              width: 20,
-              height: 20,
-              child: const _CatchDot(),
+              width: 28,
+              height: 28,
+              child: GestureDetector(
+                onTap: () => _showCatchInfo(context, c),
+                child: const _CatchDot(),
+              ),
             ))
         .toList();
     return MarkerLayer(markers: markers);
+  }
+}
+
+class _CatchInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _CatchInfoRow(this.icon, this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: TextStyle(color: Colors.grey.shade800, fontSize: 14)),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -369,11 +456,11 @@ class _CatchDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFF8F00), // amber 800
+        color: const Color(0xFFFF8F00),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2.0),
       ),
-      child: const Icon(Icons.phishing, color: Colors.white, size: 9),
+      child: const Icon(Icons.phishing, color: Colors.white, size: 12),
     );
   }
 }
