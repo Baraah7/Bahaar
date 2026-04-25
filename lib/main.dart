@@ -99,8 +99,8 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     final pageTitles = [
       l10n.fishRecognition,
       l10n.marketplace,
-      l10n.fishingMap,
       l10n.weather,
+      l10n.fishingMap,
       l10n.fishingLog,
     ];
 
