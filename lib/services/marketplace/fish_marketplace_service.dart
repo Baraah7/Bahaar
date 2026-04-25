@@ -330,6 +330,19 @@ class FishMarketplaceService extends ChangeNotifier {
     }
   }
 
+  Future<void> resellOrder(String orderId) async {
+    try {
+      final orderDoc = await _db.collection('orders').doc(orderId).get();
+      if (orderDoc.exists) {
+        final listingId = orderDoc.data()!['listingId'] as String;
+        await updateListingStatus(listingId, ListingStatus.available);
+      }
+    } catch (e) {
+      _error = 'Failed to relist: $e';
+      notifyListeners();
+    }
+  }
+
   Future<void> completeOrder(String orderId) async {
     try {
       final orderDoc = await _db.collection('orders').doc(orderId).get();

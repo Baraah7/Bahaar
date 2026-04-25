@@ -12,7 +12,10 @@ class MarketplaceLocalizations {
 
   String get marketplace => _isAr ? 'السوق' : 'Marketplace';
   String get sellFish => _isAr ? 'بيع سمك' : 'Sell Fish';
-  String get myOrders => _isAr ? 'طلباتي' : 'My Orders';
+  String get myOrders => _isAr ? 'الطلبات' : 'Orders';
+  String get searchOrders => _isAr ? 'ابحث في الطلبات...' : 'Search orders...';
+  String get filterByStatus => _isAr ? 'تصفية حسب الحالة' : 'Filter by Status';
+  String get allStatuses => _isAr ? 'جميع الحالات' : 'All Statuses';
   String get searchFishSellerLocation => _isAr ? 'ابحث عن سمك، بائع، موقع...' : 'Search fish, seller, location...';
   String get type => _isAr ? 'النوع' : 'Type';
   String get condition => _isAr ? 'الحالة' : 'Condition';

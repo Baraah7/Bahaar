@@ -236,13 +236,13 @@ class _PredictionScreenState extends State<PredictionScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.location_on_rounded, color: _teal, size: 20),
+              const Icon(Icons.location_on_rounded, color: AppColors.cream, size: 20),
               const SizedBox(width: 8),
               Text(_l10n.location,
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      color: Color(0xFF1E293B))),
+                      color: AppColors.cream)),
               const Spacer(),
               GestureDetector(
                 onTap: () =>
@@ -253,13 +253,13 @@ class _PredictionScreenState extends State<PredictionScreen> {
                       horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _showMiniMap
-                        ? _teal
-                        : _teal.withValues(alpha: 0.08),
+                        ? AppColors.white.withValues(alpha: 0.15)
+                        : AppColors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _showMiniMap
-                          ? _teal
-                          : Colors.grey.shade200,
+                          ? AppColors.white.withValues(alpha: 0.25)
+                          : AppColors.white.withValues(alpha: 0.25),
                     ),
                   ),
                   child: Row(
@@ -272,7 +272,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                         size: 14,
                         color: _showMiniMap
                             ? Colors.white
-                            : _teal,
+                            : AppColors.white.withValues(alpha: 0.75),
                       ),
                       const SizedBox(width: 5),
                       Text(
@@ -280,7 +280,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: _showMiniMap ? Colors.white : _teal,
+                          color: _showMiniMap ? Colors.white : AppColors.white.withValues(alpha: 0.75),
                         ),
                       ),
                     ],
@@ -294,13 +294,13 @@ class _PredictionScreenState extends State<PredictionScreen> {
             Row(
               children: [
                 Icon(Icons.gps_fixed,
-                    color: Colors.green.shade600, size: 14),
+                    color: Colors.tealAccent.withValues(alpha: 0.75), size: 14),
                 const SizedBox(width: 6),
                 Text(
                   '${_n(_selectedLatLng!.latitude.toStringAsFixed(4))}°N  '
                   '${_n(_selectedLatLng!.longitude.toStringAsFixed(4))}°E',
                   style: TextStyle(
-                      color: Colors.grey.shade600, fontSize: 13),
+                      color: Colors.tealAccent, fontSize: 13),
                 ),
               ],
             )
@@ -308,7 +308,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
             Text(
               _l10n.tapMapToSelect,
               style:
-                  TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                  TextStyle(color: Colors.tealAccent.withValues(alpha: 0.75), fontSize: 13),
             ),
           if (_showMiniMap) ...[
             const SizedBox(height: 12),
@@ -338,7 +338,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                           width: 40,
                           height: 40,
                           child: const Icon(Icons.location_pin,
-                              color: Colors.red, size: 36),
+                              color: AppColors.red, size: 36),
                         ),
                       ]),
                   ],
@@ -358,66 +358,74 @@ class _PredictionScreenState extends State<PredictionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 10, right: 4),
+          padding: const EdgeInsets.only(bottom: 20, right: 4, top: 8),
           child: Text(_l10n.chooseSpecies,
               style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
                   color: Colors.white)),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: kAllSpecies.map((species) {
-              final isSelected = species['id'] == _selectedSpeciesId;
-              final name = _isAr
-                  ? species['nameAr'] as String
-                  : species['nameEn'] as String;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => setState(
-                      () => _selectedSpeciesId = species['id'] as String),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? _teal : Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: isSelected
-                            ? _teal
-                            : Colors.grey.shade200,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isSelected
-                              ? _teal.withValues(alpha: 0.2)
-                              : Colors.black.withValues(alpha: 0.04),
-                          blurRadius: isSelected ? 8 : 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      name,
-                      style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.grey.shade700,
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 16) / 3;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: kAllSpecies.map((species) {
+          final isSelected = species['id'] == _selectedSpeciesId;
+          final name = _isAr
+              ? species['nameAr'] as String
+              : species['nameEn'] as String;
+          return SizedBox(
+            width: itemWidth,
+            child: GestureDetector(
+              onTap: () => setState(
+            () => _selectedSpeciesId = species['id'] as String),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+              horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+            color: isSelected
+                ? _teal
+                : Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected
+                  ? _teal
+                  : AppColors.white.withValues(alpha: 0.25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+              ? _teal.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.04),
+                blurRadius: isSelected ? 8 : 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
                 ),
-              );
-            }).toList(),
-          ),
+                child: Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : AppColors.white.withValues(alpha: 0.75),
+              fontSize: 12,
+              fontWeight: isSelected
+                  ? FontWeight.w700
+                  : FontWeight.w500,
+            ),
+                ),
+              ),
+            ),
+          );
+              }).toList(),
+            );
+          },
         ),
       ],
     );
@@ -452,22 +460,22 @@ class _PredictionScreenState extends State<PredictionScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: AppColors.red.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade200),
+        border: Border.all(color: AppColors.red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red.shade600),
+          Icon(Icons.error_outline, color: AppColors.red.withValues(alpha: 0.75), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(_errorMessage!,
-                style: TextStyle(color: Colors.red.shade700)),
+                style: TextStyle(color: AppColors.red.withValues(alpha: 0.75))),
           ),
           TextButton(
             onPressed: _runPrediction,
             child: Text(_l10n.retry,
-                style: const TextStyle(color: _tealLight)),
+                style: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -517,7 +525,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.shade700,
+        color: AppColors.red.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

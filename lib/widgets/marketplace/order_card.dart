@@ -6,7 +6,7 @@ import '../../models/marketplace/order_model.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 
-class OrderCard extends StatelessWidget {
+class OrderCard extends StatefulWidget {
   final Order order;
   final FishListing? listing;
   final bool isSeller;
@@ -32,16 +32,23 @@ class OrderCard extends StatelessWidget {
     this.onViewPaymentProof,
   });
 
+  @override
+  State<OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends State<OrderCard> {
+  bool _expanded = false;
+
   String _n(String value, String lang) => arabicN(value, lang);
 
   @override
   Widget build(BuildContext context) {
     final lang = Localizations.localeOf(context).languageCode;
     final isAr = lang == 'ar';
-    final listingName = listing == null
+    final listingName = widget.listing == null
         ? ''
-        : (isAr ? listing!.fishType.arabicName : listing!.displayName);
-    final totalPrice = listing?.totalPrice ?? 0.0;
+        : (isAr ? widget.listing!.fishType.arabicName : widget.listing!.displayName);
+    final totalPrice = widget.listing?.totalPrice ?? 0.0;
     final statusData = _getStatusData();
 
     return Container(
@@ -59,116 +66,138 @@ class OrderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // ── Gradient header ──────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  statusData.color.withValues(alpha: 0.12),
-                  statusData.color.withValues(alpha: 0.04),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+          // ── Tappable header ──────────────────────────────────
+          GestureDetector(
+            onTap: () => setState(() => _expanded = !_expanded),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    statusData.color.withValues(alpha: 0.12),
+                    statusData.color.withValues(alpha: 0.04),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: _expanded
+                    ? const BorderRadius.vertical(top: Radius.circular(20))
+                    : BorderRadius.circular(20),
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: statusData.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: statusData.color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(statusData.icon, color: statusData.color, size: 22),
                   ),
-                  child: Icon(statusData.icon, color: statusData.color, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        listingName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: Color(0xFF1E293B),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          listingName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: Color(0xFF1E293B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${_n(totalPrice.toStringAsFixed(2), lang)} ${l10n.bdUnit}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: const Color(0xFF1E293B).withValues(alpha: 0.8),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${_n(totalPrice.toStringAsFixed(2), lang)} ${widget.l10n.bdUnit}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: const Color(0xFF1E293B).withValues(alpha: 0.8),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: statusData.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusData.color.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    order.status.localizedName(lang),
-                    style: TextStyle(
-                      color: statusData.color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: statusData.color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusData.color.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      widget.order.status.localizedName(lang),
+                      style: TextStyle(
+                        color: statusData.color,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: statusData.color,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // ── Body ─────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildContactInfo(),
-                const SizedBox(height: 10),
-                _buildPaymentRow(lang),
-                if (isSeller &&
-                    order.paymentMethod == PaymentMethod.benefitPay &&
-                    order.paymentProofImageUrl != null)
-                  _buildPaymentProofSection(),
-                if (!isSeller &&
-                    order.status == OrderStatus.rejected &&
-                    order.rejectionReason != null)
-                  _buildRejectionReason(),
-                if (!isSeller && order.status == OrderStatus.pending)
-                  _buildStatusBanner(
-                    icon: Icons.hourglass_top_rounded,
-                    color: AppColors.brown,
-                    message: l10n.waitingForSeller,
-                  ),
-                if (!isSeller && order.status == OrderStatus.accepted)
-                  _buildStatusBanner(
-                    icon: Icons.check_circle_outline_rounded,
-                    color: AppColors.green,
-                    message: l10n.orderAcceptedContactSeller,
-                  ),
-                if (isSeller && order.status == OrderStatus.pending)
-                  _buildSellerActions(),
-                if (isSeller && order.status == OrderStatus.accepted)
-                  _buildCompleteButton(),
-                if (!isSeller && order.status == OrderStatus.pending)
-                  _buildCancelButton(),
-                if (isSeller && order.status == OrderStatus.cancelled)
-                  _buildCancelledSellerSection(),
-              ],
-            ),
+          // ── Expandable body ──────────────────────────────────
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: _expanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildContactInfo(),
+                        const SizedBox(height: 10),
+                        _buildPaymentRow(lang),
+                        if (widget.isSeller &&
+                            widget.order.paymentMethod == PaymentMethod.benefitPay &&
+                            widget.order.paymentProofImageUrl != null)
+                          _buildPaymentProofSection(),
+                        if (!widget.isSeller &&
+                            widget.order.status == OrderStatus.rejected &&
+                            widget.order.rejectionReason != null)
+                          _buildRejectionReason(),
+                        if (!widget.isSeller && widget.order.status == OrderStatus.pending)
+                          _buildStatusBanner(
+                            icon: Icons.hourglass_top_rounded,
+                            color: AppColors.brown,
+                            message: widget.l10n.waitingForSeller,
+                          ),
+                        if (!widget.isSeller && widget.order.status == OrderStatus.accepted)
+                          _buildStatusBanner(
+                            icon: Icons.check_circle_outline_rounded,
+                            color: AppColors.green,
+                            message: widget.l10n.orderAcceptedContactSeller,
+                          ),
+                        if (widget.isSeller && widget.order.status == OrderStatus.pending)
+                          _buildSellerActions(),
+                        if (widget.isSeller && widget.order.status == OrderStatus.accepted)
+                          _buildCompleteButton(),
+                        if (!widget.isSeller && widget.order.status == OrderStatus.pending)
+                          _buildCancelButton(),
+                        if (widget.isSeller && widget.order.status == OrderStatus.cancelled)
+                          _buildCancelledSellerSection(),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -176,16 +205,18 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildContactInfo() {
-    final rows = isSeller
+    final rows = widget.isSeller
         ? [
-            _InfoItem(Icons.person_outline_rounded, '${l10n.buyer}: ${order.buyerName}'),
-            _InfoItem(Icons.phone_outlined, order.buyerPhone),
-            if (order.buyerLocation != null)
-              _InfoItem(Icons.location_on_outlined, order.buyerLocation!),
+            _InfoItem(Icons.person_outline_rounded,
+                '${widget.l10n.buyer}: ${widget.order.buyerName}'),
+            _InfoItem(Icons.phone_outlined, widget.order.buyerPhone),
+            if (widget.order.buyerLocation != null)
+              _InfoItem(Icons.location_on_outlined, widget.order.buyerLocation!),
           ]
         : [
-            _InfoItem(Icons.store_outlined, '${l10n.sellerLabel}: ${listing?.sellerName ?? ''}'),
-            _InfoItem(Icons.phone_outlined, listing?.sellerPhone ?? 'N/A'),
+            _InfoItem(Icons.store_outlined,
+                '${widget.l10n.sellerLabel}: ${widget.listing?.sellerName ?? ''}'),
+            _InfoItem(Icons.phone_outlined, widget.listing?.sellerPhone ?? 'N/A'),
           ];
 
     return Container(
@@ -218,7 +249,7 @@ class OrderCard extends StatelessWidget {
           Icon(Icons.payments_outlined, size: 16, color: Colors.grey.shade500),
           const SizedBox(width: 8),
           Text(
-            '${l10n.payment}: ${order.paymentMethod.localizedName(lang)}',
+            '${widget.l10n.payment}: ${widget.order.paymentMethod.localizedName(lang)}',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
         ],
@@ -242,7 +273,7 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildPaymentProofSection() {
-    final url = order.paymentProofImageUrl!;
+    final url = widget.order.paymentProofImageUrl!;
     final ImageProvider imageProvider =
         url.startsWith('http') ? NetworkImage(url) : FileImage(File(url)) as ImageProvider;
 
@@ -263,14 +294,15 @@ class OrderCard extends StatelessWidget {
                 Icon(Icons.receipt_long_rounded, size: 15, color: AppColors.brown),
                 const SizedBox(width: 6),
                 Text(
-                  l10n.paymentProof,
-                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.brown, fontSize: 13),
+                  widget.l10n.paymentProof,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, color: AppColors.brown, fontSize: 13),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => onViewPaymentProof?.call(url),
+              onTap: () => widget.onViewPaymentProof?.call(url),
               child: SizedBox(
                 width: double.infinity,
                 height: 120,
@@ -279,12 +311,17 @@ class OrderCard extends StatelessWidget {
                   child: Image(
                     image: imageProvider,
                     fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.broken_image_outlined,
+                          size: 36, color: Colors.grey),
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 4),
-            Text(l10n.tapToViewFullImage, style: TextStyle(color: AppColors.brown, fontSize: 11)),
+            Text(widget.l10n.tapToViewFullImage,
+                style: TextStyle(color: AppColors.brown, fontSize: 11)),
           ],
         ),
       ),
@@ -309,7 +346,7 @@ class OrderCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    l10n.buyerCancelledOrder,
+                    widget.l10n.buyerCancelledOrder,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                   ),
                 ),
@@ -320,9 +357,9 @@ class OrderCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: onResell,
+              onPressed: widget.onResell,
               icon: const Icon(Icons.refresh_rounded, size: 17),
-              label: Text(l10n.resellListing),
+              label: Text(widget.l10n.resellListing),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.08),
@@ -353,7 +390,7 @@ class OrderCard extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '${l10n.rejectionReason}: ${order.rejectionReason}',
+                '${widget.l10n.rejectionReason}: ${widget.order.rejectionReason}',
                 style: TextStyle(color: AppColors.red, fontSize: 13),
               ),
             ),
@@ -363,7 +400,8 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBanner({required IconData icon, required Color color, required String message}) {
+  Widget _buildStatusBanner(
+      {required IconData icon, required Color color, required String message}) {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Container(
@@ -378,7 +416,8 @@ class OrderCard extends StatelessWidget {
             Icon(icon, size: 16, color: color.withValues(alpha: 0.8)),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(message, style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 13)),
+              child: Text(message,
+                  style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 13)),
             ),
           ],
         ),
@@ -393,9 +432,9 @@ class OrderCard extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: onReject,
+              onPressed: widget.onReject,
               icon: const Icon(Icons.close_rounded, size: 17),
-              label: Text(l10n.reject),
+              label: Text(widget.l10n.reject),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.red.withValues(alpha: 0.8),
                 backgroundColor: AppColors.red.withValues(alpha: 0.12),
@@ -408,16 +447,16 @@ class OrderCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: onAccept,
+              onPressed: widget.onAccept,
               icon: const Icon(Icons.check_rounded, size: 17),
-              label: Text(l10n.accept),
+              label: Text(widget.l10n.accept),
               style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.green.withValues(alpha: 0.8),
-              backgroundColor: AppColors.green.withValues(alpha: 0.12),
-              side: BorderSide(color: AppColors.green.withValues(alpha: 0.3)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+                foregroundColor: AppColors.green.withValues(alpha: 0.8),
+                backgroundColor: AppColors.green.withValues(alpha: 0.12),
+                side: BorderSide(color: AppColors.green.withValues(alpha: 0.3)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
         ],
@@ -440,9 +479,9 @@ class OrderCard extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: onComplete,
+            onPressed: widget.onComplete,
             icon: const Icon(Icons.done_all_rounded, size: 17),
-            label: Text(l10n.markAsCompleted),
+            label: Text(widget.l10n.markAsCompleted),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
@@ -462,9 +501,9 @@ class OrderCard extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          onPressed: onCancel,
+          onPressed: widget.onCancel,
           icon: const Icon(Icons.cancel_outlined, size: 17),
-          label: Text(l10n.cancelOrder),
+          label: Text(widget.l10n.cancelOrder),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.red.withValues(alpha: 0.8),
             backgroundColor: AppColors.red.withValues(alpha: 0.12),
@@ -478,7 +517,7 @@ class OrderCard extends StatelessWidget {
   }
 
   _StatusData _getStatusData() {
-    switch (order.status) {
+    switch (widget.order.status) {
       case OrderStatus.pending:
         return _StatusData(AppColors.brown, Icons.hourglass_top_rounded);
       case OrderStatus.accepted:

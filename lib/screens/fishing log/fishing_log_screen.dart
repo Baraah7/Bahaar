@@ -466,14 +466,14 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                       Expanded(
                         child: _filteredTrips.isEmpty
                             ? AppEmptyState(
-                                icon: Icons.anchor,
-                                title: _searchQuery.isNotEmpty
-                                    ? l10n.noTripsYet
-                                    : FishingLogLocalizations.of(context).noTripsYet,
-                                message: _searchQuery.isNotEmpty
-                                    ? l10n.tapStartTrip
-                                    : FishingLogLocalizations.of(context).tapStartTrip,
-                                iconColor: Colors.white.withValues(alpha: 0.5),
+                              icon: Icons.anchor,
+                              title: _searchQuery.isNotEmpty
+                                ? l10n.noTripsYet
+                                : FishingLogLocalizations.of(context).noTripsYet,
+                              message: _searchQuery.isNotEmpty
+                                ? l10n.tapStartTrip
+                                : FishingLogLocalizations.of(context).tapStartTrip,
+                              iconColor: AppColors.white.withValues(alpha: 0.5),
                               )
                             : RefreshIndicator(
                                 onRefresh: _loadTrips,

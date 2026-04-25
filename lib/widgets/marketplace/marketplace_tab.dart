@@ -66,15 +66,17 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
           _buildSearchArea(l10n),
           _buildFilterRow(l10n),
           Expanded(
-            child: _filteredListings.isEmpty
-                ? _buildEmptyState(l10n)
-                : RefreshIndicator(
-                    color: const Color(0xFF0E7490),
-                    onRefresh: widget.marketplaceService.refreshListings,
-                    child: GridView.builder(
-                      physics: const BouncingScrollPhysics(),
+            child: RefreshIndicator(
+              color: const Color(0xFF0E7490),
+              onRefresh: widget.marketplaceService.refreshListings,
+              child: _filteredListings.isEmpty
+                  ? _buildEmptyState(l10n)
+                  : GridView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics()),
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.75,
                         crossAxisSpacing: 14,
@@ -84,11 +86,12 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                       itemBuilder: (context, index) {
                         return FishCard(
                           listing: _filteredListings[index],
-                          onTap: () => widget.onFishTap(_filteredListings[index]),
+                          onTap: () =>
+                              widget.onFishTap(_filteredListings[index]),
                         );
                       },
                     ),
-                  ),
+            ),
           ),
         ],
       ),
@@ -339,81 +342,83 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     );
   }
 
+  Widget _filterChip<T>({
+    required T? value,
+    required T? selected,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = selected == value;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : AppColors.primary.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showTypeFilterSheet(MarketplaceLocalizations l10n) {
+    final lang = Localizations.localeOf(context).languageCode;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: Colors.white,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.85,
-        expand: false,
-        builder: (context, scrollController) => Column(
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
+            Text(
+              l10n.filterByFishType,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  l10n.filterByFishType,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                  ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _filterChip<FishType>(
+                  value: null,
+                  selected: _selectedTypeFilter,
+                  label: l10n.allTypes,
+                  onTap: () {
+                    setState(() => _selectedTypeFilter = null);
+                    Navigator.pop(ctx);
+                  },
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.only(bottom: 16),
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.all_inclusive_rounded, color: Colors.grey.shade600),
-                    title: Text(l10n.allTypes, style: const TextStyle(fontWeight: FontWeight.w500)),
-                    selected: _selectedTypeFilter == null,
-                    selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    onTap: () {
-                      setState(() => _selectedTypeFilter = null);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ...FishType.values.map((type) => ListTile(
-                        leading: Icon(
-                          type == FishType.shrimp
-                              ? Icons.set_meal_rounded
-                              : type == FishType.crab
-                                  ? Icons.pest_control_rounded
-                                  : Icons.phishing_rounded,
-                          color: const Color(0xFF0E7490),
-                        ),
-                        title: Text(type.localizedName(Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.w500)),
-                        selected: _selectedTypeFilter == type,
-                        selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        onTap: () {
-                          setState(() => _selectedTypeFilter = type);
-                          Navigator.pop(context);
-                        },
-                      )),
-                ],
-              ),
+                ...FishType.values.map((type) => _filterChip<FishType>(
+                      value: type,
+                      selected: _selectedTypeFilter,
+                      label: type.localizedName(lang),
+                      onTap: () {
+                        setState(() => _selectedTypeFilter = type);
+                        Navigator.pop(ctx);
+                      },
+                    )),
+              ],
             ),
           ],
         ),
@@ -422,67 +427,48 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
   }
 
   void _showConditionFilterSheet(MarketplaceLocalizations l10n) {
+    final lang = Localizations.localeOf(context).languageCode;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
+      backgroundColor: Colors.white,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
+            Text(
+              l10n.filterByCondition,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                l10n.filterByCondition,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              leading: Icon(Icons.all_inclusive_rounded, color: Colors.grey.shade600),
-              title: Text(l10n.allConditions, style: const TextStyle(fontWeight: FontWeight.w500)),
-              selected: _selectedConditionFilter == null,
-              selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              onTap: () {
-                setState(() => _selectedConditionFilter = null);
-                Navigator.pop(context);
-              },
-            ),
-            ...FishCondition.values.map((condition) => ListTile(
-                  leading: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: _getConditionColor(condition).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.check_rounded, size: 18, color: _getConditionColor(condition)),
-                  ),
-                  title: Text(condition.localizedName(Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.w500)),
-                  selected: _selectedConditionFilter == condition,
-                  selectedTileColor: const Color(0xFF0D4F54).withValues(alpha: 0.06),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _filterChip<FishCondition>(
+                  value: null,
+                  selected: _selectedConditionFilter,
+                  label: l10n.allConditions,
                   onTap: () {
-                    setState(() => _selectedConditionFilter = condition);
-                    Navigator.pop(context);
+                    setState(() => _selectedConditionFilter = null);
+                    Navigator.pop(ctx);
                   },
-                )),
+                ),
+                ...FishCondition.values.map((condition) => _filterChip<FishCondition>(
+                      value: condition,
+                      selected: _selectedConditionFilter,
+                      label: condition.localizedName(lang),
+                      onTap: () {
+                        setState(() => _selectedConditionFilter = condition);
+                        Navigator.pop(ctx);
+                      },
+                    )),
+              ],
+            ),
           ],
         ),
       ),
@@ -496,50 +482,70 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      backgroundColor: Colors.white,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.priceRange,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _minPrice = null;
+                        _maxPrice = null;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.07),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        l10n.allPrices,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    l10n.priceRange,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() { _minPrice = null; _maxPrice = null; });
-                      Navigator.pop(context);
-                    },
-                    child: Text(l10n.allPrices, style: const TextStyle(color: Color(0xFF0E7490))),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
                     '${tempMin.toStringAsFixed(0)} ${l10n.bdPerKg}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0D4F54), fontSize: 15),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        fontSize: 14),
                   ),
                   Text(
                     '${tempMax.toStringAsFixed(0)} ${l10n.bdPerKg}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0D4F54), fontSize: 15),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        fontSize: 14),
                   ),
                 ],
               ),
@@ -548,8 +554,8 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                 min: 0,
                 max: 50,
                 divisions: 50,
-                activeColor: const Color(0xFF0D4F54),
-                inactiveColor: const Color(0xFF0D4F54).withValues(alpha: 0.15),
+                activeColor: AppColors.primary,
+                inactiveColor: AppColors.primary.withValues(alpha: 0.15),
                 onChanged: (values) => setSheetState(() {
                   tempMin = values.start;
                   tempMax = values.end;
@@ -564,15 +570,18 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                       _minPrice = tempMin > 0 ? tempMin : null;
                       _maxPrice = tempMax < 50 ? tempMax : null;
                     });
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D4F54),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text(l10n.confirm, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  child: Text(l10n.confirm,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -583,12 +592,17 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
   }
 
   Widget _buildEmptyState(MarketplaceLocalizations l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: 400,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
@@ -615,19 +629,10 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
           ],
         ),
       ),
+    ),
+        ),
+      ],
     );
   }
 
-  Color _getConditionColor(FishCondition condition) {
-    switch (condition) {
-      case FishCondition.fresh:
-        return const Color(0xFF059669);
-      case FishCondition.frozen:
-        return const Color(0xFF2563EB);
-      case FishCondition.cleaned:
-        return const Color(0xFF0D9488);
-      case FishCondition.filleted:
-        return const Color(0xFFD97706);
-    }
-  }
 }

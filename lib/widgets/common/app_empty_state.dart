@@ -27,14 +27,14 @@ class AppEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: iconColor ?? AppColors.primary.withValues(alpha: 0.4)),
+            Icon(icon, size: 64, color: iconColor ?? AppColors.white.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
               title,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+                color: AppColors.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -44,7 +44,7 @@ class AppEmptyState extends StatelessWidget {
                 message!,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.primary.withValues(alpha: 0.6),
+                  color: AppColors.white.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
