@@ -2,25 +2,18 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/services/map/navigation_voice_service.dart';
-import 'package:bahaar/utilities/map/navigation_constants.dart';
+import 'package:bahaar/widgets/map/sos_button.dart';
 import 'package:latlong2/latlong.dart';
 
-/// Active navigation overlay showing turn-by-turn instructions and progress
-///
-/// Features:
-/// - Top instruction card with next waypoint
-/// - Bottom progress card with metrics
-/// - Recalculating indicator
-/// - End navigation button
-/// - Voice announcements via [NavigationVoiceService]
 class ActiveNavigationOverlay extends StatefulWidget {
   final NavigationSession session;
   final VoidCallback? onEndNavigation;
   final VoidCallback? onRecenter;
   final bool isRecalculating;
+  final bool isFollowing;
+  final VoidCallback? onToggleFollow;
 
   const ActiveNavigationOverlay({
     super.key,
@@ -28,6 +21,8 @@ class ActiveNavigationOverlay extends StatefulWidget {
     this.onEndNavigation,
     this.onRecenter,
     this.isRecalculating = false,
+    this.isFollowing = false,
+    this.onToggleFollow,
   });
 
   @override
@@ -40,7 +35,6 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
   int? _lastAnnouncedWaypointIndex;
   bool? _lastRecalculating;
 
-  // Expose widget properties via getters for the existing helper methods.
   NavigationSession get session => widget.session;
   bool get isRecalculating => widget.isRecalculating;
 
@@ -54,20 +48,19 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
   void didUpdateWidget(ActiveNavigationOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Speak "Recalculating route" when recalculation starts.
     if (widget.isRecalculating && _lastRecalculating != true) {
       _voice.speak('Recalculating route');
     }
     _lastRecalculating = widget.isRecalculating;
 
-    // Speak the new instruction when the waypoint index advances.
     final idx = widget.session.currentWaypointIndex;
     if (_lastAnnouncedWaypointIndex != idx) {
       _lastAnnouncedWaypointIndex = idx;
       _voice.resetApproach();
       final next = widget.session.nextWaypoint;
       if (next != null) {
-        final instruction = _directionInstruction(next, widget.session.currentLocation);
+        final instruction =
+            _directionInstruction(next, widget.session.currentLocation);
         _voice.speak(instruction);
       }
     }
@@ -81,81 +74,33 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    // Only show arrival card when the session is truly complete (at destination)
-    final isArriving = session.state == NavigationState.completed;
+    // The arrival dialog is shown by integrated_map.dart — nothing to render
+    // for this overlay once the session is completed.
+    if (session.state == NavigationState.completed) {
+      return const SizedBox.shrink();
+    }
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Arrival banner — full-width at very top, only at final destination
-        if (isArriving)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _buildArrivalCard(context),
-              ),
-            ),
-          ),
-
-        // Instruction card — shown only while en-route
-        if (!isArriving)
-          Positioned(
-            top: 16,
-            left: 16,
-            right: 72, // leave room for the exit button
-            child: SafeArea(child: _buildInstructionCard(context)),
-          ),
-
-        // Persistent exit button — always visible while navigating
-        if (!isArriving && widget.onEndNavigation != null)
-          Positioned(
-            top: 16,
-            right: 16,
-            child: SafeArea(
-              child: GestureDetector(
-                onTap: widget.onEndNavigation,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.close_rounded,
-                      size: 22, color: Colors.red),
-                ),
-              ),
-            ),
-          ),
-
-        // Compact metrics strip — fits between SOS (left) and zoom controls (right)
+        // ── Instruction card (full width) ─────────────────────────
         Positioned(
-          bottom: 24,
-          left: 80,
-          right: 80,
-          child: _buildProgressCard(context),
+          top: 16,
+          left: 16,
+          right: 16,
+          child: SafeArea(child: _buildInstructionCard(context)),
         ),
 
-        // Recalculating overlay
+        // ── Recalculating overlay ─────────────────────────────────
         if (isRecalculating)
           Positioned(
-            top: 130,
+            top: 140,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.orange,
                   borderRadius: BorderRadius.circular(8),
@@ -174,7 +119,8 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     ),
                     SizedBox(width: 12),
@@ -190,50 +136,73 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
               ),
             ),
           ),
+
+        // ── Follow-location toggle (above the bottom bar, right side) ──
+        if (widget.onToggleFollow != null)
+          Positioned(
+            bottom: 108,
+            right: 16,
+            child: GestureDetector(
+              onTap: widget.onToggleFollow,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: widget.isFollowing ? AppColors.primary : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.navigation_rounded,
+                  size: 22,
+                  color: widget.isFollowing
+                      ? Colors.white
+                      : Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ),
+
+        // ── Unified navigation bottom bar ─────────────────────────
+        Positioned(
+            bottom: 24,
+            left: 16,
+            right: 16,
+            child: _buildNavBottomBar(context),
+          ),
       ],
     );
   }
 
-  /// Instruction card — shown while navigating toward the next waypoint
+  // ── Instruction card ───────────────────────────────────────────────────────
+
   Widget _buildInstructionCard(BuildContext context) {
     final nextWaypoint = session.nextWaypoint;
 
-    // No more explicit waypoints — show a live compass heading to the destination
     if (nextWaypoint == null) {
       final loc = session.currentLocation;
       final dest = session.route.destination;
-      final compass = loc != null
-          ? _bearingToCompass(_computeBearing(loc, dest))
-          : null;
+      final compass =
+          loc != null ? _bearingToCompass(_computeBearing(loc, dest)) : null;
       final distToDest = loc != null
           ? _calculateDistanceToPoint(loc, dest)
           : session.distanceRemaining;
+      final instruction = compass != null
+          ? 'Head $compass toward destination'
+          : 'Continue toward destination';
 
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: _cardDecoration(),
         child: Row(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.navigation_rounded,
-                  color: AppColors.accent, size: 30),
-            ),
+            _directionIconBox(Icons.navigation_rounded, AppColors.accent),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -249,11 +218,8 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    compass != null
-                        ? 'Head $compass toward destination'
-                        : 'Continue toward destination',
-                    style: const TextStyle(
-                        fontSize: 13, color: Colors.black87),
+                    instruction,
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
                 ],
               ),
@@ -264,38 +230,19 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
     }
 
     final distanceToWaypoint = _calculateDistanceToWaypoint(nextWaypoint);
-    final icon = _getWaypointIcon(nextWaypoint.type);
     final color = _getSegmentColor(nextWaypoint.segmentType);
-    final directionText = _directionInstruction(nextWaypoint, session.currentLocation);
+    final directionText =
+        _directionInstruction(nextWaypoint, session.currentLocation);
+    final icon = _getDirectionIcon(nextWaypoint.type, directionText);
 
-    // Announce approach when within 200 m (fires once per waypoint).
-    _voice.announceApproach(
-        nextWaypoint.id, directionText, distanceToWaypoint);
+    _voice.announceApproach(nextWaypoint.id, directionText, distanceToWaypoint);
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: _cardDecoration(),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 30),
-          ),
+          _directionIconBox(icon, color),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -312,7 +259,8 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
                 const SizedBox(height: 2),
                 Text(
                   directionText,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style:
+                      const TextStyle(fontSize: 13, color: Colors.black87),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -324,147 +272,167 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
     );
   }
 
-  /// Arrival banner — shown at top only when reaching the final destination
-  Widget _buildArrivalCard(BuildContext context) {
+  Widget _directionIconBox(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
-        color: const Color(0xFF1B5E20),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.flag_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'You have arrived',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _arrivalSubtitle(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (widget.onEndNavigation != null)
-            TextButton(
-              onPressed: widget.onEndNavigation,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.white.withValues(alpha: 0.15),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              child: const Text('Done',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-        ],
-      ),
+      child: Icon(icon, color: color, size: 30),
     );
   }
 
-  /// Compact metrics strip that fits between SOS and zoom controls
-  Widget _buildProgressCard(BuildContext context) {
-    final distanceRemaining = session.distanceRemaining;
+  // ── Unified navigation bottom bar ──────────────────────────────────────────
+
+  Widget _buildNavBottomBar(BuildContext context) {
     final timeRemaining = session.timeRemaining;
-    final currentSpeed = session.currentSpeed ?? 0;
+    final distanceRemaining = session.distanceRemaining;
+    final eta = DateTime.now().add(Duration(seconds: timeRemaining));
+    final etaStr =
+        '${eta.hour.toString().padLeft(2, '0')}:${eta.minute.toString().padLeft(2, '0')}';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 8,
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildCompactMetric(
-              _formatDistance(distanceRemaining), AppColors.primary),
-          _buildDivider(),
-          _buildCompactMetric(_formatDuration(timeRemaining), Colors.orange),
-          _buildDivider(),
-          _buildCompactMetric(
-              NavigationConstants.formatSpeed(currentSpeed), AppColors.accent),
+          // SOS button
+          const SosButton(),
+
+          // Metrics
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _navMetric(
+                  _formatDuration(timeRemaining),
+                  'Time',
+                  Colors.orange,
+                ),
+                _vertDivider(),
+                _navMetric(
+                  _formatDistance(distanceRemaining),
+                  'Dist',
+                  AppColors.primary,
+                ),
+                _vertDivider(),
+                _navMetric(etaStr, 'ETA', AppColors.accent),
+              ],
+            ),
+          ),
+
+          // End trip button
+          GestureDetector(
+            onTap: widget.onEndNavigation,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade600,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.close_rounded,
+                  color: Colors.white, size: 22),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCompactMetric(String value, Color color) {
-    return Text(
-      value,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
-        color: color,
-      ),
+  Widget _navMetric(String value, String label, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+        ),
+      ],
     );
   }
 
-  Widget _buildDivider() {
-    return Container(
-      width: 1,
-      height: 16,
-      color: Colors.grey.shade300,
+  Widget _vertDivider() {
+    return Container(width: 1, height: 28, color: Colors.grey.shade200);
+  }
+
+  // ── Helper decorations ─────────────────────────────────────────────────────
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.2),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
     );
   }
 
-  /// Returns context-sensitive arrival subtitle based on the destination type.
-  String _arrivalSubtitle() {
-    final waypoints = session.route.waypoints;
-    if (waypoints.isNotEmpty) {
-      final lastType = waypoints.last.type;
-      if (lastType == WaypointType.marinaExit) {
-        return 'You have arrived at the port';
-      }
+  // ── Direction helpers ──────────────────────────────────────────────────────
+
+  /// Returns the correct directional icon by parsing the instruction text.
+  /// This avoids always showing turn_right regardless of actual direction.
+  IconData _getDirectionIcon(WaypointType type, String instruction) {
+    switch (type) {
+      case WaypointType.start:
+        return Icons.play_arrow_rounded;
+      case WaypointType.end:
+        return Icons.flag_rounded;
+      case WaypointType.marinaEntry:
+        return Icons.directions_boat_rounded;
+      case WaypointType.marinaExit:
+        return Icons.directions_car_rounded;
+      default:
+        final lower = instruction.toLowerCase();
+        if (lower.contains('slight left')) return Icons.turn_slight_left;
+        if (lower.contains('slight right')) return Icons.turn_slight_right;
+        if (lower.contains('sharp left')) return Icons.turn_sharp_left;
+        if (lower.contains('sharp right')) return Icons.turn_sharp_right;
+        if (lower.contains('turn left') ||
+            lower.contains('keep left') ||
+            lower.contains('bear left')) {
+          return Icons.turn_left;
+        }
+        if (lower.contains('turn right') ||
+            lower.contains('keep right') ||
+            lower.contains('bear right')) {
+          return Icons.turn_right;
+        }
+        if (lower.contains('u-turn') || lower.contains('uturn')) {
+          return Icons.u_turn_left;
+        }
+        if (lower.contains('straight') || lower.contains('continue')) {
+          return Icons.straight;
+        }
+        return Icons.navigation_rounded;
     }
-    final lastSegments = session.route.segments;
-    if (lastSegments.isNotEmpty &&
-        lastSegments.last.type == SegmentType.marine) {
-      return 'You have arrived at your sea destination';
-    }
-    return 'You have reached your destination';
   }
 
-  /// Returns a human-readable direction instruction for the next waypoint.
-  /// Uses the bearing from the current location to give a compass direction
-  /// when no explicit instruction is set on the waypoint.
   String _directionInstruction(Waypoint waypoint, LatLng? fromLocation) {
     switch (waypoint.type) {
       case WaypointType.marinaEntry:
@@ -472,7 +440,6 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
       case WaypointType.marinaExit:
         return waypoint.instruction ?? 'Dock at the marina';
       case WaypointType.end:
-        // Never show the raw "Arrived at destination" text while en-route
         if (fromLocation != null) {
           final compass = _bearingToCompass(
               _computeBearing(fromLocation, waypoint.location));
@@ -480,7 +447,6 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
         }
         return 'Head toward destination';
       default:
-        // Use explicit instruction if it exists and is meaningful
         final raw = waypoint.instruction;
         if (raw != null &&
             raw != 'Start navigation' &&
@@ -496,6 +462,9 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
         return 'Continue straight';
     }
   }
+
+
+  // ── Geometry helpers ───────────────────────────────────────────────────────
 
   double _computeBearing(LatLng from, LatLng to) {
     final lat1 = from.latitude * math.pi / 180;
@@ -515,10 +484,6 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
     return dirs[((bearing + 22.5) / 45).floor() % 8];
   }
 
-  // ============================================================
-  // Helper Methods
-  // ============================================================
-
   double _calculateDistanceToPoint(LatLng from, LatLng to) {
     const r = 6371000.0;
     final lat1 = from.latitude * math.pi / 180;
@@ -526,8 +491,10 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
     final dLat = (to.latitude - from.latitude) * math.pi / 180;
     final dLon = (to.longitude - from.longitude) * math.pi / 180;
     final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) *
-            math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
@@ -537,33 +504,19 @@ class _ActiveNavigationOverlayState extends State<ActiveNavigationOverlay> {
       return (waypoint.distanceFromStart - session.metrics.distanceTraveled)
           .clamp(0, double.infinity);
     }
-    // Haversine distance from current GPS position to next waypoint
-    const r = 6371000.0; // Earth radius in metres
+    const r = 6371000.0;
     final lat1 = loc.latitude * math.pi / 180;
     final lat2 = waypoint.location.latitude * math.pi / 180;
-    final dLat = (waypoint.location.latitude - loc.latitude) * math.pi / 180;
-    final dLon = (waypoint.location.longitude - loc.longitude) * math.pi / 180;
+    final dLat =
+        (waypoint.location.latitude - loc.latitude) * math.pi / 180;
+    final dLon =
+        (waypoint.location.longitude - loc.longitude) * math.pi / 180;
     final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) *
-            math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-  }
-
-  IconData _getWaypointIcon(WaypointType type) {
-    switch (type) {
-      case WaypointType.start:
-        return Icons.play_arrow;
-      case WaypointType.end:
-        return Icons.flag;
-      case WaypointType.turn:
-        return Icons.turn_right;
-      case WaypointType.marinaEntry:
-        return Icons.directions_boat;
-      case WaypointType.marinaExit:
-        return Icons.directions_car;
-      case WaypointType.intermediate:
-        return Icons.navigation;
-    }
   }
 
   Color _getSegmentColor(RouteSegmentType type) {

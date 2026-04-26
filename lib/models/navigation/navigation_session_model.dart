@@ -37,21 +37,21 @@ class NavigationSession {
     required this.metrics,
   });
 
-  // Get distance remaining to destination (meters)
+  // Get distance remaining to destination (meters) — never negative.
   double get distanceRemaining {
     if (currentLocation == null) return route.totalDistance;
-    return route.totalDistance - metrics.distanceTraveled;
+    return (route.totalDistance - metrics.distanceTraveled)
+        .clamp(0.0, double.infinity);
   }
 
-  // Get estimated time remaining (seconds)
+  // Get estimated time remaining (seconds) — never negative.
   int get timeRemaining {
     final remaining = distanceRemaining;
+    if (remaining == 0) return 0;
     final speed = currentSpeed;
     if (speed != null && speed > 0.5) {
-      return (remaining / speed).round();
+      return (remaining / speed).round().clamp(0, 99999);
     }
-    // Scale the route's pre-computed ETA by the remaining distance fraction
-    // so the progress card matches the RouteStatsCard at navigation start.
     if (route.totalDistance > 0 && route.estimatedDuration > 0) {
       final fraction = (remaining / route.totalDistance).clamp(0.0, 1.0);
       return (route.estimatedDuration * fraction).round();

@@ -229,8 +229,13 @@ class _PredictionScreenState extends State<PredictionScreen> {
   // ── Location card ────────────────────────────────────────────────────────────
 
   Widget _buildLocationCard() {
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
