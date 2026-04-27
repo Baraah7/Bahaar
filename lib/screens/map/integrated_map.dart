@@ -164,6 +164,8 @@ class _IntegratedMapState extends State<IntegratedMap>
   LatLng? _originPoint;
   LatLng? _destinationPoint;
   bool _isCalculatingRoute = false;
+  bool _isFollowingNavigation = false;
+  NavigationState? _lastNavState;
 
   // Ports loaded from seaports.json
   List<PortPoint> _availablePorts = [];
@@ -269,6 +271,17 @@ class _IntegratedMapState extends State<IntegratedMap>
     if (!mounted) return;
     final session = _navigationManager?.session;
     final navLocation = session?.currentLocation;
+    final newState = session?.state;
+
+    // Detect arrival: transition into completed fires the dialog exactly once.
+    if (newState == NavigationState.completed &&
+        _lastNavState != NavigationState.completed) {
+      _lastNavState = newState;
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _showArrivalDialog());
+      return;
+    }
+    _lastNavState = newState;
 
     setState(() {
       if (navLocation != null) {
@@ -300,6 +313,78 @@ class _IntegratedMapState extends State<IntegratedMap>
         _currentRoute = session.route;
       }
     });
+
+    // Auto-follow: keep the map centered on the user while follow mode is on.
+    if (_isFollowingNavigation && navLocation != null && _mapReady) {
+      _mapController.move(navLocation, _mapController.camera.zoom);
+    }
+  }
+
+  void _showArrivalDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.flag_rounded,
+                    size: 44, color: Colors.green.shade700),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'You have reached\nyour destination!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You have successfully arrived.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _endNavigation();
+                  },
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  label: const Text('End Trip',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _onAisUpdate() {
@@ -1829,7 +1914,11 @@ class _IntegratedMapState extends State<IntegratedMap>
       await _navigationManager!.startNavigation(_currentRoute!);
       _showMessage('Navigation started', Colors.green);
 
-      // Center on current location
+      // Enable follow mode and reset arrival tracker for this new trip.
+      setState(() {
+        _isFollowingNavigation = true;
+        _lastNavState = null;
+      });
       if (_locationData != null) {
         _mapController.move(
           LatLng(
@@ -1850,6 +1939,7 @@ class _IntegratedMapState extends State<IntegratedMap>
 
     log('Ending navigation session');
     _navigationManager!.cancelNavigation();
+    setState(() => _isFollowingNavigation = false);
     _clearRoute();
   }
 
@@ -1995,6 +2085,10 @@ class _IntegratedMapState extends State<IntegratedMap>
         onPositionChanged: (position, hasGesture) {
           if (position.zoom != _currentZoom) {
             setState(() => _currentZoom = position.zoom);
+          }
+          // User panned manually — disengage follow mode
+          if (hasGesture && _isFollowingNavigation) {
+            setState(() => _isFollowingNavigation = false);
           }
         },
         // Disable map gestures in admin/outline edit mode to allow painting
@@ -2971,6 +3065,11 @@ class _IntegratedMapState extends State<IntegratedMap>
                     onEndNavigation: _endNavigation,
                     onRecenter: _recenterOnLocation,
                     isRecalculating: _navigationManager!.isRecalculating,
+                    isFollowing: _isFollowingNavigation,
+                    onToggleFollow: () => setState(() {
+                      _isFollowingNavigation = !_isFollowingNavigation;
+                      if (_isFollowingNavigation) _recenterOnLocation();
+                    }),
                   );
                 },
               ),
@@ -3065,18 +3164,20 @@ class _IntegratedMapState extends State<IntegratedMap>
               ),
             ),
 
-          // SOS button (bottom left)
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: const SosButton(),
-          ),
+          // SOS button (bottom left) — hidden during active navigation (lives in the nav bar instead)
+          if (!(_navigationManager?.isNavigating ?? false))
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: const SosButton(),
+            ),
 
-          // Zoom controls (bottom right)
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: MapZoomControls(
+          // Zoom controls (bottom right) — hidden during active navigation
+          if (!(_navigationManager?.isNavigating ?? false))
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: MapZoomControls(
               onZoomIn: _mapReady
                   ? () => _mapController.move(
                         _mapController.camera.center,

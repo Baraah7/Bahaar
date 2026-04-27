@@ -29,9 +29,11 @@ class NavigationSessionManager extends ChangeNotifier {
   NavigationSession? _session;
   StreamSubscription<LocationData>? _locationSubscription;
   Timer? _weatherRefreshTimer;
+  Timer? _recalculationCooldownTimer;
   DateTime? _sessionStartTime;
   int _recalculationCount = 0;
   bool _isRecalculating = false;
+  bool _inRecalculationCooldown = false;
 
   NavigationSessionManager({
     required Location location,
@@ -171,6 +173,9 @@ class NavigationSessionManager extends ChangeNotifier {
     _locationSubscription = null;
     _weatherRefreshTimer?.cancel();
     _weatherRefreshTimer = null;
+    _recalculationCooldownTimer?.cancel();
+    _recalculationCooldownTimer = null;
+    _inRecalculationCooldown = false;
     _sessionStartTime = null;
   }
 
@@ -327,12 +332,14 @@ class NavigationSessionManager extends ChangeNotifier {
 
   void _checkOffRoute(LatLng currentLocation) {
     if (_session == null) return;
+    if (_inRecalculationCooldown) return;
 
     if (_session!.currentSegmentIndex >= _session!.route.segments.length) {
       return;
     }
 
-    final currentSegment = _session!.route.segments[_session!.currentSegmentIndex];
+    final currentSegment =
+        _session!.route.segments[_session!.currentSegmentIndex];
     final geometry = currentSegment.geometry;
 
     if (geometry.isEmpty) return;
@@ -355,7 +362,6 @@ class NavigationSessionManager extends ChangeNotifier {
       }
     }
 
-    // Check if off route
     if (minDistance > NavigationConstants.offRouteThreshold) {
       log('Off route detected: ${minDistance.toStringAsFixed(1)}m from route');
       _handleOffRoute();
@@ -363,10 +369,13 @@ class NavigationSessionManager extends ChangeNotifier {
   }
 
   void _handleOffRoute() async {
-    if (_isRecalculating) return;
+    if (_isRecalculating || _inRecalculationCooldown) return;
+
+    // After too many consecutive recalculations just log — don't kill the
+    // session. The user stays on the last known route.
     if (_recalculationCount >= NavigationConstants.maxRecalculations) {
-      log('Max recalculations reached, stopping auto-recalculation');
-      _handleNavigationError('Unable to recalculate route');
+      log('Max recalculations reached; continuing on current route');
+      _startRecalculationCooldown();
       return;
     }
 
@@ -385,18 +394,16 @@ class NavigationSessionManager extends ChangeNotifier {
       if (newRoute != null) {
         log('Route recalculated successfully');
 
-        // Find the waypoint closest to the user's current position so the
-        // overlay shows the correct next turn instead of resetting to "Start".
         final nearestWpIdx = _session!.currentLocation != null
             ? _findNearestWaypointIndex(
                 newRoute.waypoints, _session!.currentLocation!)
             : 0;
 
-        // Derive segment index from the nearest waypoint's segment type.
         final nearestSegIdx =
             _findSegmentIndexForWaypoint(newRoute, nearestWpIdx);
 
-        // Update session with new route
+        // Reset distance/breadcrumbs so remaining metrics match the new route
+        // and never go negative.
         _session = NavigationSession(
           id: _session!.id,
           route: newRoute,
@@ -407,20 +414,41 @@ class NavigationSessionManager extends ChangeNotifier {
           currentSegmentIndex: nearestSegIdx,
           currentWaypointIndex: nearestWpIdx,
           startTime: _session!.startTime,
-          breadcrumbs: _session!.breadcrumbs,
-          metrics: _session!.metrics,
+          breadcrumbs: _session!.currentLocation != null
+              ? [_session!.currentLocation!]
+              : _session!.breadcrumbs,
+          metrics: NavigationMetrics(
+            distanceTraveled: 0,
+            elapsedTime: _session!.metrics.elapsedTime,
+            numRecalculations: _recalculationCount,
+            hadOffRouteEvents: true,
+            maxSpeed: _session!.metrics.maxSpeed,
+          ),
         );
+
+        // Short cooldown to prevent immediate re-trigger after rerouting.
+        _startRecalculationCooldown();
       } else {
-        log('Failed to recalculate route');
-        _handleNavigationError('Could not find alternative route');
+        log('Failed to recalculate route — staying on current route');
+        _startRecalculationCooldown();
       }
     } catch (e) {
-      log('Error recalculating route: $e');
-      _handleNavigationError('Route recalculation failed');
+      log('Error recalculating route: $e — staying on current route');
+      _startRecalculationCooldown();
     } finally {
       _isRecalculating = false;
       notifyListeners();
     }
+  }
+
+  void _startRecalculationCooldown() {
+    _inRecalculationCooldown = true;
+    _recalculationCooldownTimer?.cancel();
+    _recalculationCooldownTimer = Timer(const Duration(seconds: 10), () {
+      _inRecalculationCooldown = false;
+      // Allow the counter to decrease so repeated reroutes remain possible.
+      if (_recalculationCount > 0) _recalculationCount--;
+    });
   }
 
   void _handleNavigationError(String message) {
