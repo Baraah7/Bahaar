@@ -174,7 +174,7 @@ class TripService {
   Future<CatchEntry> logCatch({
     required String tripId,
     required String species,
-    required LatLng location,
+    LatLng? location,
     double? weightKg,
     String? notes,
     String? imagePath,
@@ -186,8 +186,8 @@ class TripService {
       timestamp: timestamp ?? DateTime.now(),
       species: species,
       weightKg: weightKg,
-      latitude: location.latitude,
-      longitude: location.longitude,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
       notes: notes,
       imagePath: imagePath,
     );

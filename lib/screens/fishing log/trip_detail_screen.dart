@@ -3,12 +3,14 @@ import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
+import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -54,12 +56,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
     if (result == null || !mounted) return;
 
-    final loc = result.location ??
-        LatLng(trip.startLat ?? 26.2154, trip.startLon ?? 50.5832);
     final entry = await _service.logCatch(
       tripId: trip.id,
       species: result.species,
-      location: loc,
+      location: result.location,
       weightKg: result.weightKg,
       notes: result.notes,
       timestamp: catchTime,
@@ -115,6 +115,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       weightKg: result.weightKg,
       latitude: result.location?.latitude ?? entry.latitude,
       longitude: result.location?.longitude ?? entry.longitude,
+
       notes: result.notes,
       imagePath: entry.imagePath,
     );
@@ -577,19 +578,21 @@ class _CatchCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined,
-                          color: Colors.grey.shade400, size: 12),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${entry.latitude.toStringAsFixed(3)}, ${entry.longitude.toStringAsFixed(3)}',
-                        style: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 10),
-                      ),
-                    ],
-                  ),
+                  if (entry.location != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined,
+                            color: Colors.grey.shade400, size: 12),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${entry.latitude!.toStringAsFixed(3)}, ${entry.longitude!.toStringAsFixed(3)}',
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -671,14 +674,17 @@ class _CatchesMapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final located = catches.where((c) => c.location != null).toList();
+    if (located.isEmpty) return const SizedBox.shrink();
+
     // Compute center as average of all catch locations
-    final lats = catches.map((c) => c.latitude);
-    final lons = catches.map((c) => c.longitude);
+    final lats = located.map((c) => c.latitude!);
+    final lons = located.map((c) => c.longitude!);
     final centerLat = lats.reduce((a, b) => a + b) / lats.length;
     final centerLon = lons.reduce((a, b) => a + b) / lons.length;
 
-    final markers = catches.map((c) => Marker(
-      point: LatLng(c.latitude, c.longitude),
+    final markers = located.map((c) => Marker(
+      point: c.location!,
       width: 32,
       height: 32,
       child: GestureDetector(
@@ -708,7 +714,7 @@ class _CatchesMapView extends StatelessWidget {
         child: FlutterMap(
           options: MapOptions(
             initialCenter: LatLng(centerLat, centerLon),
-            initialZoom: catches.length == 1 ? 13.0 : 11.0,
+            initialZoom: located.length == 1 ? 13.0 : 11.0,
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
             ),
@@ -773,10 +779,11 @@ class _CatchesMapView extends StatelessWidget {
               Icons.access_time_rounded,
               '${c.timestamp.toLocal().hour.toString().padLeft(2, '0')}:${c.timestamp.toLocal().minute.toString().padLeft(2, '0')}',
             ),
-            _MapInfoRow(
-              Icons.location_on_rounded,
-              '${c.latitude.toStringAsFixed(4)}, ${c.longitude.toStringAsFixed(4)}',
-            ),
+            if (c.location != null)
+              _MapInfoRow(
+                Icons.location_on_rounded,
+                '${c.latitude!.toStringAsFixed(4)}, ${c.longitude!.toStringAsFixed(4)}',
+              ),
             if (c.notes != null && c.notes!.isNotEmpty)
               _MapInfoRow(Icons.notes_rounded, c.notes!),
           ],
@@ -835,6 +842,10 @@ class CatchEditSheetState extends State<CatchEditSheet> {
   late final TextEditingController _notesCtrl;
   LatLng? _pickedLocation;
   bool _mapPinned = false;
+  bool _gpsLoading = false;
+
+  final NavigationMask _mask = NavigationMask();
+  bool _maskReady = false;
 
   static const _quickSpeciesKeys = [
     'quickSpeciesHamour',
@@ -857,7 +868,55 @@ class CatchEditSheetState extends State<CatchEditSheet> {
     _speciesCtrl = TextEditingController(text: e?.species ?? '');
     _weightCtrl = TextEditingController(text: e?.weightKg?.toString() ?? '');
     _notesCtrl = TextEditingController(text: e?.notes ?? '');
-    if (e != null) _pickedLocation = LatLng(e.latitude, e.longitude);
+    if (e?.location != null) _pickedLocation = e!.location;
+    _mask.initialize().then((_) {
+      if (mounted) setState(() => _maskReady = true);
+    }).catchError((_) {
+      if (mounted) setState(() => _maskReady = true);
+    });
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _gpsLoading = true);
+    try {
+      // Run GPS fetch and mask init in parallel
+      final results = await Future.wait([
+        Location().getLocation(),
+        _maskReady ? Future.value(null) : _mask.initialize(),
+      ]);
+      if (!mounted) return;
+      if (!_maskReady) setState(() => _maskReady = true);
+
+      final data = results[0] as LocationData;
+      if (data.latitude == null || data.longitude == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذّر تحديد الموقع — يرجى تفعيل GPS'),
+          backgroundColor: Colors.red,
+        ));
+        return;
+      }
+      final point = LatLng(data.latitude!, data.longitude!);
+      if (_mask.isInitialized && !_mask.isPointNavigable(point)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('موقعك الحالي على اليابسة — استخدم تحديد الموقع على الخريطة'),
+          backgroundColor: Colors.red,
+        ));
+        return;
+      }
+      setState(() {
+        _pickedLocation = point;
+        _mapPinned = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذّر تحديد الموقع — يرجى تفعيل GPS'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _gpsLoading = false);
+    }
   }
 
   @override
@@ -1041,38 +1100,80 @@ class CatchEditSheetState extends State<CatchEditSheet> {
               ),
               const SizedBox(height: 18),
 
-              // Pin on map button
-              GestureDetector(
-                onTap: _pickOnMap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.map_outlined, color: AppColors.accent, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        _mapPinned
-                            ? l10n.locationPinned
-                            : l10n.pinOnMap,
-                        style: TextStyle(
-                            color: AppColors.accent,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600),
+              // Location buttons row
+              Row(
+                children: [
+                  // Use current GPS location
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _gpsLoading ? null : _useCurrentLocation,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_gpsLoading)
+                              const SizedBox(
+                                width: 14, height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            else
+                              Icon(Icons.my_location_rounded, color: AppColors.primary, size: 15),
+                            const SizedBox(width: 5),
+                            Text(
+                              'موقعي الحالي',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      if (_mapPinned) ...[
-                        const SizedBox(width: 6),
-                        Icon(Icons.check_circle_rounded,
-                            size: 14, color: Colors.green.shade600),
-                      ],
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  // Pin on map
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _pickOnMap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.map_outlined, color: AppColors.accent, size: 15),
+                            const SizedBox(width: 5),
+                            Text(
+                              _mapPinned ? l10n.locationPinned : l10n.pinOnMap,
+                              style: TextStyle(
+                                color: AppColors.accent,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (_mapPinned) ...[
+                              const SizedBox(width: 4),
+                              Icon(Icons.check_circle_rounded,
+                                  size: 13, color: Colors.green.shade600),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 22),
 

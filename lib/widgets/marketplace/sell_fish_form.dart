@@ -145,9 +145,11 @@ class _SellFishFormState extends State<SellFishForm> {
         _descriptionController.text = catch_.notes!;
       }
       // Pre-fill catch location from the logged GPS position
-      _catchLocationController.text =
-          '${catch_.latitude.toStringAsFixed(5)}, '
-          '${catch_.longitude.toStringAsFixed(5)}';
+      if (catch_.location != null) {
+        _catchLocationController.text =
+            '${catch_.latitude!.toStringAsFixed(5)}, '
+            '${catch_.longitude!.toStringAsFixed(5)}';
+      }
     });
   }
 
