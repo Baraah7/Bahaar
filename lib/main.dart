@@ -3,6 +3,7 @@ import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:bahaar/screens/weather/weather.dart';
 import 'package:bahaar/screens/map/integrated_map.dart';
 import 'package:bahaar/screens/marketplace/marketplace.dart';
@@ -27,6 +28,10 @@ import 'app_start.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.debug,
+  );
   await dotenv.load(fileName: "secrets.env");
 
   // Offline services
@@ -76,8 +81,8 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
-  // Page order: Marketplace(0), Map(1), Weather(2), Log(3), FishRecognition(4)
-  int _index = 1;
+  // Page order:  FishRecognition(0), Marketplace(1), Weather(2), Map(3), Log(4),
+  int _index = 2;
   late final PageController _controller = PageController(initialPage: _index);
 
   @override
@@ -92,11 +97,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalization.of(context);
     final pageTitles = [
-      l10n.marketplace,
-      l10n.fishingMap,
-      l10n.weather,
-      l10n.fishingLog,
       l10n.fishRecognition,
+      l10n.marketplace,
+      l10n.weather,
+      l10n.fishingMap,
+      l10n.fishingLog,
     ];
 
     return Scaffold(
@@ -125,10 +130,10 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: AppColors.cream),
-            color: AppColors.cream.withValues(alpha: 0.95),
+            color: AppColors.cream,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: AppColors.accent.withValues(alpha: 0.4)),
+              side: BorderSide(color: AppColors.tan.withValues(alpha: 0.4)),
             ),
             elevation: 8,
             onSelected: (value) {
@@ -200,11 +205,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         controller: _controller,
         onPageChanged: (index) => setState(() => _index = index),
         children: const [
-          MarinerHarvestPage(),
-          IntegratedMap(),
-          Weather(),
-          FishingLogScreen(),
           FishRecognitionScreen(),
+          MarinerHarvestPage(),
+          Weather(),
+          IntegratedMap(),
+          FishingLogScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -222,14 +227,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         },
         items: [
           BottomNavigationBarItem(
+            icon: const Icon(Icons.camera_alt_outlined),
+            activeIcon: const Icon(Icons.camera_alt),
+            label: l10n.fishRecognition,
+          ),
+          BottomNavigationBarItem(
             icon: const Icon(Icons.storefront_outlined),
             activeIcon: const Icon(Icons.storefront),
             label: l10n.marketplace,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.map_outlined),
-            activeIcon: const Icon(Icons.map),
-            label: l10n.fishingMap,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.cloud_outlined),
@@ -237,14 +242,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             label: l10n.weather,
           ),
           BottomNavigationBarItem(
+            icon: const Icon(Icons.map_outlined),
+            activeIcon: const Icon(Icons.map),
+            label: l10n.fishingMap,
+          ),
+          BottomNavigationBarItem(
             icon: const Icon(Icons.anchor_outlined),
             activeIcon: const Icon(Icons.anchor),
             label: l10n.fishingLog,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.camera_alt_outlined),
-            activeIcon: const Icon(Icons.camera_alt),
-            label: l10n.fishRecognition,
           ),
         ],
       ),

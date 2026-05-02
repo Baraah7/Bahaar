@@ -119,6 +119,7 @@ class WeatherLocalizations {
     'mahooz': 'المحوز',
     'segaya': 'سيجيئة',
     'al busaiteen': 'البسيتين',
+    'ad dayr': 'الدير',
     // ── Additional WeatherAPI variants ──────────────────────────────────────
     'manama city': 'المنامة',
     'kingdom of bahrain': 'البحرين',

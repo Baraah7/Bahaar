@@ -4,6 +4,42 @@ import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:latlong2/latlong.dart';
 
+// A single step from an OSRM route response, used to build turn-by-turn waypoints.
+class OsrmStep {
+  final double distance;
+  final int duration;
+  final String? maneuverType;
+  final String? maneuverModifier;
+  final String? streetName;
+  final LatLng location;
+
+  const OsrmStep({
+    required this.distance,
+    required this.duration,
+    this.maneuverType,
+    this.maneuverModifier,
+    this.streetName,
+    required this.location,
+  });
+
+  factory OsrmStep.fromJson(Map<String, dynamic> json) {
+    final maneuver = json['maneuver'] as Map<String, dynamic>?;
+    final loc = maneuver?['location'] as List?;
+    final lat = loc != null ? (loc[1] as num).toDouble() : 0.0;
+    final lon = loc != null ? (loc[0] as num).toDouble() : 0.0;
+    return OsrmStep(
+      distance: (json['distance'] as num).toDouble(),
+      duration: (json['duration'] as num).toInt(),
+      maneuverType: maneuver?['type'] as String?,
+      maneuverModifier: maneuver?['modifier'] as String?,
+      streetName: (json['name'] as String?)?.isNotEmpty == true
+          ? json['name'] as String
+          : null,
+      location: LatLng(lat, lon),
+    );
+  }
+}
+
 // Complete navigation route with segments, waypoints, and validation
 class NavigationRoute {
   final String id;
@@ -105,6 +141,8 @@ class RouteSegment {
   final String? transportMode;
   final Marina? entryMarina;
   final Marina? exitMarina;
+  // Turn-by-turn steps from OSRM (land segments only)
+  final List<OsrmStep> steps;
 
   const RouteSegment({
     required this.type,
@@ -114,6 +152,7 @@ class RouteSegment {
     this.transportMode,
     this.entryMarina,
     this.exitMarina,
+    this.steps = const [],
   });
 
   // Create RouteSegment from JSON - API response

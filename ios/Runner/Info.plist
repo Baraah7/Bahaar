@@ -45,8 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<string>your usage description here</string>
-		<key>UIBackgroundModes</key>
+	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 	</array>	

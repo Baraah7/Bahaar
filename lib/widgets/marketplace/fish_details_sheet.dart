@@ -2,7 +2,6 @@
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
@@ -63,7 +62,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   final _imagePicker = ImagePicker();
   int _currentImageIndex = 0;
   String? _paymentProofImage;
-  bool _isUploadingProof = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -84,26 +83,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   Future<void> _pickPaymentProofImage() async {
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
-    setState(() => _isUploadingProof = true);
-    try {
-      final uid = widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
-      final ext = image.path.split('.').last;
-      final name = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-      final ref = FirebaseStorage.instance.ref('marketplace/payment_proofs/$uid/$name');
-      await ref.putFile(File(image.path));
-      final url = await ref.getDownloadURL();
-      setState(() => _paymentProofImage = url);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Failed to upload proof image. Please try again.'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
-    } finally {
-      setState(() => _isUploadingProof = false);
-    }
+    setState(() => _paymentProofImage = image.path);
   }
 
   @override
@@ -223,7 +203,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _selectedPayment != null ? _handleBuy : null,
+                            onPressed: (_selectedPayment != null && !_isSubmitting) ? _handleBuy : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0D4F54),
                               foregroundColor: Colors.white,
@@ -234,23 +214,32 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.shopping_cart_checkout_rounded, size: 20),
-                                const SizedBox(width: 10),
-                                Text(
-                                  _selectedPayment != null
-                                      ? '${_l10n.buyNow} - ${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}'
-                                      : _l10n.selectPaymentMethod,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -0.2,
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.shopping_cart_checkout_rounded, size: 20),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        _selectedPayment != null
+                                            ? '${_l10n.buyNow} - ${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}'
+                                            : _l10n.selectPaymentMethod,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: -0.2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -799,12 +788,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
           ),
           const SizedBox(height: 12),
-          if (_isUploadingProof)
-            const SizedBox(
-              height: 100,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_paymentProofImage != null) ...[
+          if (_paymentProofImage != null) ...[
             Stack(
               children: [
                 ClipRRect(
@@ -852,7 +836,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
             ),
           ] else
             GestureDetector(
-              onTap: _isUploadingProof ? null : _pickPaymentProofImage,
+              onTap: _pickPaymentProofImage,
               child: Container(
                 height: 100,
                 width: double.infinity,
@@ -913,12 +897,10 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context); // close bottom sheet
-              final nav = Navigator.of(context);
-              await FirebaseAuth.instance.signOut();
-              nav.pushAndRemoveUntil(
+              Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const AppStart()),
                 (_) => false,
               );
@@ -1021,22 +1003,36 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
-  void _handleBuy() {
+  Future<void> _handleBuy() async {
     if (widget.isGuest) {
       _showLoginRequired();
       return;
     }
-    if (_formKey.currentState!.validate() && _selectedPayment != null) {
-      if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_l10n.pleaseUploadPaymentProofScreenshot),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-        return;
+    if (!_formKey.currentState!.validate() || _selectedPayment == null) return;
+
+    if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_l10n.pleaseUploadPaymentProofScreenshot),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      String? proofUrl;
+      if (_paymentProofImage != null) {
+        final uid = widget.currentUserId ?? 'unknown';
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final ext = _paymentProofImage!.split('.').last;
+        final ref = FirebaseStorage.instance
+            .ref('marketplace/payment_proofs/$uid/$ts.$ext');
+        await ref.putFile(File(_paymentProofImage!));
+        proofUrl = await ref.getDownloadURL();
       }
 
       widget.onBuy(
@@ -1044,8 +1040,21 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         _buyerNameController.text,
         _buyerPhoneController.text,
         _buyerLocationController.text.isEmpty ? null : _buyerLocationController.text,
-        _paymentProofImage,
+        proofUrl,
       );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_l10n.failedToUploadImage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

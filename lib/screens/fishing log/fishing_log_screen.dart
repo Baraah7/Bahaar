@@ -10,7 +10,6 @@ import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/utilities/cn/localization_helper.dart';
 import 'package:bahaar/widgets/common/app_empty_state.dart';
 import 'package:bahaar/widgets/common/app_snackbar.dart';
-import 'package:bahaar/widgets/fishing_log/catch_form.dart';
 import 'package:bahaar/widgets/fishing_log/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -104,16 +103,24 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Future<void> _startTrip() async {
-    if (_service.hasActiveTrip) {
+    try {
+      final trip = await _service.startTrip();
+      // Immediately reflect the new active trip in the UI before the DB reload.
+      if (mounted) setState(() {});
+      await _loadTrips();
+      _startTicker();
+      // Update start location in background once GPS resolves.
+      _currentLocation().then((loc) async {
+        if (loc == null) return;
+        await _service.updateTripStartLocation(trip.id, loc);
+        if (mounted) await _loadTrips();
+      });
+    } catch (e) {
+      log('FishingLogScreen: startTrip error — $e');
       if (mounted) {
-        showAppSnackBar(context, FishingLogLocalizations.of(context).tripAlreadyActive);
+        showAppSnackBar(context, 'Error starting trip: $e');
       }
-      return;
     }
-    final loc = await _currentLocation();
-    await _service.startTrip(location: loc);
-    await _loadTrips();
-    _startTicker();
   }
 
   Trip? get _todayEndedTrip {
@@ -164,19 +171,31 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   Future<void> _logCatch() async {
     final activeTrip = _service.activeTrip;
     if (activeTrip == null) return;
-    final result = await CatchForm.show(context);
-    if (result == null) return;
-    final loc = result.location ?? await _currentLocation();
-    await _service.logCatch(
-      tripId: activeTrip.id,
-      species: result.species,
-      location: loc ?? const LatLng(26.2154, 50.5832),
-      weightKg: result.weightKg,
-      notes: result.notes,
-    );
-    await _loadTrips();
-    if (mounted) {
-      showAppSnackBar(context, '${result.species} ${FishingLogLocalizations.of(context).logCatch.toLowerCase()}!');
+    try {
+      final result = await showModalBottomSheet<CatchEditResult>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const CatchEditSheet(entry: null),
+      );
+      if (result == null || !mounted) return;
+      final loc = result.location
+          ?? activeTrip.startLocation
+          ?? const LatLng(26.2154, 50.5832);
+      await _service.logCatch(
+        tripId: activeTrip.id,
+        species: result.species,
+        location: loc,
+        weightKg: result.weightKg,
+        notes: result.notes,
+      );
+      await _loadTrips();
+      if (mounted) {
+        showAppSnackBar(context, '${result.species} ${FishingLogLocalizations.of(context).logCatch.toLowerCase()}!');
+      }
+    } catch (e) {
+      log('FishingLogScreen: logCatch error — $e');
+      if (mounted) showAppSnackBar(context, 'Error: $e');
     }
   }
 
@@ -447,14 +466,14 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
                       Expanded(
                         child: _filteredTrips.isEmpty
                             ? AppEmptyState(
-                                icon: Icons.anchor,
-                                title: _searchQuery.isNotEmpty
-                                    ? l10n.noTripsYet
-                                    : FishingLogLocalizations.of(context).noTripsYet,
-                                message: _searchQuery.isNotEmpty
-                                    ? l10n.tapStartTrip
-                                    : FishingLogLocalizations.of(context).tapStartTrip,
-                                iconColor: Colors.white.withValues(alpha: 0.5),
+                              icon: Icons.anchor,
+                              title: _searchQuery.isNotEmpty
+                                ? l10n.noTripsYet
+                                : FishingLogLocalizations.of(context).noTripsYet,
+                              message: _searchQuery.isNotEmpty
+                                ? l10n.tapStartTrip
+                                : FishingLogLocalizations.of(context).tapStartTrip,
+                              iconColor: AppColors.white.withValues(alpha: 0.5),
                               )
                             : RefreshIndicator(
                                 onRefresh: _loadTrips,
@@ -582,8 +601,8 @@ class _FishingLogScreenState extends ConsumerState<FishingLogScreen> {
   }
 
   Future<void> _showTripDetail(Trip trip) async {
-    final changed = await TripDetailScreen.open(context, trip);
-    if (changed) await _loadTrips();
+    await TripDetailScreen.open(context, trip);
+    await _loadTrips();
   }
 }
 

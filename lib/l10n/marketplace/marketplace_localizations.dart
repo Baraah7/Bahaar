@@ -12,7 +12,10 @@ class MarketplaceLocalizations {
 
   String get marketplace => _isAr ? 'السوق' : 'Marketplace';
   String get sellFish => _isAr ? 'بيع سمك' : 'Sell Fish';
-  String get myOrders => _isAr ? 'طلباتي' : 'My Orders';
+  String get myOrders => _isAr ? 'الطلبات' : 'Orders';
+  String get searchOrders => _isAr ? 'ابحث في الطلبات...' : 'Search orders...';
+  String get filterByStatus => _isAr ? 'تصفية حسب الحالة' : 'Filter by Status';
+  String get allStatuses => _isAr ? 'جميع الحالات' : 'All Statuses';
   String get searchFishSellerLocation => _isAr ? 'ابحث عن سمك، بائع، موقع...' : 'Search fish, seller, location...';
   String get type => _isAr ? 'النوع' : 'Type';
   String get condition => _isAr ? 'الحالة' : 'Condition';
@@ -105,8 +108,8 @@ class MarketplaceLocalizations {
   String get total => _isAr ? 'الإجمالي' : 'Total';
   String get payment => _isAr ? 'الدفع' : 'Payment';
   String get kgUnit => _isAr ? 'كجم' : 'kg';
-  String get bdUnit => _isAr ? 'BD' : 'BD';
-  String get bdPerKg => _isAr ? 'BD/كجم' : 'BD/kg';
+  String get bdUnit => _isAr ? 'د.ب.' : 'BD';
+  String get bdPerKg => _isAr ? 'د.ب./كجم' : 'BD/kg';
   String get sellerLabel => _isAr ? 'البائع' : 'Seller';
   String get rejectionReason => _isAr ? 'السبب' : 'Reason';
   String get waitingForSellerToAccept => _isAr ? 'في انتظار قبول البائع لطلبك' : 'Waiting for seller to accept your order';
@@ -116,6 +119,9 @@ class MarketplaceLocalizations {
   String get cancelOrder => _isAr ? 'إلغاء الطلب' : 'Cancel Order';
   String get confirmCancelOrder => _isAr ? 'هل أنت متأكد أنك تريد إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?';
   String get orderCancelled => _isAr ? 'تم إلغاء الطلب' : 'Order cancelled';
+  String get resellListing => _isAr ? 'إعادة عرض للبيع' : 'Resell';
+  String get buyerCancelledOrder => _isAr ? 'قام المشتري بإلغاء هذا الطلب' : 'Buyer cancelled this order';
+  String get listingRelistedSuccess => _isAr ? 'تمت إعادة عرض السمك للبيع' : 'Listing is now available again';
   String get benefitPayIban => _isAr ? 'IBAN للـ Benefit Pay' : 'Benefit Pay IBAN';
   String get enterIban => _isAr ? 'أدخل رقم IBAN' : 'Enter IBAN number';
   String get ibanOrQrRequired => _isAr ? 'يرجى رفع رمز QR أو إدخال رقم IBAN' : 'Please upload QR code or enter IBAN number';
@@ -123,7 +129,7 @@ class MarketplaceLocalizations {
   String get confirmDeleteListing => _isAr ? 'إزالة هذه القائمة من السوق؟' : 'Remove this listing from the marketplace?';
   String get listingDeleted => _isAr ? 'تم حذف القائمة' : 'Listing deleted';
   String get or => _isAr ? 'أو' : 'OR';
-  String get priceRange => _isAr ? 'نطاق السعر' : 'Price Range';
+  String get priceRange => _isAr ? 'السعر' : 'Price';
   String priceRangeFilter(String min, String max) => _isAr
       ? 'السعر: $min–$max BD/كجم'
       : 'Price: $min–$max BD/kg';
@@ -138,6 +144,7 @@ class MarketplaceLocalizations {
   String get phoneEightDigits => _isAr ? 'يجب أن يتكون رقم الهاتف من 8 أرقام' : 'Phone number must be 8 digits';
   String get selectLocationFirst => _isAr ? 'يرجى تحديد موقع أولاً' : 'Please select a location first';
   String get unexpectedError => _isAr ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred';
+  String get failedToUploadImage => _isAr ? 'فشل رفع الصورة. يرجى المحاولة مرة أخرى' : 'Failed to upload image. Please try again';
   String get fresh => _isAr ? 'طازج' : 'Fresh';
   String get frozen => _isAr ? 'مجمد' : 'Frozen';
   String get live => _isAr ? 'حي' : 'Live';

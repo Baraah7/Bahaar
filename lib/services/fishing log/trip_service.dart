@@ -62,8 +62,16 @@ class TripService {
 
   Future<Trip> startTrip({LatLng? location, String? notes}) async {
     if (_activeTrip != null) {
-      log('TripService: startTrip blocked — trip ${_activeTrip!.id} already active');
-      return _activeTrip!;
+      // Verify the in-memory active trip still exists in the DB (guards against
+      // stale state after deletion without a matching deleteTrip call).
+      final existing = await _db.getTrip(_activeTrip!.id);
+      if (existing == null) {
+        log('TripService: clearing stale _activeTrip ${_activeTrip!.id} — not in DB');
+        _activeTrip = null;
+      } else {
+        log('TripService: startTrip blocked — trip ${_activeTrip!.id} already active');
+        return _activeTrip!;
+      }
     }
     final trip = Trip(
       id: const Uuid().v4(),
@@ -84,13 +92,19 @@ class TripService {
       log('TripService: resumeTrip blocked — trip ${_activeTrip!.id} already active');
       return _activeTrip!;
     }
-    final breakSeconds = trip.endTime != null
-        ? DateTime.now().difference(trip.endTime!).inSeconds
+    // Re-fetch from DB so we have the freshest pausedSeconds before computing.
+    final freshRow = await _db.getTrip(trip.id);
+    final fresh = freshRow != null
+        ? Trip.fromRow(freshRow, trip.catches)
+        : trip;
+
+    final breakSeconds = fresh.endTime != null
+        ? DateTime.now().difference(fresh.endTime!).inSeconds
         : 0;
-    final newPaused = trip.pausedSeconds + breakSeconds;
+    final newPaused = fresh.pausedSeconds + breakSeconds;
     await _db.clearTripEndTime(trip.id);
     await _db.updateTrip(trip.id, {'paused_seconds': newPaused});
-    final resumed = trip.copyWith(endTime: null, pausedSeconds: newPaused);
+    final resumed = fresh.copyWith(endTime: null, pausedSeconds: newPaused);
     _activeTrip = resumed;
     log('TripService: resumed trip ${trip.id}, paused so far: ${newPaused}s');
     return resumed;
@@ -129,6 +143,19 @@ class TripService {
     return Trip.fromRow(row, catches);
   }
 
+  Future<void> updateTripStartLocation(String id, LatLng location) async {
+    await _db.updateTrip(id, {
+      'start_lat': location.latitude,
+      'start_lon': location.longitude,
+    });
+    if (_activeTrip?.id == id) {
+      _activeTrip = _activeTrip!.copyWith(
+        startLat: location.latitude,
+        startLon: location.longitude,
+      );
+    }
+  }
+
   Future<void> updateTripTitle(String id, String title) async {
     final trimmed = title.trim().isEmpty ? null : title.trim();
     await _db.updateTrip(id, {'title': trimmed});
@@ -147,7 +174,7 @@ class TripService {
   Future<CatchEntry> logCatch({
     required String tripId,
     required String species,
-    required LatLng location,
+    LatLng? location,
     double? weightKg,
     String? notes,
     String? imagePath,
@@ -159,8 +186,8 @@ class TripService {
       timestamp: timestamp ?? DateTime.now(),
       species: species,
       weightKg: weightKg,
-      latitude: location.latitude,
-      longitude: location.longitude,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
       notes: notes,
       imagePath: imagePath,
     );

@@ -231,6 +231,7 @@ class _CatchFormState extends State<CatchForm> {
                               ),
                             );
                           }),
+                          const SizedBox(width: 8),
                           // Others chip
                           GestureDetector(
                             onTap: () {
@@ -244,7 +245,7 @@ class _CatchFormState extends State<CatchForm> {
                             child: _chip(
                               _isAr ? 'أخرى' : 'Others',
                               _isOtherSelected,
-                              AppColors.brown,
+                              AppColors.accent,
                             ),
                           ),
                         ],
@@ -262,7 +263,7 @@ class _CatchFormState extends State<CatchForm> {
                             controller: _speciesCtrl,
                             focusNode: _speciesFocus,
                             icon: Icons.set_meal_outlined,
-                            iconColor: _isOtherSelected ? AppColors.brown : _tealLight,
+                            iconColor: _isOtherSelected ? AppColors.accent : _tealLight,
                             label: _isOtherSelected
                                 ? (_isAr ? 'اسم السمكة' : 'Fish name')
                                 : _l10n.speciesNameLabel,
@@ -275,7 +276,7 @@ class _CatchFormState extends State<CatchForm> {
                           _CardField(
                             controller: _weightCtrl,
                             icon: Icons.scale_outlined,
-                            iconColor: AppColors.brown,
+                            iconColor: AppColors.accent,
                             label: _l10n.weightKg,
                             keyboardType:
                                 const TextInputType.numberWithOptions(
@@ -302,6 +303,7 @@ class _CatchFormState extends State<CatchForm> {
                     SectionLabel(_l10n.catchLocationLabel),
                     const SizedBox(height: 10),
                     AppCard(
+                      padding: const EdgeInsets.all(14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -311,13 +313,13 @@ class _CatchFormState extends State<CatchForm> {
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
+                                  color: AppColors.red.withValues(alpha: 0.10),
                                   borderRadius:
                                       BorderRadius.circular(10),
                                 ),
                                 child: Icon(
                                     Icons.location_on_outlined,
-                                    color: Colors.red.shade400,
+                                    color: AppColors.red,
                                     size: 20),
                               ),
                               const SizedBox(width: 12),
@@ -336,8 +338,7 @@ class _CatchFormState extends State<CatchForm> {
                                                     : Icons
                                                         .gps_fixed_rounded,
                                                 size: 13,
-                                                color: Colors
-                                                    .green.shade600,
+                                                color: AppColors.red,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
@@ -347,8 +348,7 @@ class _CatchFormState extends State<CatchForm> {
                                                         .gpsLocationLabel,
                                                 style: TextStyle(
                                                     fontSize: 11,
-                                                    color: Colors
-                                                        .green.shade600,
+                                                    color: AppColors.red,
                                                     fontWeight:
                                                         FontWeight
                                                             .w600),
@@ -380,7 +380,7 @@ class _CatchFormState extends State<CatchForm> {
                                   height: 18,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: _teal),
+                                      color: AppColors.red),
                                 ),
                             ],
                           ),
@@ -392,7 +392,7 @@ class _CatchFormState extends State<CatchForm> {
                                   icon: Icons.my_location_rounded,
                                   label: 'GPS',
                                   onTap: _fetchLocation,
-                                  color: _teal,
+                                  color: _tealLight,
                                 ),
                               ),
                               const SizedBox(width: 10),

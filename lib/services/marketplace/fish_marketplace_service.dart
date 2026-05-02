@@ -313,12 +313,11 @@ class FishMarketplaceService extends ChangeNotifier {
     try {
       final orderDoc = await _db.collection('orders').doc(orderId).get();
       if (orderDoc.exists) {
-        final listingId = orderDoc.data()!['listingId'] as String;
         await _db.collection('orders').doc(orderId).update({
           'status': OrderStatus.cancelled.name,
           'respondAt': Timestamp.now(),
         });
-        await updateListingStatus(listingId, ListingStatus.available);
+        // Seller manually chooses to relist via the Resell button — no auto-relist here.
         final idx = _orders.indexWhere((o) => o.id == orderId);
         if (idx != -1) {
           _orders[idx] = _orders[idx].copyWith(status: OrderStatus.cancelled);
@@ -327,6 +326,19 @@ class FishMarketplaceService extends ChangeNotifier {
       }
     } catch (e) {
       _error = 'Failed to cancel order: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> resellOrder(String orderId) async {
+    try {
+      final orderDoc = await _db.collection('orders').doc(orderId).get();
+      if (orderDoc.exists) {
+        final listingId = orderDoc.data()!['listingId'] as String;
+        await updateListingStatus(listingId, ListingStatus.available);
+      }
+    } catch (e) {
+      _error = 'Failed to relist: $e';
       notifyListeners();
     }
   }

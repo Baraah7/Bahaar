@@ -52,12 +52,14 @@ class _WeatherPageState extends State<Weather> {
         tidesService.getTides(),
       ]);
 
+      if (!mounted) return;
       setState(() {
         weatherData = results[0] as WeatherResponseModel;
         tides = results[1] as List<TideEntry>;
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         errorMessage = e.toString();
         isLoading = false;

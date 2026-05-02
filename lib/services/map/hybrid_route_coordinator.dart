@@ -329,7 +329,8 @@ class HybridRouteCoordinator {
     );
   }
 
-  /// Generate waypoints from route segments
+  /// Generate waypoints from route segments, including turn-by-turn steps for
+  /// land segments sourced from OSRM.
   List<Waypoint> _generateWaypoints(
     List<RouteSegment> segments,
     LatLng origin,
@@ -352,49 +353,81 @@ class HybridRouteCoordinator {
           : RouteSegmentType.marine,
     ));
 
-    // Segment transition waypoints
-    for (int i = 0; i < segments.length - 1; i++) {
-      final currentSegment = segments[i];
-      distanceAccumulator += currentSegment.distance;
-      timeAccumulator += currentSegment.duration;
+    for (int i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      final isLastSegment = i == segments.length - 1;
 
-      final transitionPoint = currentSegment.geometry.last;
-      final nextSegment = segments[i + 1];
-
-      // Determine transition type
-      final isLandToMarine = currentSegment.type == SegmentType.land &&
-          nextSegment.type == SegmentType.marine;
-      final isMarineToLand = currentSegment.type == SegmentType.marine &&
-          nextSegment.type == SegmentType.land;
-
-      String instruction = 'Continue';
-      WaypointType waypointType = WaypointType.intermediate;
-
-      if (isLandToMarine) {
-        final marina = currentSegment.exitMarina ?? nextSegment.entryMarina;
-        instruction = 'Launch boat at ${marina?.name ?? "marina"}';
-        waypointType = WaypointType.marinaEntry;
-      } else if (isMarineToLand) {
-        final marina = currentSegment.exitMarina ?? nextSegment.entryMarina;
-        instruction = 'Dock boat at ${marina?.name ?? "marina"}';
-        waypointType = WaypointType.marinaExit;
+      // Insert turn-by-turn waypoints for land segments from OSRM steps.
+      if (segment.type == SegmentType.land && segment.steps.isNotEmpty) {
+        double stepDistAcc = 0;
+        for (int s = 0; s < segment.steps.length; s++) {
+          final step = segment.steps[s];
+          final type = step.maneuverType;
+          // Skip depart/arrive steps — they're covered by start/end/transition waypoints.
+          if (type == 'depart' || type == 'arrive') {
+            stepDistAcc += step.distance;
+            continue;
+          }
+          final instruction = _buildStepInstruction(step);
+          waypoints.add(Waypoint(
+            id: 'waypoint_step_${i}_$s',
+            location: step.location,
+            type: WaypointType.turn,
+            distanceFromStart: distanceAccumulator + stepDistAcc,
+            instruction: instruction,
+            estimatedTime: timeAccumulator +
+                (segment.duration > 0 && segment.distance > 0
+                    ? (stepDistAcc / segment.distance * segment.duration)
+                        .round()
+                    : 0),
+            segmentType: RouteSegmentType.land,
+          ));
+          stepDistAcc += step.distance;
+        }
       }
 
-      waypoints.add(Waypoint(
-        id: 'waypoint_transition_$i',
-        location: transitionPoint,
-        type: waypointType,
-        distanceFromStart: distanceAccumulator,
-        instruction: instruction,
-        estimatedTime: timeAccumulator,
-        segmentType: RouteSegmentType.transition,
-      ));
+      // Segment transition waypoints (between segments, not after the last one)
+      if (!isLastSegment) {
+        distanceAccumulator += segment.distance;
+        timeAccumulator += segment.duration;
+
+        final transitionPoint = segment.geometry.last;
+        final nextSegment = segments[i + 1];
+
+        final isLandToMarine = segment.type == SegmentType.land &&
+            nextSegment.type == SegmentType.marine;
+        final isMarineToLand = segment.type == SegmentType.marine &&
+            nextSegment.type == SegmentType.land;
+
+        String instruction = 'Continue';
+        WaypointType waypointType = WaypointType.intermediate;
+
+        if (isLandToMarine) {
+          final marina = segment.exitMarina ?? nextSegment.entryMarina;
+          instruction = 'Launch boat at ${marina?.name ?? "marina"}';
+          waypointType = WaypointType.marinaEntry;
+        } else if (isMarineToLand) {
+          final marina = segment.exitMarina ?? nextSegment.entryMarina;
+          instruction = 'Dock boat at ${marina?.name ?? "marina"}';
+          waypointType = WaypointType.marinaExit;
+        }
+
+        waypoints.add(Waypoint(
+          id: 'waypoint_transition_$i',
+          location: transitionPoint,
+          type: waypointType,
+          distanceFromStart: distanceAccumulator,
+          instruction: instruction,
+          estimatedTime: timeAccumulator,
+          segmentType: RouteSegmentType.transition,
+        ));
+      } else {
+        distanceAccumulator += segment.distance;
+        timeAccumulator += segment.duration;
+      }
     }
 
     // End waypoint
-    distanceAccumulator += segments.last.distance;
-    timeAccumulator += segments.last.duration;
-
     waypoints.add(Waypoint(
       id: 'waypoint_end',
       location: destination,
@@ -408,6 +441,56 @@ class HybridRouteCoordinator {
     ));
 
     return waypoints;
+  }
+
+  /// Converts an OSRM step's maneuver into a human-readable instruction.
+  String _buildStepInstruction(OsrmStep step) {
+    final type = step.maneuverType ?? '';
+    final modifier = step.maneuverModifier ?? '';
+    final street =
+        step.streetName != null ? ' onto ${step.streetName}' : '';
+
+    switch (type) {
+      case 'turn':
+        if (modifier == 'left') return 'Turn left$street';
+        if (modifier == 'right') return 'Turn right$street';
+        if (modifier == 'sharp left') return 'Turn sharply left$street';
+        if (modifier == 'sharp right') return 'Turn sharply right$street';
+        if (modifier == 'slight left') return 'Keep left$street';
+        if (modifier == 'slight right') return 'Keep right$street';
+        return 'Turn$street';
+      case 'new name':
+        return 'Continue$street';
+      case 'merge':
+        if (modifier == 'left') return 'Merge left$street';
+        if (modifier == 'right') return 'Merge right$street';
+        return 'Merge$street';
+      case 'on ramp':
+        return 'Take the ramp$street';
+      case 'off ramp':
+        return 'Take the exit$street';
+      case 'fork':
+        if (modifier == 'left') return 'Keep left at the fork$street';
+        if (modifier == 'right') return 'Keep right at the fork$street';
+        return 'Take the fork$street';
+      case 'end of road':
+        if (modifier == 'left') return 'Turn left at the end of the road$street';
+        if (modifier == 'right') return 'Turn right at the end of the road$street';
+        return 'At the end of the road$street';
+      case 'roundabout':
+      case 'rotary':
+        if (modifier.isNotEmpty) return 'Take the roundabout, exit $modifier$street';
+        return 'Take the roundabout$street';
+      case 'roundabout turn':
+        if (modifier == 'left') return 'At the roundabout, turn left$street';
+        if (modifier == 'right') return 'At the roundabout, turn right$street';
+        return 'Continue through the roundabout$street';
+      case 'continue':
+        return 'Continue straight$street';
+      default:
+        if (street.isNotEmpty) return 'Continue$street';
+        return 'Continue straight';
+    }
   }
 
   /// Validate route geometry against navigation mask

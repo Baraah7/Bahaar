@@ -121,8 +121,8 @@ class CatchEntry {
   final DateTime timestamp;
   final String species;
   final double? weightKg;
-  final double latitude;
-  final double longitude;
+  final double? latitude;
+  final double? longitude;
   final String? notes;
   final String? imagePath;
   final bool synced;
@@ -133,14 +133,15 @@ class CatchEntry {
     required this.timestamp,
     required this.species,
     this.weightKg,
-    required this.latitude,
-    required this.longitude,
+    this.latitude,
+    this.longitude,
     this.notes,
     this.imagePath,
     this.synced = false,
   });
 
-  LatLng get location => LatLng(latitude, longitude);
+  LatLng? get location =>
+      latitude != null && longitude != null ? LatLng(latitude!, longitude!) : null;
 
   Map<String, dynamic> toRow() => {
         'id': id,
@@ -162,8 +163,8 @@ class CatchEntry {
       timestamp: DateTime.parse(row['timestamp'] as String),
       species: row['species'] as String,
       weightKg: row['weight_kg'] as double?,
-      latitude: row['latitude'] as double,
-      longitude: row['longitude'] as double,
+      latitude: row['latitude'] as double?,
+      longitude: row['longitude'] as double?,
       notes: row['notes'] as String?,
       imagePath: row['image_path'] as String?,
       synced: (row['synced'] as int? ?? 0) == 1,
@@ -176,8 +177,8 @@ class CatchEntry {
         'timestamp': timestamp.toIso8601String(),
         'species': species,
         if (weightKg != null) 'weight_kg': weightKg,
-        'latitude': latitude,
-        'longitude': longitude,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
         if (notes != null) 'notes': notes,
         if (imagePath != null) 'image_path': imagePath,
       };

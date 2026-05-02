@@ -32,7 +32,7 @@ class MapLocalizations {
   String get zonesMpasLocations => _isAr ? 'المناطق، MPAs والمواقع' : 'Zones, MPAs & locations';
   String get highConfidenceSpot => _isAr ? 'موقع ثقة عالية' : 'High confidence spot';
   String get mediumConfidenceSpot => _isAr ? 'موقع ثقة متوسطة' : 'Medium confidence spot';
-  String get fishingZone => _isAr ? 'منطقة صيد' : 'Fishing zone';
+  String get fishingZone => _isAr ? 'منطقة محمية' : 'Protected zone';
   String get fishingPrediction => _isAr ? 'توقعات الصيد' : 'Fishing Prediction';
   String get aiCatchProbability => _isAr ? 'احتمالية الصيد بالذكاء الاصطناعي' : 'AI catch probability';
   String featuresLoaded(int count) => _isAr ? 'تم تحميل $count عنصر' : '$count features loaded';

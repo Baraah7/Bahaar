@@ -29,9 +29,11 @@ class NavigationSessionManager extends ChangeNotifier {
   NavigationSession? _session;
   StreamSubscription<LocationData>? _locationSubscription;
   Timer? _weatherRefreshTimer;
+  Timer? _recalculationCooldownTimer;
   DateTime? _sessionStartTime;
   int _recalculationCount = 0;
   bool _isRecalculating = false;
+  bool _inRecalculationCooldown = false;
 
   NavigationSessionManager({
     required Location location,
@@ -171,6 +173,9 @@ class NavigationSessionManager extends ChangeNotifier {
     _locationSubscription = null;
     _weatherRefreshTimer?.cancel();
     _weatherRefreshTimer = null;
+    _recalculationCooldownTimer?.cancel();
+    _recalculationCooldownTimer = null;
+    _inRecalculationCooldown = false;
     _sessionStartTime = null;
   }
 
@@ -250,7 +255,14 @@ class NavigationSessionManager extends ChangeNotifier {
 
     final nextWaypoint = _session!.nextWaypoint;
     if (nextWaypoint == null) {
-      // No more waypoints - check if reached destination
+      // No more waypoints — check if reached destination.
+      // Skip completion check if the current segment is marine and the user
+      // appears to be on land (far from any point in the marine geometry).
+      final seg = _session!.currentSegment;
+      if (seg != null && seg.type == SegmentType.marine) {
+        if (!_isNearMarineSegment(currentLocation, seg)) return;
+      }
+
       final distanceToDestination = _calculateDistance(
         currentLocation,
         _session!.route.destination,
@@ -260,6 +272,13 @@ class NavigationSessionManager extends ChangeNotifier {
         _completeNavigation();
       }
       return;
+    }
+
+    // For marine-segment waypoints, only advance if the user is actually near
+    // the marine route (i.e. on the water), not from a land GPS position.
+    final seg = _session!.currentSegment;
+    if (seg != null && seg.type == SegmentType.marine) {
+      if (!_isNearMarineSegment(currentLocation, seg)) return;
     }
 
     final distanceToWaypoint = _calculateDistance(
@@ -272,6 +291,16 @@ class NavigationSessionManager extends ChangeNotifier {
       log('Reached waypoint: ${nextWaypoint.instruction}');
       _advanceToNextWaypoint();
     }
+  }
+
+  /// Returns true if [location] is within 300 m of any point in the marine
+  /// segment geometry — i.e. the user is actually on or near the water route.
+  bool _isNearMarineSegment(LatLng location, RouteSegment segment) {
+    const threshold = 300.0;
+    for (final pt in segment.geometry) {
+      if (_calculateDistance(location, pt) <= threshold) return true;
+    }
+    return false;
   }
 
   void _advanceToNextWaypoint() {
@@ -303,16 +332,22 @@ class NavigationSessionManager extends ChangeNotifier {
 
   void _checkOffRoute(LatLng currentLocation) {
     if (_session == null) return;
+    if (_inRecalculationCooldown) return;
 
-    // Get current segment geometry
     if (_session!.currentSegmentIndex >= _session!.route.segments.length) {
       return;
     }
 
-    final currentSegment = _session!.route.segments[_session!.currentSegmentIndex];
+    final currentSegment =
+        _session!.route.segments[_session!.currentSegmentIndex];
     final geometry = currentSegment.geometry;
 
     if (geometry.isEmpty) return;
+
+    // Never trigger rerouting for marine segments — the user may be on land
+    // monitoring a pre-planned sea route, and rerouting from a land GPS
+    // position would destroy the sea-only route.
+    if (currentSegment.type == SegmentType.marine) return;
 
     // Find minimum distance to route
     double minDistance = double.infinity;
@@ -327,7 +362,6 @@ class NavigationSessionManager extends ChangeNotifier {
       }
     }
 
-    // Check if off route
     if (minDistance > NavigationConstants.offRouteThreshold) {
       log('Off route detected: ${minDistance.toStringAsFixed(1)}m from route');
       _handleOffRoute();
@@ -335,10 +369,13 @@ class NavigationSessionManager extends ChangeNotifier {
   }
 
   void _handleOffRoute() async {
-    if (_isRecalculating) return;
+    if (_isRecalculating || _inRecalculationCooldown) return;
+
+    // After too many consecutive recalculations just log — don't kill the
+    // session. The user stays on the last known route.
     if (_recalculationCount >= NavigationConstants.maxRecalculations) {
-      log('Max recalculations reached, stopping auto-recalculation');
-      _handleNavigationError('Unable to recalculate route');
+      log('Max recalculations reached; continuing on current route');
+      _startRecalculationCooldown();
       return;
     }
 
@@ -357,7 +394,16 @@ class NavigationSessionManager extends ChangeNotifier {
       if (newRoute != null) {
         log('Route recalculated successfully');
 
-        // Update session with new route
+        final nearestWpIdx = _session!.currentLocation != null
+            ? _findNearestWaypointIndex(
+                newRoute.waypoints, _session!.currentLocation!)
+            : 0;
+
+        final nearestSegIdx =
+            _findSegmentIndexForWaypoint(newRoute, nearestWpIdx);
+
+        // Reset distance/breadcrumbs so remaining metrics match the new route
+        // and never go negative.
         _session = NavigationSession(
           id: _session!.id,
           route: newRoute,
@@ -365,23 +411,44 @@ class NavigationSessionManager extends ChangeNotifier {
           currentLocation: _session!.currentLocation,
           currentBearing: _session!.currentBearing,
           currentSpeed: _session!.currentSpeed,
-          currentSegmentIndex: 0,
-          currentWaypointIndex: 0,
+          currentSegmentIndex: nearestSegIdx,
+          currentWaypointIndex: nearestWpIdx,
           startTime: _session!.startTime,
-          breadcrumbs: _session!.breadcrumbs,
-          metrics: _session!.metrics,
+          breadcrumbs: _session!.currentLocation != null
+              ? [_session!.currentLocation!]
+              : _session!.breadcrumbs,
+          metrics: NavigationMetrics(
+            distanceTraveled: 0,
+            elapsedTime: _session!.metrics.elapsedTime,
+            numRecalculations: _recalculationCount,
+            hadOffRouteEvents: true,
+            maxSpeed: _session!.metrics.maxSpeed,
+          ),
         );
+
+        // Short cooldown to prevent immediate re-trigger after rerouting.
+        _startRecalculationCooldown();
       } else {
-        log('Failed to recalculate route');
-        _handleNavigationError('Could not find alternative route');
+        log('Failed to recalculate route — staying on current route');
+        _startRecalculationCooldown();
       }
     } catch (e) {
-      log('Error recalculating route: $e');
-      _handleNavigationError('Route recalculation failed');
+      log('Error recalculating route: $e — staying on current route');
+      _startRecalculationCooldown();
     } finally {
       _isRecalculating = false;
       notifyListeners();
     }
+  }
+
+  void _startRecalculationCooldown() {
+    _inRecalculationCooldown = true;
+    _recalculationCooldownTimer?.cancel();
+    _recalculationCooldownTimer = Timer(const Duration(seconds: 10), () {
+      _inRecalculationCooldown = false;
+      // Allow the counter to decrease so repeated reroutes remain possible.
+      if (_recalculationCount > 0) _recalculationCount--;
+    });
   }
 
   void _handleNavigationError(String message) {
@@ -429,6 +496,37 @@ class NavigationSessionManager extends ChangeNotifier {
   // ============================================================
   // Geometry Utilities
   // ============================================================
+
+  /// Returns the index of the waypoint nearest to [location], excluding the
+  /// final destination waypoint so we never skip straight to "Arrived".
+  int _findNearestWaypointIndex(List<Waypoint> waypoints, LatLng location) {
+    int best = 0;
+    double bestDist = double.infinity;
+    // Exclude the last waypoint (destination) so the user still navigates to it.
+    final limit = waypoints.length > 1 ? waypoints.length - 1 : waypoints.length;
+    for (int i = 0; i < limit; i++) {
+      final d = _calculateDistance(location, waypoints[i].location);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  /// Derives which segment index corresponds to the waypoint at [waypointIndex]
+  /// in [route] by counting marina-transition waypoints (which mark segment
+  /// boundaries) up to that position.
+  int _findSegmentIndexForWaypoint(NavigationRoute route, int waypointIndex) {
+    int segIndex = 0;
+    for (int i = 0; i < waypointIndex && i < route.waypoints.length; i++) {
+      final type = route.waypoints[i].type;
+      if (type == WaypointType.marinaEntry || type == WaypointType.marinaExit) {
+        segIndex++;
+      }
+    }
+    return segIndex.clamp(0, route.segments.length - 1);
+  }
 
   /// Calculate distance between two points using Haversine formula
   double _calculateDistance(LatLng point1, LatLng point2) {

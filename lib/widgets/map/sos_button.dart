@@ -76,25 +76,25 @@ class _SosButtonState extends State<SosButton>
           style: const TextStyle(color: Colors.white70),
           textAlign: TextAlign.center,
         ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
               l10n.cancel,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.red.shade900,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               l10n.sosSend,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
         ],
@@ -146,13 +146,6 @@ class _SosButtonState extends State<SosButton>
                 color: Colors.red.shade700,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withValues(alpha: 0.6),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
               ),
               child: const Icon(Icons.sos, color: Colors.white, size: 26),
             ),

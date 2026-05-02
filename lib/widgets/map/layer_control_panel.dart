@@ -32,6 +32,8 @@ class LayerControlPanel extends StatefulWidget {
 }
 
 class _LayerControlPanelState extends State<LayerControlPanel> {
+  final Set<String> _collapsed = {'depth', 'protected', 'spots'};
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +59,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 300, maxHeight: 600),
+      constraints: const BoxConstraints(maxWidth: 270, maxHeight: 600),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -183,11 +185,31 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     bool? toggleValue,
     ValueChanged<bool>? onToggle,
   }) {
+    final isCollapsed = _collapsed.contains(key);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
+            GestureDetector(
+              onTap: () => setState(() {
+                if (isCollapsed) {
+                  _collapsed.remove(key);
+                } else {
+                  _collapsed.add(key);
+                }
+              }),
+              child: AnimatedRotation(
+                turns: isCollapsed ? 0.0 : 0.5,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
             Container(
               width: 28,
               height: 28,
@@ -227,10 +249,11 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 6, right: 4, top: 4, bottom: 4),
-          child: content,
-        ),
+        if (!isCollapsed)
+          Padding(
+            padding: const EdgeInsets.only(left: 6, right: 4, top: 4, bottom: 4),
+            child: content,
+          ),
         const SizedBox(height: 2),
       ],
     );
@@ -366,7 +389,7 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               children: [
                 _legendRow(Colors.green.withValues(alpha: 0.6), _l10n.highConfidenceSpot),
                 _legendRow(Colors.orange.withValues(alpha: 0.6), _l10n.mediumConfidenceSpot),
-                _legendRow(Colors.blue.withValues(alpha: 0.25), _l10n.fishingZone),
+                _legendRow(Colors.red.withValues(alpha: 0.6), _l10n.fishingZone),
 
                 if (widget.onOpenPrediction != null) ...[
                     const SizedBox(height: 6),
@@ -419,13 +442,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.teal.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
         ),
         child: Row(
           children: [

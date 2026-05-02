@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:intl/intl.dart';
@@ -108,15 +109,15 @@ class TripCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.3),
+                        color: Colors.tealAccent.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: Colors.green.withValues(alpha: 0.6)),
+                            color: Colors.tealAccent.withValues(alpha: 0.6)),
                       ),
                       child: Text(
                         l10n.tripActiveLabel,
                         style: const TextStyle(
-                          color: Colors.greenAccent,
+                          color: Colors.tealAccent,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),

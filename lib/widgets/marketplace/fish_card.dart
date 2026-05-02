@@ -53,7 +53,7 @@ class FishCard extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          height: 150,
+          height: 115,
           decoration: BoxDecoration(
             gradient: listing.primaryImageUrl != null
                 ? null
@@ -171,35 +171,28 @@ class FishCard extends StatelessWidget {
     final priceStr = _n(listing.pricePerKg.toStringAsFixed(1), lang);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             primaryName,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 15,
+              fontSize: 14,
               color: Color(0xFF1E293B),
               letterSpacing: -0.2,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const Spacer(),
+          const SizedBox(height: 8),  
           Row(
             children: [
-              _buildBadge(
-                '$weightStr ${l10n.kgUnit}',
-                Icons.scale_rounded,
-              ),
+              Expanded(child: _buildBadge(weightStr, l10n.kgUnit, Icons.scale_rounded)),
               const SizedBox(width: 6),
-              Expanded(
-                child: _buildBadge(
-                  '$priceStr ${l10n.bdPerKg}',
-                  Icons.sell_rounded,
-                ),
-              ),
+              Expanded(child: _buildBadge(priceStr, l10n.bdPerKg, Icons.sell_rounded)),
             ],
           ),
         ],
@@ -207,29 +200,47 @@ class FishCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(String text, IconData icon) {
+  Widget _buildBadge(String value, String unit, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF0E7490)),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF0D4F54),
-                fontWeight: FontWeight.w600,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: const Color(0xFF0E7490)),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF0D4F54),
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            ],
+          ),
+          Text(
+            unit,
+            style: TextStyle(
+              fontSize: 10,
+              color: const Color(0xFF0D4F54).withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
+              height: 1.2,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
