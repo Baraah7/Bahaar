@@ -8,7 +8,15 @@
       "Bash(flutter pub get)",
       "Bash(flutter analyze --no-pub)",
       "Bash(flutter analyze --no-pub lib/widgets/map/bahaar_overlay_layer.dart lib/screens/integrated_map.dart)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(dart pub *)",
+      "Bash(flutter test *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\" -Recurse -Filter \"*.dart\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

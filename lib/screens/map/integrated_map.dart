@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
-import 'package:bahaar/models/ais_model.dart';
 import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:bahaar/models/map/feature_edit_state.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
@@ -14,7 +13,6 @@ import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_screen.dart';
 import 'package:bahaar/screens/fish%20recognition/prediction_screen.dart';
-import 'package:bahaar/services/ais_service.dart';
 import 'package:bahaar/services/fishRecognition/fish_probability_service.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/services/map/exclusion_zone_service.dart';
@@ -32,8 +30,6 @@ import 'package:bahaar/services/offline/connectivity_service.dart';
 import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/widgets/fishing_log/catch_form.dart';
-import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
-import 'package:bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
 import 'package:bahaar/widgets/map/trip_track_layer.dart';
@@ -50,8 +46,6 @@ import 'package:bahaar/widgets/map/territorial_mask_layer.dart';
 import 'package:bahaar/widgets/map/territorial_outline_editor.dart';
 import 'package:bahaar/models/map/nav_mode.dart';
 import 'package:bahaar/models/map/port_point.dart';
-import 'package:bahaar/widgets/map/map_button_group.dart';
-import 'package:bahaar/widgets/map/map_icon_button.dart';
 import 'package:bahaar/widgets/map/map_left_toolbar.dart';
 import 'package:bahaar/widgets/map/nav_instructions_panel.dart';
 import 'package:bahaar/widgets/map/nav_mode_option.dart';
@@ -65,7 +59,6 @@ import 'package:bahaar/widgets/navigation/route_polyline_layer.dart';
 import 'package:bahaar/widgets/navigation/weather_alert_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -127,11 +120,6 @@ class _IntegratedMapState extends State<IntegratedMap>
   OutlineBrushMode _outlineBrushMode = OutlineBrushMode.erase;
   double _outlineBrushRadius = 0.003; // ~333 m
   LatLng? _outlinePaintPreview;
-
-  // AIS state
-  late final AisService _aisService;
-  CpaResult? _topCpaAlert;
-  bool _aisAlertDismissed = false;
 
   // State
   bool _mapReady = false;
@@ -202,11 +190,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     _initRoutingServices();
     _loadFirestoreFeatures();
     _featureEditState.addListener(_onFeatureEditUpdate);
-    _aisService = AisService(
-      aishubUsername: dotenv.env['AISHUB_USERNAME'] ?? '',
-    );
-    _aisService.addListener(_onAisUpdate);
-    _aisService.initialize();
 
     TripService.instance.initialize();
 
@@ -301,28 +284,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     });
   }
 
-  void _onAisUpdate() {
-    if (!mounted) return;
-    // Pick the highest-risk CPA alert to show in the banner
-    final alerts = _aisService.cpaAlerts;
-    setState(() {
-      _topCpaAlert = alerts.isNotEmpty ? alerts.first : null;
-      if (_topCpaAlert != null) _aisAlertDismissed = false;
-    });
-
-    // Also feed own position into the CPA calculator whenever AIS updates
-    final lat = _locationData?.latitude;
-    final lon = _locationData?.longitude;
-    if (lat != null && lon != null) {
-      _aisService.updateOwnPosition(
-        lat: lat,
-        lon: lon,
-        sogKnots: 0,  // stationary until we have own-vessel SOG/COG
-        cogDeg: 0,
-      );
-    }
-  }
-
   void _onFeatureEditUpdate() {
     if (mounted) {
       setState(() {});
@@ -363,8 +324,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     _featureEditState.dispose();
     _fishProbabilityService.dispose();
     _layerManager.dispose();
-    _aisService.removeListener(_onAisUpdate);
-    _aisService.dispose();
     super.dispose();
   }
 
@@ -1243,7 +1202,9 @@ class _IntegratedMapState extends State<IntegratedMap>
     if (segments.isEmpty) return [];
 
     double cumDist = 0;
-    for (final s in segments) cumDist += s.distance;
+    for (final s in segments) {
+      cumDist += s.distance;
+    }
     final totalDist = cumDist;
 
     final waypoints = <Waypoint>[];
@@ -1898,12 +1859,6 @@ class _IntegratedMapState extends State<IntegratedMap>
               );
             },
           ),
-
-        // AIS vessels with projected paths
-        AisVesselLayer(
-          service: _aisService,
-          isVisible: true,
-        ),
 
         // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
         ListenableBuilder(
@@ -2852,13 +2807,6 @@ class _IntegratedMapState extends State<IntegratedMap>
               distanceMeters: _approachingExclusionZoneDistance,
               isViolation: false,
               onDismiss: () => setState(() => _exclusionAlertDismissed = true),
-            ),
-
-          // AIS collision alert
-          if (_topCpaAlert != null && !_aisAlertDismissed)
-            AisCollisionAlert(
-              cpa: _topCpaAlert!,
-              onDismiss: () => setState(() => _aisAlertDismissed = true),
             ),
 
           // Weather alert overlay
