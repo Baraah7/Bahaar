@@ -39,6 +39,33 @@ class WeatherLocalizations {
   String get weatherHighTide => _isAr ? 'مد عالٍ' : 'High Tide';
   String get weatherLowTide => _isAr ? 'جزر منخفض' : 'Low Tide';
   String get illuminated => _isAr ? '٪ مضيء' : '% illuminated';
+
+  // Safety badge
+  String get marineSafety => _isAr ? 'سلامة الملاحة البحرية' : 'Marine Safety';
+  String get safetyLevelSafe => _isAr ? 'آمن' : 'Safe';
+  String get safetyLevelCaution => _isAr ? 'تنبيه' : 'Caution';
+  String get safetyLevelDangerous => _isAr ? 'خطر' : 'Dangerous';
+  String get safetyLevelBlocked => _isAr ? 'محظور' : 'Blocked';
+  String get safetyDescSafe => _isAr ? 'الظروف مناسبة للملاحة' : 'Conditions are safe for navigation';
+  String get safetyDescCaution => _isAr ? 'الظروف تستلزم توخي الحذر' : 'Conditions require extra caution';
+  String get safetyDescDangerous => _isAr ? 'الظروف خطيرة للملاحة' : 'Conditions are dangerous for navigation';
+  String get safetyDescBlocked => _isAr ? 'الظروف خطيرة جداً للملاحة' : 'Conditions are too dangerous for navigation';
+  String get kn => _isAr ? 'عقدة' : 'kn';
+
+  String windExceedsLimit(String knots) => _isAr
+      ? 'الرياح ${n(knots)} $kn تتجاوز الحد الآمن'
+      : 'Wind $knots $kn exceeds safe limit';
+  String strongWind(String knots) =>
+      _isAr ? 'رياح قوية: ${n(knots)} $kn' : 'Strong wind: $knots $kn';
+  String moderateWind(String knots) =>
+      _isAr ? 'رياح معتدلة: ${n(knots)} $kn' : 'Moderate wind: $knots $kn';
+  String visibilityBelowLimit(String km) => _isAr
+      ? 'الرؤية ${n(km)} $kmUnit دون الحد الآمن'
+      : 'Visibility $km $kmUnit below safe limit';
+  String lowVisibilityKm(String km) =>
+      _isAr ? 'رؤية منخفضة: ${n(km)} $kmUnit' : 'Low visibility: $km $kmUnit';
+  String reducedVisibility(String km) =>
+      _isAr ? 'رؤية مخفضة: ${n(km)} $kmUnit' : 'Reduced visibility: $km $kmUnit';
   String get uvLow => _isAr ? 'منخفض' : 'Low';
   String get uvModerate => _isAr ? 'معتدل' : 'Moderate';
   String get uvHigh => _isAr ? 'مرتفع' : 'High';
