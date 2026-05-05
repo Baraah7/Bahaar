@@ -23,6 +23,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _phone;
   late final TextEditingController _location;
   bool _saving = false;
+  bool _sendingReset = false;
 
   @override
   void initState() {
@@ -43,6 +44,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _phone.dispose();
     _location.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendPasswordReset() async {
+    final email = ref.read(authProviderProvider).currentAppUser?.email ?? '';
+    if (email.isEmpty) return;
+    setState(() => _sendingReset = true);
+    try {
+      final lang = Localizations.localeOf(context).languageCode;
+      final l10n = ProfileLocalizations.of(context);
+      final success = await ref
+          .read(authProviderProvider)
+          .resetPassword(email, languageCode: lang);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(success ? l10n.resetLinkSent : l10n.resetLinkFailed),
+          backgroundColor: success ? AppColors.primary : AppColors.red,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _sendingReset = false);
+    }
   }
 
   Future<void> _save() async {
@@ -238,6 +264,79 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     label: l10n.username,
                   ),
                 ]),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ── Security ───────────────────────────────────────
+              SectionLabel(l10n.security),
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.lock_outline_rounded,
+                            color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.changePassword,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Color(0xFF1A1A2E),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              user?.email ?? '',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _sendingReset
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primary),
+                            )
+                          : TextButton(
+                              onPressed: _sendPasswordReset,
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(10)),
+                              ),
+                              child: Text(
+                                l10n.sendResetLink,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13),
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
               ),
 
               const SizedBox(height: 32),

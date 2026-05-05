@@ -33,6 +33,20 @@ class _OrdersTabState extends State<OrdersTab>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChange);
+    widget.marketplaceService.addListener(_onServiceUpdate);
+  }
+
+  @override
+  void didUpdateWidget(OrdersTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.marketplaceService != widget.marketplaceService) {
+      oldWidget.marketplaceService.removeListener(_onServiceUpdate);
+      widget.marketplaceService.addListener(_onServiceUpdate);
+    }
+  }
+
+  void _onServiceUpdate() {
+    if (mounted) setState(() {});
   }
 
   void _onTabChange() {
@@ -41,6 +55,7 @@ class _OrdersTabState extends State<OrdersTab>
 
   @override
   void dispose() {
+    widget.marketplaceService.removeListener(_onServiceUpdate);
     _tabController.removeListener(_onTabChange);
     _tabController.dispose();
     super.dispose();
@@ -300,8 +315,11 @@ class _OrdersTabState extends State<OrdersTab>
     final sellerOrders = widget.marketplaceService.orders
         .where((o) => o.sellerId == widget.currentUserId)
         .toList();
+    // Cancelled buyer orders are permanently hidden from the purchases list.
     final buyerOrders = widget.marketplaceService.orders
-        .where((o) => o.buyerId == widget.currentUserId)
+        .where((o) =>
+            o.buyerId == widget.currentUserId &&
+            o.status != OrderStatus.cancelled)
         .toList();
 
     final tabIdx = _tabController.index;
@@ -431,6 +449,18 @@ class _OrdersList extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(l10n.listingRelistedSuccess),
         backgroundColor: AppColors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    }
+  }
+
+  void _removeListing(BuildContext context, Order order) async {
+    await marketplaceService.removeListing(order.listingId);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.listingDeleted),
+        backgroundColor: AppColors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ));
@@ -734,6 +764,9 @@ class _OrdersList extends StatelessWidget {
               : null,
           onResell: isSeller && order.status == OrderStatus.cancelled
               ? () => _resellOrder(context, order)
+              : null,
+          onRemoveListing: isSeller && order.status == OrderStatus.cancelled
+              ? () => _removeListing(context, order)
               : null,
           onViewPaymentProof: (imagePath) =>
               _showPaymentProofFullScreen(context, imagePath),

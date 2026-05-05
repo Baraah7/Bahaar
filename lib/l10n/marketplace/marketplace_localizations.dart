@@ -10,7 +10,7 @@ class MarketplaceLocalizations {
 
   String get localeName => _locale.languageCode;
 
-  String get marketplace => _isAr ? 'السوق' : 'Marketplace';
+  String get marketplace => _isAr ? 'السوق' : 'Market';
   String get sellFish => _isAr ? 'بيع سمك' : 'Sell Fish';
   String get myOrders => _isAr ? 'الطلبات' : 'Orders';
   String get searchOrders => _isAr ? 'ابحث في الطلبات...' : 'Search orders...';
@@ -177,4 +177,13 @@ class MarketplaceLocalizations {
   String get phone    => _isAr ? 'الهاتف'        : 'Phone';
   String get location => _isAr ? 'الموقع'        : 'Location';
   String get close    => _isAr ? 'إغلاق'         : 'Close';
+  String get removePermanently => _isAr ? 'إزالة نهائية' : 'Remove Permanently';
+  String get confirmRemovePermanently => _isAr
+      ? 'هل أنت متأكد؟ سيتم حذف هذا العرض نهائيًا ولن يكون متاحًا مرة أخرى.'
+      : 'Are you sure? This listing will be permanently deleted and cannot be relisted.';
+  String get benefitPayRefundReminder => _isAr
+      ? 'دفع المشتري عبر Benefit Pay. يرجى إعادة مبلغ الدفع قبل إعادة النشر.'
+      : 'The buyer paid via Benefit Pay. Please return their payment before relisting.';
+  String get iHaveReturnedPayment => _isAr ? 'أعدتُ الدفع، أكمل' : 'I\'ve Returned It — Resell';
+  String get notYet => _isAr ? 'ليس بعد' : 'Not Yet';
 }

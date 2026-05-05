@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/screens/fishing log/location_picker_screen.dart';
+import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
@@ -36,6 +37,10 @@ class _CatchFormState extends State<CatchForm> {
   LatLng? _location;
   bool _mapPinned = false;
   bool _isOtherSelected = false;
+  String? _locationError;
+
+  final NavigationMask _mask = NavigationMask();
+  bool _maskReady = false;
 
   static const _teal = Color(0xFF0D4F54);
   static const _tealLight = Color(0xFF0E7490);
@@ -49,6 +54,7 @@ class _CatchFormState extends State<CatchForm> {
     ('زبيدي', 'Zubaidi'),
     ('ربيان', 'Shrimp'),
     ('قبقب', 'Crab'),
+    ('أخرى', 'Other')
   ];
 
   FishingLogLocalizations get _l10n => FishingLogLocalizations.of(context);
@@ -57,6 +63,11 @@ class _CatchFormState extends State<CatchForm> {
   @override
   void initState() {
     super.initState();
+    _mask.initialize().then((_) {
+      if (mounted) setState(() => _maskReady = true);
+    }).catchError((_) {
+      if (mounted) setState(() => _maskReady = true);
+    });
     _fetchLocation();
   }
 
@@ -70,18 +81,35 @@ class _CatchFormState extends State<CatchForm> {
   }
 
   Future<void> _fetchLocation() async {
-    setState(() => _locating = true);
+    setState(() { _locating = true; _locationError = null; });
     try {
-      final loc = Location();
-      final data = await loc.getLocation();
-      if (data.latitude != null && data.longitude != null && mounted) {
-        setState(() {
-          _location = LatLng(data.latitude!, data.longitude!);
-          _mapPinned = false;
-        });
+      final results = await Future.wait([
+        Location().getLocation(),
+        _maskReady ? Future.value(null) : _mask.initialize(),
+      ]);
+      if (!mounted) return;
+      if (!_maskReady) setState(() => _maskReady = true);
+
+      final data = results[0] as LocationData;
+      if (data.latitude == null || data.longitude == null) {
+        setState(() => _locationError = _l10n.locationGpsError);
+        return;
       }
-    } catch (_) {}
-    if (mounted) setState(() => _locating = false);
+      final point = LatLng(data.latitude!, data.longitude!);
+      if (_mask.isInitialized && !_mask.isPointNavigable(point)) {
+        setState(() => _locationError = _l10n.locationOnLandError);
+        return;
+      }
+      setState(() {
+        _location = point;
+        _mapPinned = false;
+        _locationError = null;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _locationError = _l10n.locationGpsError);
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
   }
 
   Future<void> _pickOnMap() async {
@@ -390,7 +418,7 @@ class _CatchFormState extends State<CatchForm> {
                               Expanded(
                                 child: _LocationButton(
                                   icon: Icons.my_location_rounded,
-                                  label: 'GPS',
+                                  label: _l10n.currectLocation,
                                   onTap: _fetchLocation,
                                   color: _tealLight,
                                 ),
@@ -406,6 +434,29 @@ class _CatchFormState extends State<CatchForm> {
                               ),
                             ],
                           ),
+                          if (_locationError != null) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline_rounded, size: 15, color: Colors.red.shade700),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      _locationError!,
+                                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

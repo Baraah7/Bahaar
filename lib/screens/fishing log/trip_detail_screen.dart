@@ -844,6 +844,11 @@ class CatchEditSheetState extends State<CatchEditSheet> {
   bool _mapPinned = false;
   bool _gpsLoading = false;
 
+  bool _isOtherSelected = false;
+  final FocusNode _speciesFocus = FocusNode();
+
+  String? _locationError;
+
   final NavigationMask _mask = NavigationMask();
   bool _maskReady = false;
 
@@ -877,9 +882,9 @@ class CatchEditSheetState extends State<CatchEditSheet> {
   }
 
   Future<void> _useCurrentLocation() async {
-    setState(() => _gpsLoading = true);
+    final l10n = FishingLogLocalizations.of(context);
+    setState(() { _gpsLoading = true; _locationError = null; });
     try {
-      // Run GPS fetch and mask init in parallel
       final results = await Future.wait([
         Location().getLocation(),
         _maskReady ? Future.value(null) : _mask.initialize(),
@@ -889,18 +894,12 @@ class CatchEditSheetState extends State<CatchEditSheet> {
 
       final data = results[0] as LocationData;
       if (data.latitude == null || data.longitude == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('تعذّر تحديد الموقع — يرجى تفعيل GPS'),
-          backgroundColor: Colors.red,
-        ));
+        setState(() => _locationError = l10n.locationGpsError);
         return;
       }
       final point = LatLng(data.latitude!, data.longitude!);
       if (_mask.isInitialized && !_mask.isPointNavigable(point)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('موقعك الحالي على اليابسة — استخدم تحديد الموقع على الخريطة'),
-          backgroundColor: Colors.red,
-        ));
+        setState(() => _locationError = l10n.locationOnLandError);
         return;
       }
       setState(() {
@@ -908,12 +907,7 @@ class CatchEditSheetState extends State<CatchEditSheet> {
         _mapPinned = true;
       });
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('تعذّر تحديد الموقع — يرجى تفعيل GPS'),
-          backgroundColor: Colors.red,
-        ));
-      }
+      if (mounted) setState(() => _locationError = l10n.locationGpsError);
     } finally {
       if (mounted) setState(() => _gpsLoading = false);
     }
@@ -924,6 +918,7 @@ class CatchEditSheetState extends State<CatchEditSheet> {
     _speciesCtrl.dispose();
     _weightCtrl.dispose();
     _notesCtrl.dispose();
+    _speciesFocus.dispose();
     super.dispose();
   }
 
@@ -1034,45 +1029,84 @@ class CatchEditSheetState extends State<CatchEditSheet> {
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
-                children: List.generate(_quickSpeciesKeys.length, (i) {
-                  final label = _localizedSpecies(l10n, i);
-                  final isSelected = _speciesCtrl.text == label;
-                  return GestureDetector(
-                    onTap: () => setState(() => _speciesCtrl.text = label),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.primary.withValues(alpha: 0.07),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
+                children: [
+                  ...List.generate(_quickSpeciesKeys.length, (i) {
+                    final label = _localizedSpecies(l10n, i);
+                    final isSelected = _speciesCtrl.text == label;
+                    return GestureDetector(
+                      onTap: () => setState(() {
+                        _speciesCtrl.text = label;
+                        _isOtherSelected = false;
+                      }),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.primary.withValues(alpha: 0.25),
+                              : AppColors.primary.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.primary.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.primary,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : AppColors.primary,
-                        ),
+                    );
+                  }),
+                  GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isOtherSelected = true;
+                      _speciesCtrl.text = '';
+                    });
+                    Future.delayed(const Duration(milliseconds: 50),
+                        () => _speciesFocus.requestFocus());
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _isOtherSelected
+                          ? AppColors.accent
+                          : AppColors.accent.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isOtherSelected
+                            ? AppColors.accent
+                            : AppColors.accent.withValues(alpha: 0.25),
                       ),
                     ),
-                  );
-                }),
+                    child: Text(
+                      l10n.quickSpeciesOther,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _isOtherSelected ? Colors.white : AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ),
+                ],
               ),
               const SizedBox(height: 16),
 
               // Species field
               TextFormField(
                 controller: _speciesCtrl,
+                focusNode: _speciesFocus,
                 decoration: _dec(l10n.speciesName, Icons.set_meal_rounded),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? '!' : null,
@@ -1126,7 +1160,7 @@ class CatchEditSheetState extends State<CatchEditSheet> {
                               Icon(Icons.my_location_rounded, color: AppColors.primary, size: 15),
                             const SizedBox(width: 5),
                             Text(
-                              'موقعي الحالي',
+                              l10n.currectLocation,
                               style: TextStyle(
                                 color: AppColors.primary,
                                 fontSize: 12,
@@ -1175,6 +1209,29 @@ class CatchEditSheetState extends State<CatchEditSheet> {
                   ),
                 ],
               ),
+              if (_locationError != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline_rounded, size: 16, color: Colors.red.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _locationError!,
+                          style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 22),
 
               // Save button

@@ -9,6 +9,8 @@ class FishMarketplaceService extends ChangeNotifier {
 
   List<FishListing> _listings = [];
   List<Order> _orders = [];
+  List<Order> _buyerOrdersList = [];
+  List<Order> _sellerOrdersList = [];
   String? _currentUserId;
   bool _isLoading = false;
   String? _error;
@@ -16,6 +18,9 @@ class FishMarketplaceService extends ChangeNotifier {
   StreamSubscription<QuerySnapshot>? _listingsSubscription;
   StreamSubscription<QuerySnapshot>? _buyerOrdersSubscription;
   StreamSubscription<QuerySnapshot>? _sellerOrdersSubscription;
+
+  /// Called when a new pending order arrives for the current seller.
+  ValueChanged<Order>? onNewSellerOrder;
 
   List<FishListing> get listings => List.unmodifiable(_listings);
   List<FishListing> get availableListings =>
@@ -68,23 +73,45 @@ class FishMarketplaceService extends ChangeNotifier {
     );
   }
 
+  // Rebuilds _orders from the two stream lists. Called by both stream listeners
+  // and by optimistic-update helpers so there is ONE merge path.
+  void _mergeAndNotify() {
+    final seen = <String>{};
+    _orders = [..._buyerOrdersList, ..._sellerOrdersList]
+        .where((o) => seen.add(o.id))
+        .toList()
+      ..sort((a, b) => b.orderedAt.compareTo(a.orderedAt));
+    notifyListeners();
+  }
+
+  // Applies fn to every copy of the order that lives in any of our three lists.
+  // This prevents a subsequent _mergeAndNotify() from reverting the optimistic change.
+  void _applyToAllLists(String orderId, Order Function(Order) fn) {
+    for (final list in [_buyerOrdersList, _sellerOrdersList, _orders]) {
+      final i = list.indexWhere((o) => o.id == orderId);
+      if (i != -1) list[i] = fn(list[i]);
+    }
+  }
+
+  void _revertAllLists(String orderId, Order prev) {
+    for (final list in [_buyerOrdersList, _sellerOrdersList, _orders]) {
+      final i = list.indexWhere((o) => o.id == orderId);
+      if (i != -1) list[i] = prev;
+    }
+  }
+
   void _startListeningToOrders() {
     if (_currentUserId == null) return;
 
     _buyerOrdersSubscription?.cancel();
     _sellerOrdersSubscription?.cancel();
 
-    List<Order> buyerOrdersList = [];
-    List<Order> sellerOrdersList = [];
+    // Reset stream lists so stale data doesn't survive a user switch.
+    _buyerOrdersList = [];
+    _sellerOrdersList = [];
 
-    void mergeAndNotify() {
-      final seen = <String>{};
-      _orders = [...buyerOrdersList, ...sellerOrdersList]
-          .where((o) => seen.add(o.id))
-          .toList()
-        ..sort((a, b) => b.orderedAt.compareTo(a.orderedAt));
-      notifyListeners();
-    }
+    var sellerOrdersInitialized = false;
+    final knownSellerOrderIds = <String>{};
 
     // Firestore rules require uid-filtered queries — split into buyer + seller streams
     _buyerOrdersSubscription = _db
@@ -94,8 +121,9 @@ class FishMarketplaceService extends ChangeNotifier {
         .snapshots()
         .listen(
       (snapshot) {
-        buyerOrdersList = snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
-        mergeAndNotify();
+        _buyerOrdersList =
+            snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        _mergeAndNotify();
       },
       onError: (e) {
         _error = 'Failed to load orders: $e';
@@ -110,8 +138,22 @@ class FishMarketplaceService extends ChangeNotifier {
         .snapshots()
         .listen(
       (snapshot) {
-        sellerOrdersList = snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
-        mergeAndNotify();
+        final newList =
+            snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        if (sellerOrdersInitialized) {
+          for (final order in newList) {
+            if (!knownSellerOrderIds.contains(order.id) &&
+                order.status == OrderStatus.pending) {
+              onNewSellerOrder?.call(order);
+            }
+          }
+        }
+        knownSellerOrderIds
+          ..clear()
+          ..addAll(newList.map((o) => o.id));
+        sellerOrdersInitialized = true;
+        _sellerOrdersList = newList;
+        _mergeAndNotify();
       },
       onError: (e) {
         _error = 'Failed to load orders: $e';
@@ -276,6 +318,10 @@ class FishMarketplaceService extends ChangeNotifier {
   }
 
   Future<void> acceptOrder(String orderId, {String? note}) async {
+    final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _applyToAllLists(
+        orderId, (o) => o.copyWith(status: OrderStatus.accepted, sellerNote: note));
+    notifyListeners();
     try {
       await _db.collection('orders').doc(orderId).update({
         'status': OrderStatus.accepted.name,
@@ -283,58 +329,54 @@ class FishMarketplaceService extends ChangeNotifier {
         'respondAt': Timestamp.now(),
       });
     } catch (e) {
+      if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to accept order: $e';
       notifyListeners();
     }
   }
 
   Future<void> rejectOrder(String orderId, {String? reason}) async {
+    final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _applyToAllLists(orderId,
+        (o) => o.copyWith(status: OrderStatus.rejected, rejectionReason: reason));
+    notifyListeners();
     try {
-      final orderDoc = await _db.collection('orders').doc(orderId).get();
-      if (orderDoc.exists) {
-        final listingId = orderDoc.data()!['listingId'] as String;
-
-        await _db.collection('orders').doc(orderId).update({
-          'status': OrderStatus.rejected.name,
-          'rejectionReason': reason,
-          'respondAt': Timestamp.now(),
-        });
-
-        // Make the listing available again
-        await updateListingStatus(listingId, ListingStatus.available);
+      await _db.collection('orders').doc(orderId).update({
+        'status': OrderStatus.rejected.name,
+        'rejectionReason': reason,
+        'respondAt': Timestamp.now(),
+      });
+      if (prev != null) {
+        await updateListingStatus(prev.listingId, ListingStatus.available);
       }
     } catch (e) {
+      if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to reject order: $e';
       notifyListeners();
     }
   }
 
   Future<void> cancelOrder(String orderId) async {
+    final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _applyToAllLists(orderId, (o) => o.copyWith(status: OrderStatus.cancelled));
+    notifyListeners();
     try {
-      final orderDoc = await _db.collection('orders').doc(orderId).get();
-      if (orderDoc.exists) {
-        await _db.collection('orders').doc(orderId).update({
-          'status': OrderStatus.cancelled.name,
-          'respondAt': Timestamp.now(),
-        });
-        // Seller manually chooses to relist via the Resell button — no auto-relist here.
-        final idx = _orders.indexWhere((o) => o.id == orderId);
-        if (idx != -1) {
-          _orders[idx] = _orders[idx].copyWith(status: OrderStatus.cancelled);
-          notifyListeners();
-        }
-      }
+      await _db.collection('orders').doc(orderId).update({
+        'status': OrderStatus.cancelled.name,
+        'respondAt': Timestamp.now(),
+      });
     } catch (e) {
+      if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to cancel order: $e';
       notifyListeners();
     }
   }
 
   Future<void> resellOrder(String orderId) async {
+    final listingId =
+        _orders.where((o) => o.id == orderId).firstOrNull?.listingId;
     try {
-      final orderDoc = await _db.collection('orders').doc(orderId).get();
-      if (orderDoc.exists) {
-        final listingId = orderDoc.data()!['listingId'] as String;
+      if (listingId != null) {
         await updateListingStatus(listingId, ListingStatus.available);
       }
     } catch (e) {
@@ -344,27 +386,24 @@ class FishMarketplaceService extends ChangeNotifier {
   }
 
   Future<void> completeOrder(String orderId) async {
+    final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _applyToAllLists(orderId, (o) => o.copyWith(status: OrderStatus.completed));
+    notifyListeners();
     try {
-      final orderDoc = await _db.collection('orders').doc(orderId).get();
-      if (orderDoc.exists) {
-        final listingId = orderDoc.data()!['listingId'] as String;
-
-        await _db.collection('orders').doc(orderId).update({
-          'status': OrderStatus.completed.name,
-          'respondAt': Timestamp.now(),
-        });
-
-        await updateListingStatus(listingId, ListingStatus.sold);
-
-        // Update seller's total sales — only allowed if current user is the seller
-        final sellerId = orderDoc.data()!['sellerId'] as String;
-        if (_currentUserId == sellerId) {
-          await _db.collection('users').doc(sellerId).update({
+      await _db.collection('orders').doc(orderId).update({
+        'status': OrderStatus.completed.name,
+        'respondAt': Timestamp.now(),
+      });
+      if (prev != null) {
+        await updateListingStatus(prev.listingId, ListingStatus.sold);
+        if (_currentUserId == prev.sellerId) {
+          await _db.collection('users').doc(prev.sellerId).update({
             'total_sales': FieldValue.increment(1),
           });
         }
       }
     } catch (e) {
+      if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to complete order: $e';
       notifyListeners();
     }
