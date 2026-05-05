@@ -2,14 +2,16 @@ import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/models/weather/weather_response_model.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/weather/weather_localizations.dart';
 import 'styles.dart';
 
 /// Derives a [SafetyLevel] from a [WeatherResponseModel] using the same
 /// thresholds as [MarineSafetyThresholds], then renders a prominent badge.
 class WeatherSafetyBadge extends StatelessWidget {
   final WeatherResponseModel weatherData;
+  final WeatherLocalizations l10n;
 
-  const WeatherSafetyBadge({super.key, required this.weatherData});
+  const WeatherSafetyBadge({super.key, required this.weatherData, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class WeatherSafetyBadge extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WeatherStyles.sectionHeader('Marine Safety', color),
+          WeatherStyles.sectionHeader(l10n.marineSafety, color),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -43,7 +45,7 @@ class WeatherSafetyBadge extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    level.displayName,
+                    _levelDisplayName(level),
                     style: TextStyle(
                       color: color,
                       fontSize: 20,
@@ -51,7 +53,7 @@ class WeatherSafetyBadge extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    level.description,
+                    _levelDescription(level),
                     style: TextStyle(
                       color: WeatherStyles.white(0.6),
                       fontSize: 13,
@@ -91,6 +93,20 @@ class WeatherSafetyBadge extends StatelessWidget {
     );
   }
 
+  String _levelDisplayName(SafetyLevel level) => switch (level) {
+        SafetyLevel.safe => l10n.safetyLevelSafe,
+        SafetyLevel.caution => l10n.safetyLevelCaution,
+        SafetyLevel.dangerous => l10n.safetyLevelDangerous,
+        SafetyLevel.blocked => l10n.safetyLevelBlocked,
+      };
+
+  String _levelDescription(SafetyLevel level) => switch (level) {
+        SafetyLevel.safe => l10n.safetyDescSafe,
+        SafetyLevel.caution => l10n.safetyDescCaution,
+        SafetyLevel.dangerous => l10n.safetyDescDangerous,
+        SafetyLevel.blocked => l10n.safetyDescBlocked,
+      };
+
   WeatherSafetyAssessment _assess(WeatherResponseModel data) {
     final current = data.currentWeather;
     final windKph = current.windKph;
@@ -99,29 +115,27 @@ class WeatherSafetyBadge extends StatelessWidget {
     SafetyLevel worst = SafetyLevel.safe;
     final warnings = <String>[];
 
-    // Wind speed
     final windKnots = windKph / 1.852;
     if (windKph >= NavigationConstants.windSpeedBlockedKph) {
       worst = SafetyLevel.blocked;
-      warnings.add('Wind ${windKnots.toStringAsFixed(0)} kn exceeds safe limit');
+      warnings.add(l10n.windExceedsLimit(windKnots.toStringAsFixed(0)));
     } else if (windKph >= NavigationConstants.windSpeedDangerousKph) {
       worst = _worst(worst, SafetyLevel.dangerous);
-      warnings.add('Strong wind: ${windKnots.toStringAsFixed(0)} kn');
+      warnings.add(l10n.strongWind(windKnots.toStringAsFixed(0)));
     } else if (windKph >= NavigationConstants.windSpeedCautionKph) {
       worst = _worst(worst, SafetyLevel.caution);
-      warnings.add('Moderate wind: ${windKnots.toStringAsFixed(0)} kn');
+      warnings.add(l10n.moderateWind(windKnots.toStringAsFixed(0)));
     }
 
-    // Visibility
     if (visMeters <= NavigationConstants.visibilityBlockedMeters) {
       worst = SafetyLevel.blocked;
-      warnings.add('Visibility ${current.visKm.toStringAsFixed(1)} km below safe limit');
+      warnings.add(l10n.visibilityBelowLimit(current.visKm.toStringAsFixed(1)));
     } else if (visMeters <= NavigationConstants.visibilityDangerousMeters) {
       worst = _worst(worst, SafetyLevel.dangerous);
-      warnings.add('Low visibility: ${current.visKm.toStringAsFixed(1)} km');
+      warnings.add(l10n.lowVisibilityKm(current.visKm.toStringAsFixed(1)));
     } else if (visMeters <= NavigationConstants.visibilityCautionMeters) {
       worst = _worst(worst, SafetyLevel.caution);
-      warnings.add('Reduced visibility: ${current.visKm.toStringAsFixed(1)} km');
+      warnings.add(l10n.reducedVisibility(current.visKm.toStringAsFixed(1)));
     }
 
     return WeatherSafetyAssessment(
