@@ -11,6 +11,7 @@ import '3_daily_forecast.dart';
 import '4_wind_card.dart';
 import '6_tides_card.dart';
 import '7_celestial_almanac_card.dart';
+import 'safety_badge.dart';
 
 class WeatherList extends StatelessWidget {
   final WeatherResponseModel weatherData;
@@ -42,6 +43,8 @@ class WeatherList extends StatelessWidget {
             child: Column(
               children: [
                 WeatherWindCard(wind: current, l10n: l10n),
+                const SizedBox(height: 16),
+                WeatherSafetyBadge(weatherData: weatherData),
                 const SizedBox(height: 16),
 
                 // Compact info row 1: UV + Feels like

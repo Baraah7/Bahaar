@@ -114,10 +114,10 @@ class WeatherLocalizations {
     'southern city': 'المدينة الجنوبية',
     'qudaibiya': 'قضيبية',
     'adliya': 'العدلية',
-    'hoora': 'الحورة',
+    'al hoora': 'الحورة',
     'um al hassam': 'أم الحصم',
-    'mahooz': 'المحوز',
-    'segaya': 'سيجيئة',
+    'al mahooz': 'المحوز',
+    'segaya': 'سقية',
     'al busaiteen': 'البسيتين',
     'ad dayr': 'الدير',
     // ── Additional WeatherAPI variants ──────────────────────────────────────
@@ -135,9 +135,9 @@ class WeatherLocalizations {
     'umm al hassam': 'أم الحصم',
     'gudaibiya': 'قضيبية',
     'gudaibiyah': 'قضيبية',
+    'as sakhir': 'الصخير',
   };
 
-  
   static const Map<String, String> _conditionArabic = {
     'sunny': 'مشمس',
     'clear': 'صافٍ',

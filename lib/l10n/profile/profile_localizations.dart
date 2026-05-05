@@ -105,4 +105,6 @@ class ProfileLocalizations {
   String get saveChanges => _isAr ? 'حفظ التغييرات' : 'Save Changes';
   String get save => _isAr ? 'حفظ' : 'Save';
   String get account => _isAr ? 'الحساب' : 'Account';
+  String get security => _isAr ? 'الأمان' : 'Security';
+  String get changePassword => _isAr ? 'تغيير كلمة المرور' : 'Change Password';
 }

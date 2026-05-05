@@ -5,23 +5,29 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Fetches tide predictions from the WorldTides API v3 (worldtides.info).
-/// Free plan: 10 requests/day — results are cached for 24 hours to stay
-/// within quota.
+/// Free plan: 10 requests/day — results are cached per location for 24 hours.
 class WorldTidesService {
-  // Bahrain (Manama) coordinates
-  static const double _lat = 26.2235;
-  static const double _lon = 50.5876;
-
-  static const _cacheKey = 'tides_cache_json';
-  static const _cacheTimeKey = 'tides_cache_time';
+  // Fallback coordinates (Bahrain / Manama) when GPS is unavailable.
+  static const double _defaultLat = 26.2235;
+  static const double _defaultLon = 50.5876;
 
   final http.Client _client;
 
   WorldTidesService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<List<TideEntry>> getTides({int days = 1}) async {
-    // Return cached data if it is less than 24 hours old.
-    final cached = await _loadCache();
+  Future<List<TideEntry>> getTides({
+    int days = 1,
+    double? lat,
+    double? lon,
+  }) async {
+    final usedLat = lat ?? _defaultLat;
+    final usedLon = lon ?? _defaultLon;
+
+    // Round to 1 decimal (~11 km grid) so nearby GPS fixes share a cache entry.
+    final cacheKey = _cacheKey(usedLat, usedLon);
+    final cacheTimeKey = _cacheTimeKey(usedLat, usedLon);
+
+    final cached = await _loadCache(cacheKey, cacheTimeKey);
     if (cached != null) return cached;
 
     final apiKey = dotenv.env['WORLDTIDES_API'];
@@ -31,7 +37,7 @@ class WorldTidesService {
 
     try {
       final url =
-          'https://www.worldtides.info/api/v3?extremes&lat=$_lat&lon=$_lon&key=$apiKey&days=$days';
+          'https://www.worldtides.info/api/v3?extremes&lat=$usedLat&lon=$usedLon&key=$apiKey&days=$days';
       final response = await _client.get(Uri.parse(url));
 
       if (response.statusCode != 200) return [];
@@ -46,23 +52,29 @@ class WorldTidesService {
           .map((e) => TideEntry.fromWorldTidesJson(e as Map<String, dynamic>))
           .toList();
 
-      await _saveCache(extremes.cast<Map<String, dynamic>>());
+      await _saveCache(cacheKey, cacheTimeKey, extremes.cast<Map<String, dynamic>>());
       return entries;
     } catch (_) {
       return [];
     }
   }
 
-  Future<List<TideEntry>?> _loadCache() async {
+  String _cacheKey(double lat, double lon) =>
+      'tides_cache_json_${lat.toStringAsFixed(1)}_${lon.toStringAsFixed(1)}';
+
+  String _cacheTimeKey(double lat, double lon) =>
+      'tides_cache_time_${lat.toStringAsFixed(1)}_${lon.toStringAsFixed(1)}';
+
+  Future<List<TideEntry>?> _loadCache(String cacheKey, String cacheTimeKey) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedTime = prefs.getInt(_cacheTimeKey);
+      final savedTime = prefs.getInt(cacheTimeKey);
       if (savedTime == null) return null;
 
       final age = DateTime.now().millisecondsSinceEpoch - savedTime;
       if (age > const Duration(hours: 24).inMilliseconds) return null;
 
-      final raw = prefs.getString(_cacheKey);
+      final raw = prefs.getString(cacheKey);
       if (raw == null) return null;
 
       final list = jsonDecode(raw) as List;
@@ -74,12 +86,15 @@ class WorldTidesService {
     }
   }
 
-  Future<void> _saveCache(List<Map<String, dynamic>> extremes) async {
+  Future<void> _saveCache(
+    String cacheKey,
+    String cacheTimeKey,
+    List<Map<String, dynamic>> extremes,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKey, jsonEncode(extremes));
-      await prefs.setInt(
-          _cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setString(cacheKey, jsonEncode(extremes));
+      await prefs.setInt(cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
     } catch (_) {}
   }
 }

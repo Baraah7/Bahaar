@@ -28,7 +28,8 @@ class FishingLogLocalizations {
   String get pinOnMap => _isAr ? 'تثبيت على الخريطة' : 'Pin on Map';
   String get latitude => _isAr ? 'خط العرض' : 'Latitude';
   String get longitude => _isAr ? 'خط الطول' : 'Longitude';
-  String get locationPinned => _isAr ? 'تم تثبيت الموقع على الخريطة.' : 'Location pinned on map.';
+  String get locationPinned => _isAr ? 'تم تثبيت الموقع.' : 'Location pinned';
+  String get currectLocation => _isAr ? 'الموقع الحالي' : 'Current location';
   String get ongoing => _isAr ? 'جارية' : 'Ongoing';
   String get pickCatchTime => _isAr ? 'اختر وقت الصيد' : 'Pick catch time';
   String get quickSpeciesHamour => _isAr ? 'هامور' : 'Hamour';
@@ -38,6 +39,9 @@ class FishingLogLocalizations {
   String get quickSpeciesZubaidi => _isAr ? 'زبيدي' : 'Zubaidi';
   String get quickSpeciesShrimp => _isAr ? 'جمبري' : 'Shrimp';
   String get quickSpeciesCrab => _isAr ? 'سرطان البحر' : 'Crab';
+  String get quickSpeciesOther => _isAr ? 'أخرى' : 'Others';
+  String get locationOnLandError => _isAr ? 'موقعك على اليابسة — استخدم الخريطة' : 'Your location is on land — use the map';
+  String get locationGpsError => _isAr ? 'تعذّر تحديد الموقع — فعّل GPS' : 'Could not get location — enable GPS';
   String get tripAlreadyActive => _isAr ? 'رحلة نشطة بالفعل — أنهها أولاً.' : 'A trip is already active — end it first.';
   String get endActiveTripFirst => _isAr ? 'أنهِ الرحلة النشطة أولاً.' : 'End the active trip first.';
   String get endButtonLabel => _isAr ? 'إنهاء' : 'End';

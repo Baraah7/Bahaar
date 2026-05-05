@@ -29,11 +29,11 @@ class AppLocalization {
   String get fishingMapSubtitle => _isAr ? 'خريطة تفاعلية مع ألوان العمق' : 'Interactive map with depth colors';
   String get weather => _isAr ? 'الطقس' : 'Weather';
   String get weatherSubtitle => _isAr ? 'تحقق من طقس البحر' : 'Check marine weather';
-  String get fishRecognition => _isAr ? 'التعرف على الأسماك' : 'Fish Recognition';
+  String get fishRecognition => _isAr ? 'التصنيف' : 'Discerment';
   String get fishRecognitionSubtitle => _isAr ? 'تعرف على أنواع الأسماك' : 'Identify fish species';
   String get marinerHarvest => _isAr ? 'حصاد البحار' : 'Mariner Harvest';
   String get marinerHarvestSubtitle => _isAr ? 'شراء وبيع الأسماك الطازجة' : 'Buy & sell fresh fish';
-  String get marketplace => _isAr ? 'السوق' : 'Marketplace';
+  String get marketplace => _isAr ? 'السوق' : 'Market';
   String get fishingLog => _isAr ? 'السجل' : 'Log';
   String get signOut => _isAr ? 'تسجيل الخروج' : 'Sign Out';
   String get signIn => _isAr ? 'تسجيل الدخول' : 'Sign In';

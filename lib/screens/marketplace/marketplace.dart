@@ -15,6 +15,7 @@ import 'package:bahaar/widgets/marketplace/sell_fish_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bahaar/services/notifications/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 class MarinerHarvestPage extends ConsumerStatefulWidget {
@@ -88,7 +89,14 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     final auth = ref.read(authProviderProvider);
     await auth.initializeAuthState();
     final user = auth.currentAppUser;
-    if (user != null) _marketplaceService.setCurrentUser(user.id);
+    if (user != null) {
+      _marketplaceService.setCurrentUser(user.id);
+      _marketplaceService.onNewSellerOrder = (order) {
+        NotificationService.instance.showNewOrderNotification(
+          buyerName: order.buyerName,
+        );
+      };
+    }
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
