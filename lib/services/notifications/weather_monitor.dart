@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:bahaar/services/marine_weather_service.dart';
 import 'package:bahaar/services/notifications/notification_service.dart';
 import 'package:bahaar/services/weather/world_tides_service.dart';
+import 'package:location/location.dart';
 
 /// Periodically checks weather and tide conditions, fires local notifications
 /// when thresholds are exceeded.
@@ -77,7 +78,18 @@ class WeatherMonitor {
 
   Future<void> _checkTides() async {
     try {
-      final tides = await WorldTidesService().getTides();
+      double? lat;
+      double? lon;
+      try {
+        final loc = Location();
+        final data = await loc.getLocation();
+        if (data.latitude != null && data.longitude != null) {
+          lat = data.latitude;
+          lon = data.longitude;
+        }
+      } catch (_) {}
+
+      final tides = await WorldTidesService().getTides(lat: lat, lon: lon);
       if (tides.isEmpty) return;
 
       final now = DateTime.now();

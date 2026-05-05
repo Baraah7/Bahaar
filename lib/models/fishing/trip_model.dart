@@ -111,7 +111,6 @@ class Trip {
         if (startLat != null) 'start_lat': startLat,
         if (startLon != null) 'start_lon': startLon,
         if (notes != null) 'notes': notes,
-        'catches': catches.map((c) => c.toJson()).toList(),
       };
 }
 

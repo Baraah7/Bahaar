@@ -38,10 +38,14 @@ class _WeatherPageState extends State<Weather> {
 
     try {
       String weatherQuery = "Manama";
+      double? userLat;
+      double? userLon;
       try {
         final loc = Location();
         final data = await loc.getLocation();
         if (data.latitude != null && data.longitude != null) {
+          userLat = data.latitude;
+          userLon = data.longitude;
           weatherQuery =
               "${data.latitude!.toStringAsFixed(4)},${data.longitude!.toStringAsFixed(4)}";
         }
@@ -49,7 +53,7 @@ class _WeatherPageState extends State<Weather> {
 
       final results = await Future.wait([
         weatherService.getWeather(weatherQuery, true, 7, false),
-        tidesService.getTides(),
+        tidesService.getTides(lat: userLat, lon: userLon),
       ]);
 
       if (!mounted) return;

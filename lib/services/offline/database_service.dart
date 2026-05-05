@@ -188,6 +188,18 @@ class DatabaseService {
     return db.query('catches', where: 'synced = 0');
   }
 
+  Future<List<Map<String, dynamic>>> getUnsyncedCatchesForTrip(
+      String tripId, {String? userId}) async {
+    final db = await database;
+    if (userId != null) {
+      return db.query('catches',
+          where: 'synced = 0 AND trip_id = ? AND user_id = ?',
+          whereArgs: [tripId, userId]);
+    }
+    return db.query('catches',
+        where: 'synced = 0 AND trip_id = ?', whereArgs: [tripId]);
+  }
+
   Future<void> markTripSynced(String id) async {
     final db = await database;
     await db
