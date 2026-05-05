@@ -31,7 +31,6 @@ import 'package:bahaar/services/offline/connectivity_service.dart';
 import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
-import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
 import 'package:bahaar/widgets/map/trip_track_layer.dart';
@@ -1289,10 +1288,6 @@ class _IntegratedMapState extends State<IntegratedMap>
   List<Waypoint> _buildRouteWaypoints(List<RouteSegment> segments) {
     if (segments.isEmpty) return [];
 
-    double cumDist = 0;
-    for (final s in segments) cumDist += s.distance;
-    final totalDist = cumDist;
-
     final waypoints = <Waypoint>[];
     double distAcc = 0;
     int timeAcc = 0;
@@ -1936,56 +1931,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     });
   }
 
-  Future<void> _handleSaveMask() async {
-    final success = await _navigationMask.saveChanges();
-    if (success) {
-      _showMessage('Mask saved successfully', Colors.green);
-      setState(() {});
-    } else {
-      _showMessage('Failed to save mask', Colors.red);
-    }
-  }
-
-  Future<void> _handleResetMask() async {
-    final l10n = MapLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.resetMask),
-        content: Text(l10n.resetMaskConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.reset, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final success = await _navigationMask.resetToOriginal();
-      if (success) {
-        setState(() {
-          _paintedCells.clear();
-        });
-        _showMessage(l10n.maskResetToOriginal, Colors.green);
-      } else {
-        _showMessage(l10n.failedToResetMask, Colors.red);
-      }
-    }
-  }
-
-  void _exitAdminEditMode() {
-    setState(() {
-      _layerManager.isAdminEditMode = false;
-      _paintedCells.clear();
-    });
-  }
-
   // ============================================================
   // Outline Edit Methods
   // ============================================================
@@ -2619,164 +2564,6 @@ class _IntegratedMapState extends State<IntegratedMap>
         ),
       ),
     );
-  }
-
-  Widget _buildNavigationStatusIndicator(MapLocalizations l10n) {
-    final ready = _maskInitialized;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: ready ? Colors.green.shade600 : Colors.grey.shade500,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            ready ? l10n.navigationReady : l10n.loading,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapIconButton({
-    required IconData icon,
-    required String tooltip,
-    VoidCallback? onPressed,
-    bool isActive = false,
-    Color activeColor = AppColors.red,
-  }) {
-    final iconColor = onPressed == null
-        ? Colors.grey.shade400
-        : isActive
-            ? activeColor
-            : Colors.blueGrey.shade700;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: Icon(icon, size: 22, color: iconColor),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButtonGroup(List<Widget> buttons) {
-    final children = <Widget>[];
-    for (int i = 0; i < buttons.length; i++) {
-      children.add(buttons[i]);
-      if (i < buttons.length - 1) {
-        children.add(Divider(
-          height: 1,
-          thickness: 0.5,
-          color: Colors.grey.shade200,
-        ));
-      }
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Colors.green),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.green)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomControls() {
-    return _buildButtonGroup([
-      _buildMapIconButton(
-        icon: Icons.add,
-        tooltip: 'Zoom in',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom + 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.remove,
-        tooltip: 'Zoom out',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom - 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.my_location,
-        tooltip: 'My location',
-        onPressed: _mapReady && _locationData != null
-            ? () => _mapController.move(
-                  LatLng(
-                    _locationData!.latitude ?? MapConstants.defaultLatitude,
-                    _locationData!.longitude ?? MapConstants.defaultLongitude,
-                  ),
-                  14,
-                )
-            : null,
-      ),
-    ]);
   }
 
   // ============================================================

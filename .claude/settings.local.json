@@ -16,7 +16,8 @@
       "Bash(Sort-Object)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\" -Recurse -Filter \"*.dart\")",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\\\\lib\" -MaxDepth 0 -Filter \"*.dart\" -File)"
     ]
   }
 }

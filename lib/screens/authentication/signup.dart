@@ -5,7 +5,6 @@ import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/utilities/authentication/authentication_validation.dart';
 import 'package:bahaar/widgets/common/app_snackbar.dart';
 import 'package:bahaar/widgets/common/language_toggle.dart';
-import 'package:bahaar/widgets/profile/auth_background.dart';
 import 'package:bahaar/widgets/profile/auth_background.dart' as widgets;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,7 +69,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          const Positioned.fill(child: AuthBackground()),
+          const Positioned.fill(child: widgets.AuthBackground()),
 
           SafeArea(
             child: SingleChildScrollView(

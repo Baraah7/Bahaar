@@ -1,5 +1,4 @@
-﻿import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:intl/intl.dart';

@@ -1,14 +1,10 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:bahaar/core/constants/app_colors.dart';
-import 'package:bahaar/navigation/corrections.dart';
-import 'package:bahaar/navigation/confidence_engine.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/navigation/camera_service.dart';
-import 'package:bahaar/navigation/dead_reckoning.dart';
 import 'package:bahaar/navigation/star_identifier.dart';
 import 'package:bahaar/screens/celestial navigation/sky_scanner_view.dart';
 import 'package:bahaar/l10n/celestial_navigation/celestial_navigation_localizations.dart';
@@ -27,25 +23,10 @@ class CelestialNavigationScreen extends StatefulWidget {
 
 class _CelestialNavigationScreenState
     extends State<CelestialNavigationScreen> {
-  // ── Live clock ───────────────────────────────────────────────────────────
-  Timer? _clockTimer;
-  DateTime _nowUtc = DateTime.now().toUtc();
-
   // ── GPS ──────────────────────────────────────────────────────────────────
   final _location = Location();
   LatLng? _gpsPosition;
   bool _gpsLoading = false;
-
-  // ── Sight-reduction form ─────────────────────────────────────────────────
-  final _altController = TextEditingController(text: '45.0');
-  final _hoeController = TextEditingController(text: '3.0');
-  final _pressController = TextEditingController(text: '1013.0');
-  final _tempController = TextEditingController(text: '25.0');
-
-  // ── Confidence-engine inputs ─────────────────────────────────────────────
-  final _pitchController = TextEditingController(text: '1.0');
-  final _starsController = TextEditingController(text: '12');
-  final _driftController = TextEditingController(text: '0.05');
 
   // ── Sky Scanner ──────────────────────────────────────────────────────────
   final _cameraService = CameraService();
@@ -56,26 +37,15 @@ class _CelestialNavigationScreenState
   int    _detectedStars     = 0;
   double _engineConfidence  = 0.0;
   double _imuDrift          = 0.0;
-  bool   _motionBlurred     = false;
   bool   _horizonDetected   = false;
   double _horizonAngle      = 0.0;
   List<String> _identifiedStarNames = [];
 
-  // ── Results ──────────────────────────────────────────────────────────────
-  double? _correctedAltDeg; // after refraction + dip correction
-  double? _correctionArcmin;
-  String _correctionReason = '';
-  ConfidenceResult? _confidenceResult;
   CelestialFix? _postedFix;
-
-  final _engine = const ConfidenceEngine(expectedStarsInRegion: 20);
 
   @override
   void initState() {
     super.initState();
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _nowUtc = DateTime.now().toUtc());
-    });
     _fetchGps();
     // Load star catalog in the background — needed by Sky Scanner
     StarIdentifier.instance.loadCatalog().then((err) {
@@ -87,15 +57,7 @@ class _CelestialNavigationScreenState
 
   @override
   void dispose() {
-    _clockTimer?.cancel();
     _cameraService.dispose();
-    _altController.dispose();
-    _hoeController.dispose();
-    _pressController.dispose();
-    _tempController.dispose();
-    _pitchController.dispose();
-    _starsController.dispose();
-    _driftController.dispose();
     super.dispose();
   }
 
@@ -122,54 +84,7 @@ class _CelestialNavigationScreenState
     }
   }
 
-  // ── Sight reduction ───────────────────────────────────────────────────────
 
-  void _calculateSightReduction() {
-    final appAlt = double.tryParse(_altController.text) ?? 0.0;
-    final hoe = double.tryParse(_hoeController.text) ?? 3.0;
-    final press = double.tryParse(_pressController.text) ?? 1013.0;
-    final temp = double.tryParse(_tempController.text) ?? 25.0;
-
-    final reason = StringBuffer();
-    final totalArcmin = CelestialCorrections.totalCorrection(
-      appAlt, hoe, press, temp,
-      reason: reason,
-    );
-
-    setState(() {
-      _correctionArcmin = totalArcmin;
-      _correctionReason = reason.toString();
-      if (totalArcmin > 0) {
-        _correctedAltDeg = appAlt - totalArcmin / 60.0;
-      } else {
-        _correctedAltDeg = null;
-      }
-    });
-  }
-
-  // ── Confidence score ──────────────────────────────────────────────────────
-
-  void _calculateConfidence() {
-    final pitch = double.tryParse(_pitchController.text) ?? 1.0;
-    final stars = int.tryParse(_starsController.text) ?? 12;
-    final drift = double.tryParse(_driftController.text) ?? 0.05;
-    final appAlt = double.tryParse(_altController.text) ?? 45.0;
-
-    // Simulate 10 IMU samples at the given pitch std-dev
-    final samples = List.generate(
-      10,
-      (i) => pitch * math.sin(i * math.pi / 5),
-    );
-
-    final result = _engine.evaluate(
-      pitchSamplesWindow: samples,
-      detectedUsableStars: stars,
-      primaryAltitudeDeg: _correctedAltDeg ?? appAlt,
-      peakGyroDriftDegPerSec: drift,
-    );
-
-    setState(() => _confidenceResult = result);
-  }
 
   // ── Sky Scanner ───────────────────────────────────────────────────────────
 
@@ -207,71 +122,14 @@ class _CelestialNavigationScreenState
         _detectedStars        = result.detectedStars;
         _engineConfidence     = result.engineConfidence;
         _imuDrift             = result.imuDrift;
-        _motionBlurred        = false;
         _horizonDetected      = result.horizonDetected;
         _horizonAngle         = result.horizonAngle;
         _identifiedStarNames  = result.identifiedStarNames;
       });
       // Auto-fill confidence engine inputs with the scan results
-      _starsController.text = result.detectedStars.toString();
-      _driftController.text = result.imuDrift.toStringAsFixed(3);
     }
   }
 
-  // ── Post fix to map ───────────────────────────────────────────────────────
-
-  void _postFixToMap() {
-    if (_gpsPosition == null || _confidenceResult == null) return;
-    if (_confidenceResult!.decision == FixDecision.rejected) return;
-
-    final uncertaintyNm =
-        _confidenceResult!.decision == FixDecision.fix ? 3.0 : 5.0;
-
-    // GPS spoofing check — compare the new celestial fix position to the
-    // current GPS reading.  If the two positions diverge by more than
-    // (uncertaintyNm + 2 NM guard band) the GPS signal is likely spoofed.
-    bool isSpoofed = false;
-    if (_gpsPosition != null) {
-      final prevFix = CelestialFixNotifier.instance.fix;
-      if (prevFix != null) {
-        final deltaNm = DeadReckoning.distanceNm(
-          _gpsPosition!,
-          prevFix.position,
-        );
-        // Alert if GPS position and last celestial fix are > uncertaintyNm + 2 NM apart
-        isSpoofed = deltaNm > (uncertaintyNm + 2.0);
-      }
-    }
-
-    final fix = CelestialFix(
-      position: _gpsPosition!,
-      confidenceScore: _confidenceResult!.score,
-      decision: _confidenceResult!.decision,
-      uncertaintyNm: uncertaintyNm,
-      timestamp: _nowUtc,
-    );
-
-    CelestialFixNotifier.instance.setFix(fix, spoofingAlert: isSpoofed);
-    setState(() => _postedFix = fix);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text(
-          'Fix posted to map — uncertainty ±${uncertaintyNm.toStringAsFixed(0)} NM',
-          style: const TextStyle(color: Colors.white),
-        ),
-        action: SnackBarAction(
-          label: 'Clear',
-          textColor: AppColors.tan,
-          onPressed: () {
-            CelestialFixNotifier.instance.clearFix();
-            setState(() => _postedFix = null);
-          },
-        ),
-      ),
-    );
-  }
 
 
   // ── Steps card ────────────────────────────────────────────────────────────
@@ -714,15 +572,6 @@ class _CelestialNavigationScreenState
     );
   }
 
-  bool get _canPost =>
-      _gpsPosition != null &&
-      _confidenceResult != null &&
-      _confidenceResult!.decision != FixDecision.rejected;
-
-  static String _fmtUtc(DateTime dt) =>
-      '${dt.hour.toString().padLeft(2, '0')}:'
-      '${dt.minute.toString().padLeft(2, '0')}:'
-      '${dt.second.toString().padLeft(2, '0')} UTC';
 }
 
 // ─── Reusable UI components ───────────────────────────────────────────────────
