@@ -119,6 +119,16 @@ class TripService {
 
     if (_connectivity.isOnline) {
       await _syncTripToFirestore(ended);
+      // Sync any catches that were logged while offline
+      final uid = ended.userId ?? _currentUid;
+      if (uid != null) {
+        final unsyncedCatches =
+            await _db.getUnsyncedCatchesForTrip(ended.id, userId: uid);
+        for (final row in unsyncedCatches) {
+          await _syncCatchRowToFirestore(uid, row);
+          await _db.markCatchSynced(row['id'] as String);
+        }
+      }
     }
     return ended;
   }
@@ -162,11 +172,35 @@ class TripService {
     if (_activeTrip?.id == id) {
       _activeTrip = _activeTrip!.copyWith(title: trimmed);
     }
+    if (_connectivity.isOnline && _currentUid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUid)
+            .collection('trips')
+            .doc(id)
+            .update({'title': trimmed});
+      } catch (e) {
+        log('TripService: trip title sync failed — $e');
+      }
+    }
   }
 
   Future<void> deleteTrip(String id) async {
     await _db.deleteTrip(id);
     if (_activeTrip?.id == id) _activeTrip = null;
+    if (_connectivity.isOnline && _currentUid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUid)
+            .collection('trips')
+            .doc(id)
+            .delete();
+      } catch (e) {
+        log('TripService: trip delete sync failed — $e');
+      }
+    }
   }
 
   // ─── Catch CRUD ──────────────────────────────────────────────
@@ -202,6 +236,15 @@ class TripService {
       );
     }
 
+    if (_connectivity.isOnline && _currentUid != null) {
+      try {
+        await _syncCatchRowToFirestore(_currentUid!, row);
+        await _db.markCatchSynced(entry.id);
+      } catch (e) {
+        log('TripService: immediate catch sync failed — $e');
+      }
+    }
+
     log('TripService: logged catch ${entry.id} for trip $tripId');
     return entry;
   }
@@ -215,10 +258,41 @@ class TripService {
       'notes': entry.notes,
       'synced': 0,
     });
+    if (_connectivity.isOnline && _currentUid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUid)
+            .collection('catches')
+            .doc(entry.id)
+            .update({
+          'species': entry.species,
+          'weight_kg': entry.weightKg,
+          'latitude': entry.latitude,
+          'longitude': entry.longitude,
+          'notes': entry.notes,
+        });
+        await _db.markCatchSynced(entry.id);
+      } catch (e) {
+        log('TripService: catch update sync failed — $e');
+      }
+    }
   }
 
   Future<void> deleteCatch(String catchId) async {
     await _db.deleteCatch(catchId);
+    if (_connectivity.isOnline && _currentUid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUid)
+            .collection('catches')
+            .doc(catchId)
+            .delete();
+      } catch (e) {
+        log('TripService: catch delete sync failed — $e');
+      }
+    }
   }
 
   // ─── Firestore Sync ──────────────────────────────────────────
@@ -269,7 +343,9 @@ class TripService {
         .doc(uid)
         .collection('trips')
         .doc(row['id'] as String)
-        .set(Map<String, dynamic>.from(row)..remove('user_id'));
+        .set(Map<String, dynamic>.from(row)
+          ..remove('user_id')
+          ..remove('synced'));
   }
 
   Future<void> _syncCatchRowToFirestore(
@@ -279,7 +355,9 @@ class TripService {
         .doc(uid)
         .collection('catches')
         .doc(row['id'] as String)
-        .set(Map<String, dynamic>.from(row)..remove('user_id'));
+        .set(Map<String, dynamic>.from(row)
+          ..remove('user_id')
+          ..remove('synced'));
   }
 
   /// Seeds local SQLite with this user's data from Firestore (first-time
