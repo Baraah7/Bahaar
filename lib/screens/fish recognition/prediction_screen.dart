@@ -39,7 +39,6 @@ class _PredictionScreenState extends State<PredictionScreen> {
   bool _showMiniMap = false;
 
   static const _teal = Color(0xFF0D4F54);
-  static const _tealLight = Color(0xFF0E7490);
 
   FishRecognitionLocalizations get _l10n => FishRecognitionLocalizations.of(context);
   bool get _isAr => _l10n.localeName == 'ar';

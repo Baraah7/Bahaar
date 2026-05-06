@@ -62,6 +62,35 @@ class NotificationService {
     );
   }
 
+  int _orderNotificationId = 2000;
+
+  Future<void> showNewOrderNotification({required String buyerName}) async {
+    if (!_initialized) await initialize();
+
+    const androidDetails = AndroidNotificationDetails(
+      'marketplace_orders',
+      'Marketplace Orders',
+      channelDescription: 'Bahaar marketplace new order alerts',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+    await _plugin.show(
+      _orderNotificationId++,
+      'New Order Received',
+      'You have a new order from $buyerName',
+      details,
+    );
+    log('NotificationService: new order from $buyerName');
+  }
+
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }

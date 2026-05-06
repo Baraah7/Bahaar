@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
-import 'package:bahaar/models/ais_model.dart';
 import 'package:bahaar/models/map/editable_map_feature.dart';
 import 'package:bahaar/models/map/feature_edit_state.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
@@ -15,7 +14,6 @@ import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_screen.dart';
 import 'package:bahaar/screens/fish%20recognition/prediction_screen.dart';
-import 'package:bahaar/services/ais_service.dart';
 import 'package:bahaar/services/fishRecognition/fish_probability_service.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/services/map/exclusion_zone_service.dart';
@@ -33,8 +31,6 @@ import 'package:bahaar/services/offline/connectivity_service.dart';
 import 'package:bahaar/utilities/cn/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
-import 'package:bahaar/widgets/map/admin_edit_toolbar.dart';
-import 'package:bahaar/widgets/map/ais_vessel_layer.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
 import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
 import 'package:bahaar/widgets/map/trip_track_layer.dart';
@@ -51,8 +47,6 @@ import 'package:bahaar/widgets/map/territorial_mask_layer.dart';
 import 'package:bahaar/widgets/map/territorial_outline_editor.dart';
 import 'package:bahaar/models/map/nav_mode.dart';
 import 'package:bahaar/models/map/port_point.dart';
-import 'package:bahaar/widgets/map/map_button_group.dart';
-import 'package:bahaar/widgets/map/map_icon_button.dart';
 import 'package:bahaar/widgets/map/map_left_toolbar.dart';
 import 'package:bahaar/widgets/map/nav_instructions_panel.dart';
 import 'package:bahaar/widgets/map/nav_mode_option.dart';
@@ -67,7 +61,6 @@ import 'package:bahaar/widgets/navigation/weather_alert_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -129,11 +122,6 @@ class _IntegratedMapState extends State<IntegratedMap>
   OutlineBrushMode _outlineBrushMode = OutlineBrushMode.erase;
   double _outlineBrushRadius = 0.003; // ~333 m
   LatLng? _outlinePaintPreview;
-
-  // AIS state
-  late final AisService _aisService;
-  CpaResult? _topCpaAlert;
-  bool _aisAlertDismissed = false;
 
   // State
   bool _mapReady = false;
@@ -206,11 +194,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     _initRoutingServices();
     _loadFirestoreFeatures();
     _featureEditState.addListener(_onFeatureEditUpdate);
-    _aisService = AisService(
-      aishubUsername: dotenv.env['AISHUB_USERNAME'] ?? '',
-    );
-    _aisService.addListener(_onAisUpdate);
-    _aisService.initialize();
 
     final tripUid = FirebaseAuth.instance.currentUser?.uid;
     TripService.instance.initialize(uid: tripUid).then((_) {
@@ -391,28 +374,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     );
   }
 
-  void _onAisUpdate() {
-    if (!mounted) return;
-    // Pick the highest-risk CPA alert to show in the banner
-    final alerts = _aisService.cpaAlerts;
-    setState(() {
-      _topCpaAlert = alerts.isNotEmpty ? alerts.first : null;
-      if (_topCpaAlert != null) _aisAlertDismissed = false;
-    });
-
-    // Also feed own position into the CPA calculator whenever AIS updates
-    final lat = _locationData?.latitude;
-    final lon = _locationData?.longitude;
-    if (lat != null && lon != null) {
-      _aisService.updateOwnPosition(
-        lat: lat,
-        lon: lon,
-        sogKnots: 0,  // stationary until we have own-vessel SOG/COG
-        cogDeg: 0,
-      );
-    }
-  }
-
   void _onFeatureEditUpdate() {
     if (mounted) {
       setState(() {});
@@ -453,8 +414,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     _featureEditState.dispose();
     _fishProbabilityService.dispose();
     _layerManager.dispose();
-    _aisService.removeListener(_onAisUpdate);
-    _aisService.dispose();
     super.dispose();
   }
 
@@ -1976,56 +1935,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     });
   }
 
-  Future<void> _handleSaveMask() async {
-    final success = await _navigationMask.saveChanges();
-    if (success) {
-      _showMessage('Mask saved successfully', Colors.green);
-      setState(() {});
-    } else {
-      _showMessage('Failed to save mask', Colors.red);
-    }
-  }
-
-  Future<void> _handleResetMask() async {
-    final l10n = MapLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.resetMask),
-        content: Text(l10n.resetMaskConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.reset, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final success = await _navigationMask.resetToOriginal();
-      if (success) {
-        setState(() {
-          _paintedCells.clear();
-        });
-        _showMessage(l10n.maskResetToOriginal, Colors.green);
-      } else {
-        _showMessage(l10n.failedToResetMask, Colors.red);
-      }
-    }
-  }
-
-  void _exitAdminEditMode() {
-    setState(() {
-      _layerManager.isAdminEditMode = false;
-      _paintedCells.clear();
-    });
-  }
-
   // ============================================================
   // Outline Edit Methods
   // ============================================================
@@ -2160,12 +2069,6 @@ class _IntegratedMapState extends State<IntegratedMap>
               );
             },
           ),
-
-        // AIS vessels with projected paths
-        AisVesselLayer(
-          service: _aisService,
-          isVisible: true,
-        ),
 
         // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
         ListenableBuilder(
@@ -2667,164 +2570,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     );
   }
 
-  Widget _buildNavigationStatusIndicator(MapLocalizations l10n) {
-    final ready = _maskInitialized;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: ready ? Colors.green.shade600 : Colors.grey.shade500,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            ready ? l10n.navigationReady : l10n.loading,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapIconButton({
-    required IconData icon,
-    required String tooltip,
-    VoidCallback? onPressed,
-    bool isActive = false,
-    Color activeColor = AppColors.red,
-  }) {
-    final iconColor = onPressed == null
-        ? Colors.grey.shade400
-        : isActive
-            ? activeColor
-            : Colors.blueGrey.shade700;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: Icon(icon, size: 22, color: iconColor),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButtonGroup(List<Widget> buttons) {
-    final children = <Widget>[];
-    for (int i = 0; i < buttons.length; i++) {
-      children.add(buttons[i]);
-      if (i < buttons.length - 1) {
-        children.add(Divider(
-          height: 1,
-          thickness: 0.5,
-          color: Colors.grey.shade200,
-        ));
-      }
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Colors.green),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.green)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomControls() {
-    return _buildButtonGroup([
-      _buildMapIconButton(
-        icon: Icons.add,
-        tooltip: 'Zoom in',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom + 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.remove,
-        tooltip: 'Zoom out',
-        onPressed: _mapReady
-            ? () => _mapController.move(
-                  _mapController.camera.center,
-                  _mapController.camera.zoom - 1,
-                )
-            : null,
-      ),
-      _buildMapIconButton(
-        icon: Icons.my_location,
-        tooltip: 'My location',
-        onPressed: _mapReady && _locationData != null
-            ? () => _mapController.move(
-                  LatLng(
-                    _locationData!.latitude ?? MapConstants.defaultLatitude,
-                    _locationData!.longitude ?? MapConstants.defaultLongitude,
-                  ),
-                  14,
-                )
-            : null,
-      ),
-    ]);
-  }
-
   // ============================================================
   // Main Build Method
   // ============================================================
@@ -3124,13 +2869,6 @@ class _IntegratedMapState extends State<IntegratedMap>
               distanceMeters: _approachingExclusionZoneDistance,
               isViolation: false,
               onDismiss: () => setState(() => _exclusionAlertDismissed = true),
-            ),
-
-          // AIS collision alert
-          if (_topCpaAlert != null && !_aisAlertDismissed)
-            AisCollisionAlert(
-              cpa: _topCpaAlert!,
-              onDismiss: () => setState(() => _aisAlertDismissed = true),
             ),
 
           // Weather alert overlay

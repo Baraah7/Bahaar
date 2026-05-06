@@ -8,7 +8,7 @@ class LanguageNotifier extends Notifier<Locale> {
   @override
   Locale build() {
     _loadSavedLanguage();
-    return const Locale('en'); // Default to English
+    return const Locale('ar'); // Default to Arabic
   }
 
   Future<void> _loadSavedLanguage() async {
