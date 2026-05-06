@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'screens/authentication/login.dart';
 import 'main.dart';
 
@@ -54,6 +55,11 @@ class AppStart extends StatelessWidget {
             if (userSnapshot.hasData && !userSnapshot.data!.exists) {
               return _CreateUserDocument(user: user);
             }
+
+            // Auth confirmed — initialize trip service and sync
+            TripService.instance.initialize(uid: uid).then((_) {
+              TripService.instance.syncPendingToFirestore();
+            });
 
             return MyHomePage(title: 'Bahaar Home Page');
           },
