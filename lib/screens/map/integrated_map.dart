@@ -58,6 +58,7 @@ import 'package:bahaar/widgets/navigation/active_navigation_overlay.dart';
 import 'package:bahaar/widgets/navigation/marina_marker_layer.dart';
 import 'package:bahaar/widgets/navigation/route_polyline_layer.dart';
 import 'package:bahaar/widgets/navigation/weather_alert_overlay.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
@@ -194,7 +195,10 @@ class _IntegratedMapState extends State<IntegratedMap>
     _loadFirestoreFeatures();
     _featureEditState.addListener(_onFeatureEditUpdate);
 
-    TripService.instance.initialize();
+    final tripUid = FirebaseAuth.instance.currentUser?.uid;
+    TripService.instance.initialize(uid: tripUid).then((_) {
+      TripService.instance.syncPendingToFirestore();
+    });
 
     // Sync pending offline data when connectivity is restored
     ConnectivityService.instance.onConnectivityChanged.listen((online) {
