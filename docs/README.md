@@ -82,7 +82,8 @@ lib/screens/
 docs/
 ├── README.md                            # This file - quick reference
 ├── MAP_GUIDE.md                         # Comprehensive technical guide
-└── DEPTH_LAYER_COMPARISON.md            # Before/after comparison
+├── DEPTH_LAYER_COMPARISON.md            # Before/after comparison
+└── BAHAAR_API.md                        # Bahaar fishing prediction API reference
 ```
 
 ---
