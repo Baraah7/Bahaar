@@ -289,7 +289,7 @@ void main() {
       final entry = makeCatch(latitude: 26.3, longitude: 50.6);
       final loc = entry.location;
       expect(loc, isA<LatLng>());
-      expect(loc.latitude, closeTo(26.3, 0.0001));
+      expect(loc!.latitude, closeTo(26.3, 0.0001));
       expect(loc.longitude, closeTo(50.6, 0.0001));
     });
   });

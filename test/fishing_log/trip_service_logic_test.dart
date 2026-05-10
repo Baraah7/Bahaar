@@ -121,7 +121,7 @@ void main() {
     test('activeTrip is null after endTrip (simulated)', () {
       Trip? activeTrip = makeTrip();
       activeTrip = null; // mirrors service: _activeTrip = null
-      expect(activeTrip, isNull);
+      expect(activeTrip, isNull); // ignore: unused_local_variable
     });
   });
 
@@ -438,8 +438,8 @@ void main() {
   group('CatchEntry.location LatLng helper', () {
     test('location returns correct LatLng from lat/lon fields', () {
       final entry = makeCatch(lat: 26.15, lon: 50.42);
-      expect(entry.location.latitude, closeTo(26.15, 0.0001));
-      expect(entry.location.longitude, closeTo(50.42, 0.0001));
+      expect(entry.location!.latitude, closeTo(26.15, 0.0001));
+      expect(entry.location!.longitude, closeTo(50.42, 0.0001));
     });
   });
 }
