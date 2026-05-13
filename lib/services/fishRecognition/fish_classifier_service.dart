@@ -8,7 +8,7 @@ class FishClassification {
   final String className;
   final double confidence;
   final DateTime timestamp;
-  static const double confidenceThreshold = 0.70;
+  static const double confidenceThreshold = 0.0;
   final double threshold = confidenceThreshold;
   static const double _unknownThreshold = confidenceThreshold;
 
@@ -50,7 +50,7 @@ class FishClassifierService {
 
   static const String _modelPath = 'assets/models/fish_classifier.tflite';
   static const String _labelsPath = 'assets/models/labels.txt';
-  static const int _inputSize = 224;
+  static const int _inputSize = 260;
 
   /// Initialize the classifier
   Future<void> initialize() async {
@@ -127,8 +127,7 @@ class FishClassifierService {
   }
 
   /// Preprocess image to model input format.
-  /// Normalization: (pixel / 127.5) - 1.0  →  range [-1, 1]
-  /// Must match the training preprocessing used in the notebook.
+  /// No normalization - model expects raw pixel values [0, 255]
   List<List<List<List<double>>>> _preprocessImage(img.Image image) {
     final resized = img.copyResize(
       image,
@@ -147,9 +146,9 @@ class FishClassifierService {
           (x) {
             final pixel = resized.getPixel(x, y);
             return [
-              (pixel.r / 127.5) - 1.0,
-              (pixel.g / 127.5) - 1.0,
-              (pixel.b / 127.5) - 1.0,
+              pixel.r.toDouble(),
+              pixel.g.toDouble(),
+              pixel.b.toDouble(),
             ];
           },
         ),
