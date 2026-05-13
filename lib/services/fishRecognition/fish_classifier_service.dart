@@ -4,13 +4,24 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 
+enum FishRecognitionStatus {
+  supportedFish,
+  unsupportedFish,
+  noFish,
+}
+
 class FishClassification {
   final String className;
   final double confidence;
+  final double detectorScore;
+  final FishRecognitionStatus status;
   final DateTime timestamp;
-  static const double confidenceThreshold = 0.0;
-  final double threshold = confidenceThreshold;
-  static const double _unknownThreshold = confidenceThreshold;
+  static const double confidenceThreshold = 0.70;
+  static const double _fishDetectorNoFishThreshold = 0.90;
+  static const Map<String, double> _classThresholds = {
+    'Gilt Head Bream': 0.35,
+    'Red Mullet': 0.40,
+  };
 
   // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
@@ -24,19 +35,27 @@ class FishClassification {
   FishClassification({
     required this.className,
     required this.confidence,
+    required this.detectorScore,
+    required this.status,
     required this.timestamp,
   });
 
   // Get Arabic name for the fish class
   String get arabicName => _arabicNames[className] ?? className;
 
-  bool get isConfident => confidence >= threshold;
-  bool get isUnknown => confidence < _unknownThreshold;
+  double get threshold => _classThresholds[className] ?? confidenceThreshold;
+  bool get isFishDetected => status != FishRecognitionStatus.noFish;
+  bool get isConfident => status == FishRecognitionStatus.supportedFish;
+  bool get isUnknown => status != FishRecognitionStatus.supportedFish;
+  bool get isUnsupported => status == FishRecognitionStatus.unsupportedFish;
+  bool get isNoFish => status == FishRecognitionStatus.noFish;
 
   Map<String, dynamic> toJson() {
     return {
       'className': className,
       'confidence': confidence,
+      'detectorScore': detectorScore,
+      'status': status.name,
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -44,11 +63,14 @@ class FishClassification {
 
 /// TensorFlow Lite model service for fish classification
 class FishClassifierService {
-  Interpreter? _interpreter;
+  Interpreter? _classifierInterpreter;
+  Interpreter? _detectorInterpreter;
   List<String>? _labels;
   bool _isInitialized = false;
 
-  static const String _modelPath = 'assets/models/fish_classifier.tflite';
+  static const String _classifierModelPath =
+      'assets/models/fish_classifier.tflite';
+  static const String _detectorModelPath = 'assets/models/fish_detector.tflite';
   static const String _labelsPath = 'assets/models/labels.txt';
   static const int _inputSize = 260;
 
@@ -65,8 +87,10 @@ class FishClassifierService {
           .where((label) => label.isNotEmpty)
           .toList();
 
-      // Load TFLite model
-      _interpreter = await Interpreter.fromAsset(_modelPath);
+      // Load TFLite models
+      _detectorInterpreter = await Interpreter.fromAsset(_detectorModelPath);
+      _classifierInterpreter =
+          await Interpreter.fromAsset(_classifierModelPath);
 
       _isInitialized = true;
     } catch (e) {
@@ -102,28 +126,49 @@ class FishClassifierService {
       if (decoded == null) throw Exception('Failed to decode image.');
 
       final input = _preprocessImage(decoded);
+      final detectorScore = _detectFish(input);
 
       // Output shape: [1, numClasses]
       final numClasses = _labels!.length;
       final output = List.generate(1, (_) => List.filled(numClasses, 0.0));
 
-      _interpreter!.run(input, output);
+      _classifierInterpreter!.run(input, output);
 
       final scores = output[0];
       final bestIndex = scores.indexOf(scores.reduce(max));
       final confidence = scores[bestIndex];
-      final className = confidence < FishClassification.confidenceThreshold
-          ? 'Unknown / Not a fish'
-          : _labels![bestIndex];
+      final predictedClassName = _labels![bestIndex];
+      final classThreshold =
+          FishClassification._classThresholds[predictedClassName] ??
+              FishClassification.confidenceThreshold;
+      final status =
+          detectorScore < FishClassification._fishDetectorNoFishThreshold
+              ? confidence >= classThreshold
+                  ? FishRecognitionStatus.supportedFish
+                  : FishRecognitionStatus.unsupportedFish
+              : FishRecognitionStatus.noFish;
+      final className = switch (status) {
+        FishRecognitionStatus.supportedFish => predictedClassName,
+        FishRecognitionStatus.unsupportedFish => 'Unsupported species',
+        FishRecognitionStatus.noFish => 'No fish detected',
+      };
 
       return FishClassification(
         className: className,
         confidence: confidence,
+        detectorScore: detectorScore,
+        status: status,
         timestamp: DateTime.now(),
       );
     } catch (e) {
       throw Exception('Classification failed: $e');
     }
+  }
+
+  double _detectFish(List<List<List<List<double>>>> input) {
+    final output = List.generate(1, (_) => List.filled(1, 0.0));
+    _detectorInterpreter!.run(input, output);
+    return output[0][0];
   }
 
   /// Preprocess image to model input format.
@@ -166,8 +211,10 @@ class FishClassifierService {
 
   /// Dispose resources
   void dispose() {
-    _interpreter?.close();
-    _interpreter = null;
+    _classifierInterpreter?.close();
+    _detectorInterpreter?.close();
+    _classifierInterpreter = null;
+    _detectorInterpreter = null;
     _isInitialized = false;
   }
 }
