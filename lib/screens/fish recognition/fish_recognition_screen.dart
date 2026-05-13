@@ -486,7 +486,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _fishInfo = {
-    'Gilt-Head Bream': {
+    'Gilt Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'Coastal waters & lagoons',
       'size': '20 – 50 cm',
@@ -497,7 +497,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'nutrition': 'High in protein, omega-3, vitamins B12 & D',
       'fact': 'Recognisable by the gold stripe between its eyes — hence the name "gilt-head". Highly prized in Bahraini and Gulf fish markets.',
     },
-    'Hourse Mackerel': {
+    'Horse Mackerel': {
       'scientific': 'Trachurus trachurus',
       'habitat': 'Open sea & coastal waters',
       'size': '15 – 30 cm',
@@ -507,6 +507,17 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'popular_in': 'Arabian Sea, Mediterranean Sea, Eastern Atlantic',
       'nutrition': 'Rich in omega-3 fatty acids, selenium & vitamin B12',
       'fact': 'Travels in large, fast-moving schools near the surface. One of the most commercially important fish species in the world.',
+    },
+    'Red Mullet': {
+      'scientific': 'Mullus barbatus',
+      'habitat': 'Sandy & muddy bottoms',
+      'size': '15 – 25 cm',
+      'season': 'Year-round',
+      'diet': 'Worms, crustaceans, mollusks',
+      'flavor': 'Delicate, sweet flesh',
+      'popular_in': 'Arabian Gulf, Mediterranean Sea, Red Sea',
+      'nutrition': 'High in protein, omega-3, selenium & vitamin B12',
+      'fact': 'Known for its distinctive red color and barbels under the chin. A delicacy in Gulf cuisine, often grilled whole.',
     },
     'Sea Bass': {
       'scientific': 'Dicentrarchus labrax',
@@ -533,7 +544,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   };
 
   static const _fishInfoAr = {
-    'Gilt-Head Bream': {
+    'Gilt Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'المياه الساحلية والبحيرات',
       'size': '٢٠ – ٥٠ سم',
@@ -544,7 +555,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'nutrition': 'غني بالبروتين وأوميغا-3 وفيتامين B12 وD',
       'fact': 'يُميّز بالشريط الذهبي بين عينيه — ومنه جاء اسمه "ذهبي الرأس". يُعدّ من أكثر الأسماك قيمةً في أسواق الأسماك البحرينية والخليجية.',
     },
-    'Hourse Mackerel': {
+    'Horse Mackerel': {
       'scientific': 'Trachurus trachurus',
       'habitat': 'أعالي البحار والمياه الساحلية',
       'size': '١٥ – ٣٠ سم',
@@ -554,6 +565,17 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'popular_in': 'بحر العرب، البحر الأبيض المتوسط، شرق الأطلسي',
       'nutrition': 'غني بأحماض أوميغا-3 والسيلينيوم وفيتامين B12',
       'fact': 'يتنقل في أسراب كبيرة وسريعة الحركة قرب السطح. يُعدّ من أهم أنواع الأسماك التجارية على مستوى العالم.',
+    },
+    'Red Mullet': {
+      'scientific': 'Mullus barbatus',
+      'habitat': 'القيعان الرملية والطينية',
+      'size': '١٥ – ٢٥ سم',
+      'season': 'طوال العام',
+      'diet': 'الديدان والقشريات والرخويات',
+      'flavor': 'لحم طري وحلو',
+      'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، البحر الأحمر',
+      'nutrition': 'غني بالبروتين وأوميغا-3 والسيلينيوم وفيتامين B12',
+      'fact': 'يُعرف بلونه الأحمر المميز والشوارب تحت ذقنه. يُعدّ من الأطباق الفاخرة في المطبخ الخليجي، وغالبًا يُشوى كاملاً.',
     },
     'Sea Bass': {
       'scientific': 'Dicentrarchus labrax',
@@ -940,8 +962,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _speciesImages = {
-    'Gilt-Head Bream': 'assets/images/Gilt-Head Bream.jpg',
+    'Gilt Head Bream': 'assets/images/Gilt-Head Bream.jpg',
     'Horse Mackerel': 'assets/images/Horse mackerel.jpg',
+    'Red Mullet': 'assets/images/Red Mullet.jpg',
     'Sea Bass': 'assets/images/Seabass.jpg',
     'Shrimp': 'assets/images/Shrimp.jpeg',
   };

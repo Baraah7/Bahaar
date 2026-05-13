@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 enum FishSpecies {
   giltHeadBream,
   horseMackerel,
+  redMullet,
   seaBass,
   shrimp,
 }
@@ -13,9 +14,11 @@ extension FishSpeciesExtension on FishSpecies {
   String get englishName {
     switch (this) {
       case FishSpecies.giltHeadBream:
-        return 'Gilt-Head Bream';
+        return 'Gilt Head Bream';
       case FishSpecies.horseMackerel:
         return 'Horse Mackerel';
+      case FishSpecies.redMullet:
+        return 'Red Mullet';
       case FishSpecies.seaBass:
         return 'Sea Bass';
       case FishSpecies.shrimp:
@@ -29,6 +32,8 @@ extension FishSpeciesExtension on FishSpecies {
         return 'دنيس';
       case FishSpecies.horseMackerel:
         return 'سكمبري';
+      case FishSpecies.redMullet:
+        return 'بربوني';
       case FishSpecies.seaBass:
         return 'قاروص';
       case FishSpecies.shrimp:
@@ -43,6 +48,8 @@ extension FishSpeciesExtension on FishSpecies {
         return Colors.teal;
       case FishSpecies.horseMackerel:
         return Colors.blue;
+      case FishSpecies.redMullet:
+        return Colors.red;
       case FishSpecies.seaBass:
         return Colors.indigo;
       case FishSpecies.shrimp:

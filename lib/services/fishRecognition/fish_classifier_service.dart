@@ -14,8 +14,9 @@ class FishClassification {
 
   // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
-    'Gilt-Head Bream': 'دنيس',
-    'Hourse Mackerel': 'سكمبري',
+    'Gilt Head Bream': 'دنيس',
+    'Horse Mackerel': 'سكمبري',
+    'Red Mullet': 'بربوني',
     'Sea Bass': 'قاروص',
     'Shrimp': 'روبيان',
   };
