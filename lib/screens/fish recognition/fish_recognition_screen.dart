@@ -510,18 +510,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
           'Travels in large, fast-moving schools near the surface. One of the most commercially important fish species in the world.',
     },
     'Red Mullet': {
-      'scientific': 'Mullus barbatus',
-      'habitat': 'Sandy & muddy bottoms',
-      'size': '15 – 25 cm',
-      'season': 'Year-round',
-      'diet': 'Worms, crustaceans, mollusks',
-      'flavor': 'Delicate, sweet flesh',
-      'popular_in': 'Arabian Gulf, Mediterranean Sea, Red Sea',
-      'nutrition': 'High in protein, omega-3, selenium & vitamin B12',
-      'fact':
-          'Known for its distinctive red color and barbels under the chin. A delicacy in Gulf cuisine, often grilled whole.',
-    },
-    'Red Mullet': {
       'scientific': 'Mullus surmuletus',
       'habitat': 'Sandy & muddy seabeds',
       'size': '15 – 40 cm',
@@ -594,17 +582,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'nutrition': 'غني بالبروتين وأوميغا-3 والسيلينيوم وفيتامين B12',
       'fact':
           'يُعرف بلونه الأحمر المميز والشوارب تحت ذقنه. يُعدّ من الأطباق الفاخرة في المطبخ الخليجي، وغالبًا يُشوى كاملاً.',
-    },
-    'Red Mullet': {
-      'scientific': 'Mullus surmuletus',
-      'habitat': 'القاع الرملي والطيني',
-      'size': '١٥ – ٤٠ سم',
-      'season': 'الربيع والصيف',
-      'diet': 'اللافقاريات الصغيرة والديدان والقشريات',
-      'flavor': 'لحم غني ولذيذ',
-      'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، المحيط الهندي',
-      'nutrition': 'غني بالبروتين وأوميغا-3 وفيتامين B6 وB12',
-      'fact': 'يكتسب الحومر لونه الأحمر الزاهي من تغذيته على القشريات. يُعدّ من أكثر الأسماك قيمةً في أسواق الخليج، ويُقدَّم تقليديًا مشوياً أو مقلياً بالكامل.',
     },
     'Sea Bass': {
       'scientific': 'Dicentrarchus labrax',
@@ -1015,7 +992,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     'Red Mullet': 'assets/images/Red Mullet.jpg',
     'Sea Bass': 'assets/images/Seabass.jpg',
     'Shrimp': 'assets/images/Shrimp.jpeg',
-    'Red Mullet': 'assets/images/Red Mullet.jpg',
   };
 
   Widget _buildSupportedSpecies(FishRecognitionLocalizations l10n) {
