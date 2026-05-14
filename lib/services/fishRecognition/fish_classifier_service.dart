@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -16,17 +17,26 @@ class FishClassification {
   final double detectorScore;
   final FishRecognitionStatus status;
   final DateTime timestamp;
-  static const double confidenceThreshold = 0.70;
-  static const double _fishDetectorNoFishThreshold = 0.90;
+  static const double confidenceThreshold = 0.35;
+  // When detector score is in the ambiguous range (0.40+), require higher
+  // classifier confidence to accept as fish — this rejects non-fish images
+  // (logos, people, objects) whose detector scores overlap with real fish.
+  static const double _detectorAmbiguousThreshold = 0.40;
+  static const double _ambiguousZoneMinConfidence = 0.65;
+  static const double _minimumTopClassMargin = 0.10;
   static const Map<String, double> _classThresholds = {
-    'Gilt Head Bream': 0.35,
-    'Red Mullet': 0.40,
+    'Gilt-Head Bream': 0.35,
+    'Horse Mackerel': 0.35,
+    'Red Mullet': 0.35,
+    'Sea Bass': 0.35,
+    'Shrimp': 0.35,
   };
 
   // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
-    'Gilt Head Bream': 'دنيس',
+    'Gilt-Head Bream': 'دنيس',
     'Horse Mackerel': 'سكمبري',
+    'Hourse Mackerel': 'سكمبري',
     'Red Mullet': 'بربوني',
     'Sea Bass': 'قاروص',
     'Shrimp': 'روبيان',
@@ -72,7 +82,7 @@ class FishClassifierService {
       'assets/models/fish_classifier.tflite';
   static const String _detectorModelPath = 'assets/models/fish_detector.tflite';
   static const String _labelsPath = 'assets/models/labels.txt';
-  static const int _inputSize = 260;
+  static const int _inputSize = 300;
 
   /// Initialize the classifier
   Future<void> initialize() async {
@@ -83,7 +93,7 @@ class FishClassifierService {
       final labelsData = await rootBundle.loadString(_labelsPath);
       _labels = labelsData
           .split('\n')
-          .map((label) => label.trim())
+          .map((label) => _normalizeModelLabel(label.trim()))
           .where((label) => label.isNotEmpty)
           .toList();
 
@@ -100,6 +110,13 @@ class FishClassifierService {
 
   /// Check if classifier is initialized
   bool get isInitialized => _isInitialized;
+
+  String _normalizeModelLabel(String label) {
+    return switch (label) {
+      'Hourse Mackerel' => 'Horse Mackerel',
+      _ => label,
+    };
+  }
 
   /// Classify image from file
   Future<FishClassification?> classifyImage(File imageFile) async {
@@ -135,18 +152,32 @@ class FishClassifierService {
       _classifierInterpreter!.run(input, output);
 
       final scores = output[0];
-      final bestIndex = scores.indexOf(scores.reduce(max));
+      final rankedIndexes = List<int>.generate(scores.length, (index) => index)
+        ..sort((a, b) => scores[b].compareTo(scores[a]));
+      final bestIndex = rankedIndexes.first;
       final confidence = scores[bestIndex];
+      final runnerUpConfidence =
+          rankedIndexes.length > 1 ? scores[rankedIndexes[1]] : 0.0;
+      final topClassMargin = confidence - runnerUpConfidence;
       final predictedClassName = _labels![bestIndex];
       final classThreshold =
           FishClassification._classThresholds[predictedClassName] ??
               FishClassification.confidenceThreshold;
+      developer.log(
+        'detector=$detectorScore  top=$predictedClassName  conf=${confidence.toStringAsFixed(3)}  margin=${topClassMargin.toStringAsFixed(3)}  threshold=$classThreshold',
+        name: 'FishClassifier',
+      );
+      final effectiveConfidenceThreshold =
+          detectorScore >= FishClassification._detectorAmbiguousThreshold
+              ? FishClassification._ambiguousZoneMinConfidence
+              : classThreshold;
+      final isClearSupportedSpecies =
+          confidence >= effectiveConfidenceThreshold &&
+              topClassMargin >= FishClassification._minimumTopClassMargin;
       final status =
-          detectorScore < FishClassification._fishDetectorNoFishThreshold
-              ? confidence >= classThreshold
-                  ? FishRecognitionStatus.supportedFish
-                  : FishRecognitionStatus.unsupportedFish
-              : FishRecognitionStatus.noFish;
+          !isClearSupportedSpecies
+              ? FishRecognitionStatus.noFish
+              : FishRecognitionStatus.supportedFish;
       final className = switch (status) {
         FishRecognitionStatus.supportedFish => predictedClassName,
         FishRecognitionStatus.unsupportedFish => 'Unsupported species',

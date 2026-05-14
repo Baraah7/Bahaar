@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// The four species supported by the fish classifier, also used for
+/// The species supported by the fish classifier, also used for
 /// the probability heatmap.
 enum FishSpecies {
   giltHeadBream,
@@ -14,7 +14,7 @@ extension FishSpeciesExtension on FishSpecies {
   String get englishName {
     switch (this) {
       case FishSpecies.giltHeadBream:
-        return 'Gilt Head Bream';
+        return 'Gilt-Head Bream';
       case FishSpecies.horseMackerel:
         return 'Horse Mackerel';
       case FishSpecies.redMullet:
