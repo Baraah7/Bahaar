@@ -1,5 +1,9 @@
 import 'package:latlong2/latlong.dart';
 
+
+//delete this file 
+
+//what is this for ? 
 /// Types of fishing-related events
 enum FishingEventType {
   fishing,
@@ -8,6 +12,8 @@ enum FishingEventType {
   loitering,
   transshipment,
 }
+
+
 
 /// Intensity levels for aggregated fishing activity
 enum FishingIntensityLevel { low, moderate, high, veryHigh }

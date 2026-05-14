@@ -262,6 +262,8 @@ class FishListing {
     };
   }
   
+
+  //why ?
   // Creates a new FishListing with updated values
   FishListing copyWith({
     String? id,
