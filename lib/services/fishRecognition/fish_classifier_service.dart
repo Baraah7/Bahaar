@@ -82,7 +82,7 @@ class FishClassifierService {
       'assets/models/fish_classifier.tflite';
   static const String _detectorModelPath = 'assets/models/fish_detector.tflite';
   static const String _labelsPath = 'assets/models/labels.txt';
-  static const int _inputSize = 300;
+  static const int _inputSize = 260;
 
   /// Initialize the classifier
   Future<void> initialize() async {

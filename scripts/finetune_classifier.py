@@ -27,11 +27,13 @@ TRAIN_DIR       = pathlib.Path("assets/data/finetune_dataset")
 
 LABELS = ["Gilt-Head Bream", "Horse Mackerel", "Red Mullet", "Sea Bass", "Shrimp"]
 
-# Original model was trained at 260×260; we keep the same to reuse its weights
-INPUT_SIZE  = 260
-BATCH_SIZE  = 16
-EPOCHS      = 15
-LR          = 1e-4
+# Original model was trained at 260×260 with raw pixel values (no normalization)
+INPUT_SIZE   = 260
+BATCH_SIZE   = 16
+EPOCHS       = 20
+LR           = 1e-4
+# Cap per-class images to prevent imbalance dominating training
+MAX_PER_CLASS = 55
 
 # ── build dataset directory ──────────────────────────────────────────────────
 def build_dataset() -> None:
@@ -80,8 +82,7 @@ def build_dataset() -> None:
                 if img.suffix.lower() in {".jpg", ".jpeg", ".png"}:
                     shutil.copy(img, dest_dir / img.name)
 
-    # Copy extra downloaded images
-    suffixes = {".jpg", ".jpeg", ".png"}
+    # Copy extra downloaded images (Red Mullet and Shrimp)
     for label in ["Red Mullet", "Shrimp"]:
         src_dir = EXTRA_DIR / label
         if not src_dir.exists():
@@ -91,6 +92,20 @@ def build_dataset() -> None:
         for img in src_dir.glob("*.jpg"):
             shutil.copy(img, dest_dir / img.name)
 
+    # Balance: cap overrepresented classes, augment underrepresented ones
+    # by downloading extra images for Gilt-Head Bream, Horse Mackerel, Sea Bass
+    _download_extra_for_balance()
+
+    # Cap each class at MAX_PER_CLASS to prevent imbalance
+    for label in LABELS:
+        class_dir = TRAIN_DIR / label
+        if not class_dir.exists():
+            continue
+        imgs = sorted(class_dir.glob("*"))
+        if len(imgs) > MAX_PER_CLASS:
+            for img in imgs[MAX_PER_CLASS:]:
+                img.unlink()
+
     # Report
     print("\nDataset summary:")
     total = 0
@@ -99,6 +114,55 @@ def build_dataset() -> None:
         print(f"  {label:<20} {count:>4} images")
         total += count
     print(f"  {'TOTAL':<20} {total:>4} images\n")
+
+
+# ── balance download ─────────────────────────────────────────────────────────
+def _download_extra_for_balance() -> None:
+    """Download images for classes that still have fewer than MAX_PER_CLASS images."""
+    import io, time, requests
+    from ddgs import DDGS
+
+    queries = {
+        "Gilt-Head Bream": ["gilt head bream fish fresh", "sparus aurata fish market", "orata fish fresh whole"],
+        "Horse Mackerel":  ["horse mackerel fish fresh market", "trachurus fish fresh", "saurel fish market"],
+        "Sea Bass":        ["sea bass fish fresh market", "branzino fish whole fresh", "loup de mer fish fresh"],
+    }
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+    for label, search_queries in queries.items():
+        dest_dir = TRAIN_DIR / label
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        current = len(list(dest_dir.glob("*.jpg")))
+        needed = MAX_PER_CLASS - current
+        if needed <= 0:
+            continue
+        print(f"  Downloading {needed} more images for {label}...")
+        index = current
+        per_query = max(1, needed // len(search_queries) + 1)
+        for query in search_queries:
+            if index - current >= needed:
+                break
+            try:
+                results = list(DDGS().images(query, max_results=per_query))
+            except Exception:
+                continue
+            for r in results:
+                if index - current >= needed:
+                    break
+                url = r.get("image", "")
+                if not url:
+                    continue
+                try:
+                    resp = requests.get(url, headers=headers, timeout=8)
+                    from PIL import Image as PILImage
+                    img = PILImage.open(io.BytesIO(resp.content))
+                    if img.width < 150 or img.height < 150:
+                        continue
+                    img.convert("RGB").save(dest_dir / f"{index:04d}.jpg", "JPEG", quality=92)
+                    index += 1
+                except Exception:
+                    pass
+                time.sleep(0.05)
 
 
 # ── model ─────────────────────────────────────────────────────────────────────
@@ -129,9 +193,8 @@ def build_model() -> Model:
 
 # ── data generators ───────────────────────────────────────────────────────────
 def make_generators():
-    # Aggressive augmentation to help generalise from diverse images
+    # No rescale — original model was trained on raw 0-255 pixel values
     train_gen = ImageDataGenerator(
-        rescale=1.0 / 255,
         validation_split=0.15,
         rotation_range=20,
         width_shift_range=0.15,
@@ -201,17 +264,17 @@ def validate_tflite() -> None:
         ("Shrimp",     "assets/data/fish_test/supportedFish/Shrimp/OIP-844962183.jpg"),
     ]
 
-    print("\n── Validation on reference images ──")
+    print("\n--- Validation on reference images ---")
     for expected, path in list(test_images.items()) + [(e, p) for e, p in extra_tests]:
         img = Image.open(path).convert("RGB").resize((INPUT_SIZE, INPUT_SIZE))
-        t = np.expand_dims(np.asarray(img, dtype=np.float32) / 255.0, 0)
+        t = np.expand_dims(np.asarray(img, dtype=np.float32), 0)  # raw 0-255
         interp.set_tensor(inp_idx, t)
         interp.invoke()
         scores = interp.get_tensor(out_idx)[0]
         pred = LABELS[int(np.argmax(scores))]
         conf = float(np.max(scores))
-        status = "✓" if pred == expected else "✗"
-        print(f"  {status} {expected:<20} → {pred:<20} {conf:.3f}  {pathlib.Path(path).name}")
+        status = "OK" if pred == expected else "XX"
+        print(f"  {status} {expected:<20} -> {pred:<20} {conf:.3f}  {pathlib.Path(path).name}")
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
