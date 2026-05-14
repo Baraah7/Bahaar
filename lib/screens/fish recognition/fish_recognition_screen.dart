@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/fish_recognition/fish_recognition_localizations.dart';
 import 'package:bahaar/models/fishing/fish_probability_model.dart';
@@ -116,51 +116,53 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     }
 
     return Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary,
-                AppColors.accent,
-                AppColors.primary,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (Navigator.canPop(context))
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                Expanded(
-                  child: hasError
-                      ? AppEmptyState(
-                          icon: Icons.error_outline_rounded,
-                          title: FishRecognitionLocalizations.of(context)
-                              .failedToLoadModel,
-                          message: classificationState.error,
-                          buttonText: FishRecognitionLocalizations.of(context)
-                              .tryAgain,
-                          onButtonPressed: () => ref
-                              .read(fishClassificationProvider.notifier)
-                              .initialize(),
-                          iconColor: Colors.white,
-                        )
-                      : !isInitialized
-                    ? AppLoadingView(message: l10n.loadingRecognitionModel, color: Colors.white)
-                    : _buildMainContent(context, classificationState, l10n),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primary,
+              AppColors.accent,
+              AppColors.primary,
+            ],
           ),
         ),
-      );
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (Navigator.canPop(context))
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              Expanded(
+                child: hasError
+                    ? AppEmptyState(
+                        icon: Icons.error_outline_rounded,
+                        title: FishRecognitionLocalizations.of(context)
+                            .failedToLoadModel,
+                        message: classificationState.error,
+                        buttonText:
+                            FishRecognitionLocalizations.of(context).tryAgain,
+                        onButtonPressed: () => ref
+                            .read(fishClassificationProvider.notifier)
+                            .initialize(),
+                        iconColor: Colors.white,
+                      )
+                    : !isInitialized
+                        ? AppLoadingView(
+                            message: l10n.loadingRecognitionModel,
+                            color: Colors.white)
+                        : _buildMainContent(context, classificationState, l10n),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildMainContent(
@@ -201,7 +203,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildUploadArea(dynamic classificationState, FishRecognitionLocalizations l10n) {
+  Widget _buildUploadArea(
+      dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -283,9 +286,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     required bool isPrimary,
   }) {
     return Material(
-      color: isPrimary
-          ? Colors.white
-          : Colors.white.withValues(alpha: 0.15),
+      color: isPrimary ? Colors.white : Colors.white.withValues(alpha: 0.15),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onPressed,
@@ -297,9 +298,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               Icon(
                 icon,
                 size: 28,
-                color: isPrimary
-                    ? AppColors.accent
-                    : Colors.white,
+                color: isPrimary ? AppColors.accent : Colors.white,
               ),
               const SizedBox(height: 8),
               Text(
@@ -307,9 +306,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isPrimary
-                      ? AppColors.accent
-                      : Colors.white,
+                  color: isPrimary ? AppColors.accent : Colors.white,
                 ),
               ),
             ],
@@ -319,7 +316,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildImagePreview(dynamic classificationState, FishRecognitionLocalizations l10n) {
+  Widget _buildImagePreview(
+      dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -378,7 +376,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildResultCard(BuildContext context, dynamic result, FishRecognitionLocalizations l10n) {
+  Widget _buildResultCard(
+      BuildContext context, dynamic result, FishRecognitionLocalizations l10n) {
     final isConfident = result.isConfident;
     final confidence = result.confidence as double;
 
@@ -486,7 +485,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _fishInfo = {
-    'Gilt-Head Bream': {
+    'Gilt Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'Coastal waters & lagoons',
       'size': '20 – 50 cm',
@@ -495,7 +494,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'Mild, delicate white flesh',
       'popular_in': 'Arabian Gulf, Mediterranean Sea, Atlantic Coast',
       'nutrition': 'High in protein, omega-3, vitamins B12 & D',
-      'fact': 'Recognisable by the gold stripe between its eyes — hence the name "gilt-head". Highly prized in Bahraini and Gulf fish markets.',
+      'fact':
+          'Recognisable by the gold stripe between its eyes — hence the name "gilt-head". Highly prized in Bahraini and Gulf fish markets.',
     },
     'Horse Mackerel': {
       'scientific': 'Trachurus trachurus',
@@ -506,7 +506,20 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'Firm, slightly oily flesh',
       'popular_in': 'Arabian Sea, Mediterranean Sea, Eastern Atlantic',
       'nutrition': 'Rich in omega-3 fatty acids, selenium & vitamin B12',
-      'fact': 'Travels in large, fast-moving schools near the surface. One of the most commercially important fish species in the world.',
+      'fact':
+          'Travels in large, fast-moving schools near the surface. One of the most commercially important fish species in the world.',
+    },
+    'Red Mullet': {
+      'scientific': 'Mullus barbatus',
+      'habitat': 'Sandy & muddy bottoms',
+      'size': '15 – 25 cm',
+      'season': 'Year-round',
+      'diet': 'Worms, crustaceans, mollusks',
+      'flavor': 'Delicate, sweet flesh',
+      'popular_in': 'Arabian Gulf, Mediterranean Sea, Red Sea',
+      'nutrition': 'High in protein, omega-3, selenium & vitamin B12',
+      'fact':
+          'Known for its distinctive red color and barbels under the chin. A delicacy in Gulf cuisine, often grilled whole.',
     },
     'Red Mullet': {
       'scientific': 'Mullus surmuletus',
@@ -528,7 +541,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'Delicate, mild white flesh',
       'popular_in': 'Arabian Gulf, Mediterranean Sea, European coasts',
       'nutrition': 'Excellent source of lean protein, phosphorus & potassium',
-      'fact': 'A prized game fish known for its fighting spirit when caught. Sea bass can live up to 15 years and are highly valued in Gulf seafood cuisine.',
+      'fact':
+          'A prized game fish known for its fighting spirit when caught. Sea bass can live up to 15 years and are highly valued in Gulf seafood cuisine.',
     },
     'Shrimp': {
       'scientific': 'Various species',
@@ -539,12 +553,13 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'Sweet, tender',
       'popular_in': 'Arabian Gulf, especially Bahrain & Kuwait',
       'nutrition': 'Low in calories, high in iodine, protein & antioxidants',
-      'fact': 'Bahrain has a centuries-old tradition of shrimping. Gulf shrimp (locally known as روبيان) are considered among the finest in the world and are a staple of Bahraini cuisine.',
+      'fact':
+          'Bahrain has a centuries-old tradition of shrimping. Gulf shrimp (locally known as روبيان) are considered among the finest in the world and are a staple of Bahraini cuisine.',
     },
   };
 
   static const _fishInfoAr = {
-    'Gilt-Head Bream': {
+    'Gilt Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'المياه الساحلية والبحيرات',
       'size': '٢٠ – ٥٠ سم',
@@ -553,7 +568,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'لحم أبيض خفيف ولذيذ',
       'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، الساحل الأطلسي',
       'nutrition': 'غني بالبروتين وأوميغا-3 وفيتامين B12 وD',
-      'fact': 'يُميّز بالشريط الذهبي بين عينيه — ومنه جاء اسمه "ذهبي الرأس". يُعدّ من أكثر الأسماك قيمةً في أسواق الأسماك البحرينية والخليجية.',
+      'fact':
+          'يُميّز بالشريط الذهبي بين عينيه — ومنه جاء اسمه "ذهبي الرأس". يُعدّ من أكثر الأسماك قيمةً في أسواق الأسماك البحرينية والخليجية.',
     },
     'Horse Mackerel': {
       'scientific': 'Trachurus trachurus',
@@ -564,7 +580,20 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'لحم متماسك ودهني قليلاً',
       'popular_in': 'بحر العرب، البحر الأبيض المتوسط، شرق الأطلسي',
       'nutrition': 'غني بأحماض أوميغا-3 والسيلينيوم وفيتامين B12',
-      'fact': 'يتنقل في أسراب كبيرة وسريعة الحركة قرب السطح. يُعدّ من أهم أنواع الأسماك التجارية على مستوى العالم.',
+      'fact':
+          'يتنقل في أسراب كبيرة وسريعة الحركة قرب السطح. يُعدّ من أهم أنواع الأسماك التجارية على مستوى العالم.',
+    },
+    'Red Mullet': {
+      'scientific': 'Mullus barbatus',
+      'habitat': 'القيعان الرملية والطينية',
+      'size': '١٥ – ٢٥ سم',
+      'season': 'طوال العام',
+      'diet': 'الديدان والقشريات والرخويات',
+      'flavor': 'لحم طري وحلو',
+      'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، البحر الأحمر',
+      'nutrition': 'غني بالبروتين وأوميغا-3 والسيلينيوم وفيتامين B12',
+      'fact':
+          'يُعرف بلونه الأحمر المميز والشوارب تحت ذقنه. يُعدّ من الأطباق الفاخرة في المطبخ الخليجي، وغالبًا يُشوى كاملاً.',
     },
     'Red Mullet': {
       'scientific': 'Mullus surmuletus',
@@ -586,7 +615,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'لحم أبيض طري وخفيف',
       'popular_in': 'الخليج العربي، البحر الأبيض المتوسط، السواحل الأوروبية',
       'nutrition': 'مصدر ممتاز للبروتين الخفيف والفوسفور والبوتاسيوم',
-      'fact': 'سمكة صيد مرغوبة تُعرف بمقاومتها الشديدة عند اصطيادها. يمكن أن تعيش حتى ١٥ عامًا، وتُعدّ من أبرز مأكولات البحر الخليجية.',
+      'fact':
+          'سمكة صيد مرغوبة تُعرف بمقاومتها الشديدة عند اصطيادها. يمكن أن تعيش حتى ١٥ عامًا، وتُعدّ من أبرز مأكولات البحر الخليجية.',
     },
     'Shrimp': {
       'scientific': 'أنواع متعددة',
@@ -597,7 +627,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       'flavor': 'حلو وطري',
       'popular_in': 'الخليج العربي، خاصةً البحرين والكويت',
       'nutrition': 'قليل السعرات، غني باليود والبروتين ومضادات الأكسدة',
-      'fact': 'تمتلك البحرين تقليدًا عريقًا في صيد الروبيان. يُعدّ روبيان الخليج (المعروف محليًا بـ"روبيان") من أجود أنواعه في العالم وركيزة أساسية في المطبخ البحريني.',
+      'fact':
+          'تمتلك البحرين تقليدًا عريقًا في صيد الروبيان. يُعدّ روبيان الخليج (المعروف محليًا بـ"روبيان") من أجود أنواعه في العالم وركيزة أساسية في المطبخ البحريني.',
     },
   };
 
@@ -619,7 +650,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
         children: [
           Row(
             children: [
-              const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 18),
+              const Icon(Icons.info_outline_rounded,
+                  color: Colors.white70, size: 18),
               const SizedBox(width: 8),
               Text(
                 l10n.fishInfo,
@@ -644,24 +676,29 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ],
           ),
           const SizedBox(height: 14),
-
           _InfoGrid(items: [
-            _InfoItem(Icons.place_outlined,       l10n.labelHabitat, info['habitat']!),
-            _InfoItem(Icons.straighten_rounded,   l10n.labelSize,    info['size']!),
-            _InfoItem(Icons.wb_sunny_outlined,    l10n.labelSeason,  info['season']!),
-            _InfoItem(Icons.restaurant_outlined,  l10n.labelDiet,    info['diet']!),
-            _InfoItem(Icons.star_outline_rounded, l10n.labelFlavor,  info['flavor']!),
+            _InfoItem(
+                Icons.place_outlined, l10n.labelHabitat, info['habitat']!),
+            _InfoItem(Icons.straighten_rounded, l10n.labelSize, info['size']!),
+            _InfoItem(
+                Icons.wb_sunny_outlined, l10n.labelSeason, info['season']!),
+            _InfoItem(Icons.restaurant_outlined, l10n.labelDiet, info['diet']!),
+            _InfoItem(
+                Icons.star_outline_rounded, l10n.labelFlavor, info['flavor']!),
           ]),
-
           const SizedBox(height: 14),
           Divider(color: Colors.white.withValues(alpha: 0.15), height: 1),
           const SizedBox(height: 14),
-
-          _InfoRow(icon: Icons.public_rounded,          label: l10n.labelPopularIn, value: info['popular_in']!),
+          _InfoRow(
+              icon: Icons.public_rounded,
+              label: l10n.labelPopularIn,
+              value: info['popular_in']!),
           const SizedBox(height: 10),
-          _InfoRow(icon: Icons.favorite_outline_rounded, label: l10n.labelNutrition, value: info['nutrition']!),
+          _InfoRow(
+              icon: Icons.favorite_outline_rounded,
+              label: l10n.labelNutrition,
+              value: info['nutrition']!),
           const SizedBox(height: 14),
-
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -672,7 +709,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFFFD54F), size: 18),
+                const Icon(Icons.lightbulb_outline_rounded,
+                    color: Color(0xFFFFD54F), size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -693,8 +731,17 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   Widget _buildUnknownCard(dynamic result, FishRecognitionLocalizations l10n) {
-    final confidence = result.confidence as double;
+    final isNoFish = result.isNoFish == true;
+    final confidence =
+        isNoFish ? result.detectorScore as double : result.confidence as double;
     final percentage = (confidence * 100).toInt();
+    final title = isNoFish ? l10n.noFishDetected : l10n.unsupportedSpecies;
+    final hint =
+        isNoFish ? l10n.noFishDetectedHint : l10n.unsupportedSpeciesHint;
+    final statusLabel = isNoFish ? l10n.noFishDetected : l10n.lowConfidence;
+    final icon = isNoFish
+        ? Icons.image_not_supported_outlined
+        : Icons.help_outline_rounded;
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -729,7 +776,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                           value: confidence,
                           strokeWidth: 6,
                           backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB0BEC5)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFFB0BEC5)),
                           strokeCap: StrokeCap.round,
                         ),
                       ),
@@ -752,7 +800,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.unknownFish,
+                        title,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -762,11 +810,10 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.help_outline_rounded,
-                              size: 18, color: Color(0xFFB0BEC5)),
+                          Icon(icon, size: 18, color: const Color(0xFFB0BEC5)),
                           const SizedBox(width: 6),
                           Text(
-                            l10n.lowConfidence,
+                            statusLabel,
                             style: const TextStyle(
                               fontSize: 14,
                               color: Color(0xFFB0BEC5),
@@ -796,7 +843,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      l10n.unknownFishHint,
+                      hint,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -879,7 +926,8 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
     );
   }
 
-  Widget _buildActionButtons(dynamic classificationState, FishRecognitionLocalizations l10n) {
+  Widget _buildActionButtons(
+      dynamic classificationState, FishRecognitionLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -962,8 +1010,9 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _speciesImages = {
-    'Gilt-Head Bream': 'assets/images/Gilt-Head Bream.jpg',
+    'Gilt Head Bream': 'assets/images/Gilt-Head Bream.jpg',
     'Horse Mackerel': 'assets/images/Horse mackerel.jpg',
+    'Red Mullet': 'assets/images/Red Mullet.jpg',
     'Sea Bass': 'assets/images/Seabass.jpg',
     'Shrimp': 'assets/images/Shrimp.jpeg',
     'Red Mullet': 'assets/images/Red Mullet.jpg',
@@ -1010,26 +1059,26 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
               final displayName = isArabic ? s.arabicName : englishName;
               final imagePath = _speciesImages[englishName];
               return ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     if (imagePath != null)
                       Image.asset(
-                                imagePath,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
                           color: Colors.white.withValues(alpha: 0.1),
                           child: const Icon(Icons.set_meal_rounded,
                               color: Colors.white54, size: 40),
-                                ),
-                              )
+                        ),
+                      )
                     else
                       Container(
                         color: Colors.white.withValues(alpha: 0.1),
-                                child: const Icon(Icons.set_meal_rounded,
+                        child: const Icon(Icons.set_meal_rounded,
                             color: Colors.white54, size: 40),
-                              ),
+                      ),
                     // Dark gradient overlay
                     Container(
                       decoration: BoxDecoration(
@@ -1069,7 +1118,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
       ),
     );
   }
-
 }
 
 class _InfoItem {
@@ -1083,7 +1131,8 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow(
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -1124,36 +1173,38 @@ class _InfoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: items.map((item) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(item.icon, size: 15, color: Colors.white60),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 90,
-              child: Text(
-                item.label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontSize: 12,
+      children: items
+          .map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(item.icon, size: 15, color: Colors.white60),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 90,
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        item.value,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                item.value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      )).toList(),
+              ))
+          .toList(),
     );
   }
 }

@@ -251,6 +251,7 @@ class FishProbabilityService {
     final (minOk, minOpt, maxOpt, maxOk) = switch (species) {
       FishSpecies.giltHeadBream => (18.0, 20.0, 26.0, 30.0),
       FishSpecies.horseMackerel => (16.0, 18.0, 24.0, 28.0),
+      FishSpecies.redMullet => (16.0, 18.0, 25.0, 29.0),
       FishSpecies.seaBass => (14.0, 16.0, 22.0, 26.0),
       FishSpecies.shrimp => (20.0, 22.0, 28.0, 32.0),
       FishSpecies.redMullet => (14.0, 16.0, 22.0, 26.0),
