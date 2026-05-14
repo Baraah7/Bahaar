@@ -51,6 +51,8 @@ extension FishSpeciesExtension on FishSpecies {
   }
 }
 
+
+/// this is for fish spot probability 
 /// Five probability tiers for finer colour resolution than the
 /// four-tier FishingIntensityLevel.
 enum FishProbabilityLevel { veryLow, low, moderate, high, veryHigh }

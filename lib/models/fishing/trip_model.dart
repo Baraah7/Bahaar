@@ -1,12 +1,14 @@
 import 'package:latlong2/latlong.dart';
 
+//there is alot of redundant code in this file and it is not being used anywhere in the app, we can delete it and add it back when we need it
+
 class Trip {
   final String id;
   final String? userId;
   final String? title;
   final DateTime startTime;
   final DateTime? endTime;
-  final int pausedSeconds; // total seconds spent paused (breaks)
+  final int pausedSeconds; // total seconds spent paused (breaks) why do we need it ?
   final double? startLat;
   final double? startLon;
   final List<CatchEntry> catches;
@@ -42,6 +44,7 @@ class Trip {
   }
 
   double get totalWeightKg => catches.fold(0, (sum, c) => sum + (c.weightKg ?? 0));
+
 
   Trip copyWith({
     String? id,

@@ -37,7 +37,8 @@ const List<Map<String, dynamic>> kMPAs = [
     'center': [25.6667, 50.7667],
     'radiusKm': 15.0,
   },
-  {
+  // note : make the location of Tubli MPA more central to the actual protected area, which extends south of the current center point. This will improve the accuracy of the map display and user experience.
+  {  
     'id': 'tubli',
     'nameAr': 'محمية خليج توبلي',
     'center': [26.1667, 50.5667],

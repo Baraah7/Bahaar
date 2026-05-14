@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
+//delete this file for now, we can add it back when we need it
+
 
 /// Types of map features that can be created/edited
 enum MapFeatureType {
@@ -22,7 +24,7 @@ extension MapFeatureTypeExtension on MapFeatureType {
       case MapFeatureType.fishingSpot:
         return 'Fishing Spot';
       case MapFeatureType.shippingLane:
-        return 'Shipping Lane';
+        return 'Shipping Lane'; //no
       case MapFeatureType.protectedZone:
         return 'Protected Zone';
       case MapFeatureType.fishingZone:
@@ -30,9 +32,9 @@ extension MapFeatureTypeExtension on MapFeatureType {
       case MapFeatureType.restrictedArea:
         return 'Restricted Area';
       case MapFeatureType.reef:
-        return 'Reef';
+        return 'Reef'; //no
       case MapFeatureType.patrolRoute:
-        return 'Patrol Route';
+        return 'Patrol Route'; //no
     }
   }
 
@@ -104,6 +106,8 @@ class EditableMapFeature {
   final DateTime? updatedAt;
   final bool deleted;
 
+
+//no
   const EditableMapFeature({
     this.id,
     required this.featureType,
@@ -118,6 +122,7 @@ class EditableMapFeature {
 
   GeometryType get geometryType => featureType.geometryType;
 
+//no
   EditableMapFeature copyWith({
     String? id,
     MapFeatureType? featureType,
