@@ -75,6 +75,7 @@ flutter:
     - lib/widgets/map/mask/bahrain_territorial_waters.tif
     - assets/depth_gebco.mbtiles
     - assets/models/fish_classifier.tflite
+    - assets/models/fish_detector.tflite
     - assets/models/labels.txt
     - assets/images/Seabass.jpg
     - assets/images/Shrimp.jpeg
