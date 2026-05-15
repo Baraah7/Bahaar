@@ -135,6 +135,9 @@ class _IntegratedMapState extends State<IntegratedMap>
   // GeoJSON data
   GeoJsonLayerBuilder? _geoJsonBuilder;
 
+  // MPA polygons loaded from protected-areas.json
+  List<Map<String, dynamic>> _mpaPolygons = [];
+
   // Marina data
   Marina? _selectedMarina;
   final bool _showMarinas = true;
@@ -180,6 +183,7 @@ class _IntegratedMapState extends State<IntegratedMap>
     _initLocation();
     _initNavigationMask();
     _loadGeoJson();
+    _loadMpaPolygons();
     _loadSeaports();
     _initMarinas();
     _initRoutingServices();
@@ -512,6 +516,16 @@ class _IntegratedMapState extends State<IntegratedMap>
         .split(' ')
         .map((word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}')
         .join(' ');
+  }
+
+  Future<void> _loadMpaPolygons() async {
+    try {
+      final raw = await rootBundle.loadString('assets/data/protected-areas.json');
+      final list = jsonDecode(raw) as List;
+      if (mounted) setState(() => _mpaPolygons = list.cast<Map<String, dynamic>>());
+    } catch (e) {
+      log('Failed to load MPA polygons: $e');
+    }
   }
 
   Future<void> _loadGeoJson() async {
@@ -1748,24 +1762,39 @@ class _IntegratedMapState extends State<IntegratedMap>
   /// Returns the name of the protected or restricted area that contains [point],
   /// or null if the point is not inside any such area.
   String? _getProtectedAreaAt(LatLng point) {
-    if (_geoJsonBuilder == null) return null;
-
-    for (final type in ['protected_zone', 'restricted_area']) {
-      for (final feature in _geoJsonBuilder!.getFeaturesByType(type)) {
-        try {
-          final coords = feature['geometry']['coordinates'][0] as List;
-          final polygon = coords
-              .map((c) => LatLng(
-                    (c[1] as num).toDouble(),
-                    (c[0] as num).toDouble(),
-                  ))
-              .toList();
-          if (GeometryUtils.isPointInPolygon(point, polygon)) {
-            return feature['properties']['name'] as String? ?? 'Protected Area';
-          }
-        } catch (_) {}
+    // Check GeoJSON protected zones / restricted areas
+    if (_geoJsonBuilder != null) {
+      for (final type in ['protected_zone', 'restricted_area']) {
+        for (final feature in _geoJsonBuilder!.getFeaturesByType(type)) {
+          try {
+            final coords = feature['geometry']['coordinates'][0] as List;
+            final polygon = coords
+                .map((c) => LatLng(
+                      (c[1] as num).toDouble(),
+                      (c[0] as num).toDouble(),
+                    ))
+                .toList();
+            if (GeometryUtils.isPointInPolygon(point, polygon)) {
+              return feature['properties']['name'] as String? ?? 'Protected Area';
+            }
+          } catch (_) {}
+        }
       }
     }
+
+    // Check MPA polygons from protected-areas.json
+    for (final mpa in _mpaPolygons) {
+      try {
+        final pts = (mpa['polygon'] as List).map((p) {
+          final pair = p as List;
+          return LatLng((pair[0] as num).toDouble(), (pair[1] as num).toDouble());
+        }).toList();
+        if (GeometryUtils.isPointInPolygon(point, pts)) {
+          return mpa['nameAr'] as String? ?? mpa['nameEn'] as String? ?? 'Protected Area';
+        }
+      } catch (_) {}
+    }
+
     return null;
   }
 
@@ -2268,15 +2297,19 @@ class _IntegratedMapState extends State<IntegratedMap>
             ],
           ),
 
-        // Bahaar fishing zones, MPA circles, and confirmed spot markers
+        // Bahaar fishing zones, MPA polygons, and confirmed spot markers
         ListenableBuilder(
           listenable: _layerManager,
-          builder: (context, _) => _layerManager.showFishingSpots
-              ? BahaarOverlayLayer(
-                  onGetPrediction: _navigateToPrediction,
-                  showMpaCircles: _layerManager.showProtectedZones,
-                )
-              : const SizedBox.shrink(),
+          builder: (context, _) {
+            final showMpa = _layerManager.showProtectedZones;
+            final showSpots = _layerManager.showFishingSpots;
+            if (!showMpa && !showSpots) return const SizedBox.shrink();
+            return BahaarOverlayLayer(
+              onGetPrediction: _navigateToPrediction,
+              showMpaCircles: showMpa,
+              showSpots: showSpots,
+            );
+          },
         ),
 
         // Catch markers — visible during an active trip
