@@ -28,11 +28,12 @@ FOLDER_TO_LABEL = {
     "shrimp": "Shrimp",
 }
 
-INPUT_SIZE = 260
+DETECTOR_INPUT_SIZE = 300
+CLASSIFIER_INPUT_SIZE = 260
 CLASSIFIER_THRESHOLD = 0.35
-DETECTOR_AMBIGUOUS_THRESHOLD = 0.40
+DETECTOR_AMBIGUOUS_THRESHOLD = 0.18
 AMBIGUOUS_ZONE_MIN_CONFIDENCE = 0.65
-MINIMUM_TOP_CLASS_MARGIN = 0.10
+MINIMUM_TOP_CLASS_MARGIN = 0.05
 CLASS_THRESHOLDS = {
     "Gilt-Head Bream": 0.35,
     "Horse Mackerel": 0.35,
@@ -82,8 +83,8 @@ def load_interpreter(path: Path) -> tf.lite.Interpreter:
     return interpreter
 
 
-def image_to_tensor(path: Path) -> np.ndarray:
-    image = Image.open(path).convert("RGB").resize((INPUT_SIZE, INPUT_SIZE))
+def image_to_tensor(path: Path, size: int) -> np.ndarray:
+    image = Image.open(path).convert("RGB").resize((size, size))
     return np.expand_dims(np.asarray(image, dtype=np.float32), axis=0)
 
 
@@ -187,9 +188,10 @@ def predict_all(
 
     for expected, path in cases:
         try:
-            tensor = image_to_tensor(path)
-            detector_score = float(run_interpreter(detector, tensor)[0][0])
-            scores = run_interpreter(classifier, tensor)[0]
+            detector_tensor = image_to_tensor(path, DETECTOR_INPUT_SIZE)
+            classifier_tensor = image_to_tensor(path, CLASSIFIER_INPUT_SIZE)
+            detector_score = float(run_interpreter(detector, detector_tensor)[0][0])
+            scores = run_interpreter(classifier, classifier_tensor)[0]
             order = np.argsort(scores)[::-1]
             predicted_label = labels[int(order[0])]
             confidence = float(scores[order[0]])

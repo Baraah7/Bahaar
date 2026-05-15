@@ -7,51 +7,76 @@ import 'package:bahaar/providers/fish%20recognition/fish_classification_provider
 FishClassification makeResult({
   String className = 'Sea Bass',
   double confidence = 0.85,
+  double detectorScore = 0.01,
+  FishRecognitionStatus status = FishRecognitionStatus.supportedFish,
 }) =>
     FishClassification(
       className: className,
       confidence: confidence,
+      detectorScore: detectorScore,
+      status: status,
       timestamp: DateTime(2026, 4, 22, 10, 0),
     );
 
 void main() {
-  // ── FishClassification — thresholds ─────────────────────────────────────────
+  // ── FishClassification — status helpers ──────────────────────────────────────
 
   group('FishClassification.isConfident', () {
-    test('returns true when confidence equals threshold (0.70)', () {
-      expect(makeResult(confidence: 0.70).isConfident, isTrue);
+    test('returns true for supportedFish status', () {
+      expect(
+        makeResult(status: FishRecognitionStatus.supportedFish).isConfident,
+        isTrue,
+      );
     });
 
-    test('returns true when confidence is above threshold', () {
-      expect(makeResult(confidence: 0.95).isConfident, isTrue);
-      expect(makeResult(confidence: 0.71).isConfident, isTrue);
+    test('returns false for noFish status', () {
+      expect(
+        makeResult(status: FishRecognitionStatus.noFish).isConfident,
+        isFalse,
+      );
     });
 
-    test('returns false when confidence is below threshold', () {
-      expect(makeResult(confidence: 0.69).isConfident, isFalse);
-      expect(makeResult(confidence: 0.00).isConfident, isFalse);
+    test('returns false for unsupportedFish status', () {
+      expect(
+        makeResult(status: FishRecognitionStatus.unsupportedFish).isConfident,
+        isFalse,
+      );
     });
   });
 
   group('FishClassification.isUnknown', () {
-    test('returns true when confidence is below unknown threshold (0.55)', () {
-      expect(makeResult(confidence: 0.54).isUnknown, isTrue);
-      expect(makeResult(confidence: 0.00).isUnknown, isTrue);
+    test('returns true when status is not supportedFish', () {
+      expect(
+        makeResult(status: FishRecognitionStatus.noFish).isUnknown,
+        isTrue,
+      );
+      expect(
+        makeResult(status: FishRecognitionStatus.unsupportedFish).isUnknown,
+        isTrue,
+      );
     });
 
-    test('returns false when confidence equals unknown threshold (0.55)', () {
-      expect(makeResult(confidence: 0.55).isUnknown, isFalse);
+    test('returns false when status is supportedFish', () {
+      expect(
+        makeResult(status: FishRecognitionStatus.supportedFish).isUnknown,
+        isFalse,
+      );
     });
+  });
 
-    test('returns false when confidence is above unknown threshold', () {
-      expect(makeResult(confidence: 0.60).isUnknown, isFalse);
-      expect(makeResult(confidence: 0.95).isUnknown, isFalse);
+  group('FishClassification.isNoFish', () {
+    test('returns true only for noFish status', () {
+      expect(makeResult(status: FishRecognitionStatus.noFish).isNoFish, isTrue);
+      expect(makeResult(status: FishRecognitionStatus.supportedFish).isNoFish, isFalse);
+      expect(makeResult(status: FishRecognitionStatus.unsupportedFish).isNoFish, isFalse);
     });
+  });
 
-    test('middle zone (0.55–0.69) is neither unknown nor confident', () {
-      final result = makeResult(confidence: 0.62);
-      expect(result.isUnknown, isFalse);
-      expect(result.isConfident, isFalse);
+  group('FishClassification.isFishDetected', () {
+    test('returns false only for noFish status', () {
+      expect(makeResult(status: FishRecognitionStatus.noFish).isFishDetected, isFalse);
+      expect(makeResult(status: FishRecognitionStatus.supportedFish).isFishDetected, isTrue);
+      expect(makeResult(status: FishRecognitionStatus.unsupportedFish).isFishDetected, isTrue);
     });
   });
 
@@ -83,17 +108,21 @@ void main() {
   // ── FishClassification — toJson ──────────────────────────────────────────────
 
   group('FishClassification.toJson', () {
-    test('serializes className, confidence, and timestamp', () {
+    test('serializes className, confidence, detectorScore, status and timestamp', () {
       final ts = DateTime(2026, 4, 22, 10, 0);
       final result = FishClassification(
         className: 'Sea Bass',
         confidence: 0.87,
+        detectorScore: 0.02,
+        status: FishRecognitionStatus.supportedFish,
         timestamp: ts,
       );
       final json = result.toJson();
 
       expect(json['className'], 'Sea Bass');
       expect(json['confidence'], closeTo(0.87, 0.0001));
+      expect(json['detectorScore'], closeTo(0.02, 0.0001));
+      expect(json['status'], 'supportedFish');
       expect(json['timestamp'], ts.toIso8601String());
     });
 
@@ -168,7 +197,6 @@ void main() {
     test('result cannot be cleared to null via copyWith — use clearResult()', () {
       final r = makeResult();
       final s = FishClassificationState(result: r, isInitialized: true);
-      // copyWith(result: null) is not possible; null argument is ignored
       final copy = s.copyWith(isLoading: false);
       expect(copy.result, same(r));
     });
@@ -178,8 +206,6 @@ void main() {
 
   group('FishClassificationNotifier.clearResult preserves isInitialized', () {
     test('clearResult resets result and error but keeps isInitialized=true', () {
-      // Simulate the exact code path in clearResult():
-      //   state = FishClassificationState(isInitialized: state.isInitialized)
       const initialized = true;
       final cleared = FishClassificationState(isInitialized: initialized);
       expect(cleared.result, isNull);
@@ -245,7 +271,6 @@ void main() {
     });
 
     test('classifyImage when not initialized: error set, no loading', () {
-      // Simulates the guard: if (!state.isInitialized) { state = copyWith(error: 'Model not ready'); return; }
       const before = FishClassificationState(isInitialized: false);
       final guarded = before.copyWith(error: 'Model not ready');
       expect(guarded.isLoading, isFalse);

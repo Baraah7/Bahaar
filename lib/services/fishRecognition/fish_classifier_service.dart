@@ -18,12 +18,12 @@ class FishClassification {
   final FishRecognitionStatus status;
   final DateTime timestamp;
   static const double confidenceThreshold = 0.35;
-  // When detector score is in the ambiguous range (0.40+), require higher
-  // classifier confidence to accept as fish — this rejects non-fish images
-  // (logos, people, objects) whose detector scores overlap with real fish.
-  static const double _detectorAmbiguousThreshold = 0.40;
+  // When detector score >= 0.18 (non-photographic content, logos, people),
+  // require higher classifier confidence — rejects non-fish that the classifier
+  // mislabels with moderate confidence (0.45–0.60).
+  static const double _detectorAmbiguousThreshold = 0.18;
   static const double _ambiguousZoneMinConfidence = 0.65;
-  static const double _minimumTopClassMargin = 0.10;
+  static const double _minimumTopClassMargin = 0.05;
   static const Map<String, double> _classThresholds = {
     'Gilt-Head Bream': 0.35,
     'Horse Mackerel': 0.35,
