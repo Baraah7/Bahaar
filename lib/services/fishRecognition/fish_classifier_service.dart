@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -18,11 +17,6 @@ class FishClassification {
   final FishRecognitionStatus status;
   final DateTime timestamp;
   static const double confidenceThreshold = 0.35;
-  // When detector score >= 0.18 (non-photographic content, logos, people),
-  // require higher classifier confidence — rejects non-fish that the classifier
-  // mislabels with moderate confidence (0.45–0.60).
-  static const double _detectorAmbiguousThreshold = 0.18;
-  static const double _ambiguousZoneMinConfidence = 0.65;
   static const double _minimumTopClassMargin = 0.05;
   static const Map<String, double> _classThresholds = {
     'Gilt-Head Bream': 0.35,
@@ -32,7 +26,6 @@ class FishClassification {
     'Shrimp': 0.35,
   };
 
-  // Mapping of English class names to Arabic names
   static const Map<String, String> _arabicNames = {
     'Gilt-Head Bream': 'دنيس',
     'Horse Mackerel': 'سكمبري',
@@ -50,9 +43,7 @@ class FishClassification {
     required this.timestamp,
   });
 
-  // Get Arabic name for the fish class
   String get arabicName => _arabicNames[className] ?? className;
-
   double get threshold => _classThresholds[className] ?? confidenceThreshold;
   bool get isFishDetected => status != FishRecognitionStatus.noFish;
   bool get isConfident => status == FishRecognitionStatus.supportedFish;
@@ -71,25 +62,20 @@ class FishClassification {
   }
 }
 
-/// TensorFlow Lite model service for fish classification
 class FishClassifierService {
   Interpreter? _classifierInterpreter;
-  Interpreter? _detectorInterpreter;
   List<String>? _labels;
   bool _isInitialized = false;
 
   static const String _classifierModelPath =
       'assets/models/fish_classifier.tflite';
-  static const String _detectorModelPath = 'assets/models/fish_detector.tflite';
   static const String _labelsPath = 'assets/models/labels.txt';
   static const int _inputSize = 260;
 
-  /// Initialize the classifier
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      // Load labels
       final labelsData = await rootBundle.loadString(_labelsPath);
       _labels = labelsData
           .split('\n')
@@ -97,8 +83,6 @@ class FishClassifierService {
           .where((label) => label.isNotEmpty)
           .toList();
 
-      // Load TFLite models
-      _detectorInterpreter = await Interpreter.fromAsset(_detectorModelPath);
       _classifierInterpreter =
           await Interpreter.fromAsset(_classifierModelPath);
 
@@ -108,7 +92,6 @@ class FishClassifierService {
     }
   }
 
-  /// Check if classifier is initialized
   bool get isInitialized => _isInitialized;
 
   String _normalizeModelLabel(String label) {
@@ -118,12 +101,10 @@ class FishClassifierService {
     };
   }
 
-  /// Classify image from file
   Future<FishClassification?> classifyImage(File imageFile) async {
     if (!_isInitialized) {
       throw Exception('FishClassifierService is not initialized.');
     }
-
     try {
       final bytes = await imageFile.readAsBytes();
       return classifyImageBytes(bytes);
@@ -132,7 +113,6 @@ class FishClassifierService {
     }
   }
 
-  /// Classify from image bytes (e.g., from camera)
   Future<FishClassification> classifyImageBytes(Uint8List imageBytes) async {
     if (!_isInitialized) {
       throw Exception('Classifier not initialized. Call initialize() first.');
@@ -143,16 +123,13 @@ class FishClassifierService {
       if (decoded == null) throw Exception('Failed to decode image.');
 
       final input = _preprocessImage(decoded);
-      final detectorScore = _detectFish(input);
 
-      // Output shape: [1, numClasses]
       final numClasses = _labels!.length;
       final output = List.generate(1, (_) => List.filled(numClasses, 0.0));
-
       _classifierInterpreter!.run(input, output);
 
       final scores = output[0];
-      final rankedIndexes = List<int>.generate(scores.length, (index) => index)
+      final rankedIndexes = List<int>.generate(scores.length, (i) => i)
         ..sort((a, b) => scores[b].compareTo(scores[a]));
       final bestIndex = rankedIndexes.first;
       final confidence = scores[bestIndex];
@@ -163,21 +140,20 @@ class FishClassifierService {
       final classThreshold =
           FishClassification._classThresholds[predictedClassName] ??
               FishClassification.confidenceThreshold;
+
       developer.log(
-        'detector=$detectorScore  top=$predictedClassName  conf=${confidence.toStringAsFixed(3)}  margin=${topClassMargin.toStringAsFixed(3)}  threshold=$classThreshold',
+        'top=$predictedClassName  conf=${confidence.toStringAsFixed(3)}  margin=${topClassMargin.toStringAsFixed(3)}  threshold=$classThreshold  allScores=${scores.map((s) => s.toStringAsFixed(3)).toList()}',
         name: 'FishClassifier',
       );
-      final effectiveConfidenceThreshold =
-          detectorScore >= FishClassification._detectorAmbiguousThreshold
-              ? FishClassification._ambiguousZoneMinConfidence
-              : classThreshold;
+
       final isClearSupportedSpecies =
-          confidence >= effectiveConfidenceThreshold &&
+          confidence >= classThreshold &&
               topClassMargin >= FishClassification._minimumTopClassMargin;
-      final status =
-          !isClearSupportedSpecies
-              ? FishRecognitionStatus.noFish
-              : FishRecognitionStatus.supportedFish;
+
+      final status = isClearSupportedSpecies
+          ? FishRecognitionStatus.supportedFish
+          : FishRecognitionStatus.noFish;
+
       final className = switch (status) {
         FishRecognitionStatus.supportedFish => predictedClassName,
         FishRecognitionStatus.unsupportedFish => 'Unsupported species',
@@ -187,7 +163,7 @@ class FishClassifierService {
       return FishClassification(
         className: className,
         confidence: confidence,
-        detectorScore: detectorScore,
+        detectorScore: confidence,
         status: status,
         timestamp: DateTime.now(),
       );
@@ -196,14 +172,7 @@ class FishClassifierService {
     }
   }
 
-  double _detectFish(List<List<List<List<double>>>> input) {
-    final output = List.generate(1, (_) => List.filled(1, 0.0));
-    _detectorInterpreter!.run(input, output);
-    return output[0][0];
-  }
-
-  /// Preprocess image to model input format.
-  /// No normalization - model expects raw pixel values [0, 255]
+  /// Preprocess: stretch to 260×260, raw [0, 255] — matches training
   List<List<List<List<double>>>> _preprocessImage(img.Image image) {
     final resized = img.copyResize(
       image,
@@ -211,9 +180,7 @@ class FishClassifierService {
       height: _inputSize,
       interpolation: img.Interpolation.cubic,
     );
-
-    // Shape: [1, 224, 224, 3]
-    final input = List.generate(
+    return List.generate(
       1,
       (_) => List.generate(
         _inputSize,
@@ -230,22 +197,14 @@ class FishClassifierService {
         ),
       ),
     );
-
-    return input;
   }
 
-  /// Get all class labels
   List<String> get labels => List.unmodifiable(_labels ?? []);
-
-  /// Get model input size
   int get inputSize => _inputSize;
 
-  /// Dispose resources
   void dispose() {
     _classifierInterpreter?.close();
-    _detectorInterpreter?.close();
     _classifierInterpreter = null;
-    _detectorInterpreter = null;
     _isInitialized = false;
   }
 }
