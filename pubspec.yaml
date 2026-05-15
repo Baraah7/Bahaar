@@ -69,7 +69,6 @@ flutter:
     - assets/data/fish_probability_fallback.json
     - assets/data/seaports.json
     - assets/data/protected-areas.json
-    - assets/data/bahrain_exclusion_zones.geojson
     - assets/data/stars_2500.json
     - assets/navigation/
     - assets/models/

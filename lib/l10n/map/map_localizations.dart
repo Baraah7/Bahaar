@@ -18,15 +18,9 @@ class MapLocalizations {
   String get showDepthLayer => _isAr ? 'عرض طبقة العمق' : 'Show depth layer';
   String get visualizationType => _isAr ? 'نوع التصور' : 'Visualization Type';
   String get opacityLabel => _isAr ? 'الشفافية' : 'Opacity';
-  String get protectedExclusionZones => _isAr ? 'المناطق المحمية والمحظورة' : 'Protected & Exclusion Zones';
   String get protectedZones => _isAr ? 'المناطق المحمية' : 'Protected Zones';
   String get marineReservesReefs => _isAr ? 'المحميات البحرية والشعاب' : 'Marine Reserves & Reefs';
   String get mpaRestrictedArea => _isAr ? 'منطقة MPA / مقيدة' : 'MPA / Restricted Area';
-  String get oilGasExclusion => _isAr ? 'منطقة النفط والغاز المحظورة' : 'Oil & Gas Exclusion';
-  String get oilExclusion    => _isAr ? 'منطقة النفط المحظورة' : 'Oil Exclusion Zone';
-  String get gasExclusion    => _isAr ? 'منطقة الغاز المحظورة' : 'Gas Exclusion Zone';
-  String get safetyBuffersVisible => _isAr ? 'مخازن السلامة مرئية' : 'Safety buffers visible';
-  String get safetyRulesApplyWhenHidden => _isAr ? 'قواعد السلامة تُطبق عند الإخفاء' : 'Safety rules apply when hidden';
   String get fishingSpotSuggestions => _isAr ? 'اقتراحات أماكن الصيد' : 'Fishing Spot Suggestions';
   String get showFishingSpots => _isAr ? 'عرض أماكن الصيد' : 'Show fishing spots';
   String get zonesMpasLocations => _isAr ? 'المناطق، MPAs والمواقع' : 'Zones, MPAs & locations';
