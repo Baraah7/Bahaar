@@ -12,16 +12,10 @@ class FishRecognitionLocalizations {
 
   String get tryAgain => _isAr ? 'حاول مرة أخرى' : 'Try Again';
   String get noDataAvailable => _isAr ? 'لا توجد بيانات' : 'No data available';
-  String get fishRecognition =>
-      _isAr ? 'التعرف على الأسماك' : 'Fish Recognition';
-  String get loadingRecognitionModel =>
-      _isAr ? 'جاري تحميل نموذج التعرف...' : 'Loading recognition model...';
-  String get takePhotoOfFish => _isAr
-      ? 'التقط صورة للأسماك أو الجمبري'
-      : 'Take a photo of fish or shrimp';
-  String get systemWillIdentify => _isAr
-      ? 'سيتعرف النظام على النوع تلقائياً'
-      : 'The system will identify the species automatically';
+  String get fishRecognition => _isAr ? 'التعرف على الأسماك' : 'Fish Recognition';
+  String get loadingRecognitionModel => _isAr ? 'جاري تحميل نموذج التعرف...' : 'Loading recognition model...';
+  String get takePhotoOfFish => _isAr ? 'التقط صورة للأسماك أو الروبيان' : 'Take a photo of fish or shrimp';
+  String get systemWillIdentify => _isAr ? 'سيتعرف النظام على النوع تلقائياً' : 'The system will identify the species automatically';
   String get camera => _isAr ? 'الكاميرا' : 'Camera';
   String get gallery => _isAr ? 'المعرض' : 'Gallery';
   String get analyzing => _isAr ? 'جاري التحليل...' : 'Analyzing...';

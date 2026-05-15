@@ -5,7 +5,9 @@
 //   3. Spot markers   – colour-coded by confidence/MPA; tap → bottom sheet
 //                       with a "Get Prediction" button.
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/core/constants/zone_data.dart';
@@ -21,14 +23,17 @@ class BahaarOverlayLayer extends StatelessWidget {
   /// Receives the spot's [LatLng] and [speciesId] (first species of the spot).
   final void Function(LatLng latLng, String speciesId)? onGetPrediction;
 
-  /// When true the MPA red circles are rendered (controlled by the
-  /// Protected Zones toggle, not the Fishing Spots toggle).
+  /// When true the MPA red polygons are rendered (Protected Zones toggle).
   final bool showMpaCircles;
+
+  /// When true the fishing spot markers are rendered (Fishing Spots toggle).
+  final bool showSpots;
 
   const BahaarOverlayLayer({
     super.key,
     this.onGetPrediction,
     this.showMpaCircles = true,
+    this.showSpots = true,
   });
 
   @override
@@ -39,12 +44,15 @@ class BahaarOverlayLayer extends StatelessWidget {
           _MpaCircleLayer(
             onMpaTapped: (mpa) => _showMpaSheet(context, mpa),
           ),
-        _SpotMarkerLayer(
-          onSpotTapped: (spot) => _showSpotSheet(context, spot),
-        ),
+        if (showSpots)
+          _SpotMarkerLayer(
+            onSpotTapped: (spot) => _showSpotSheet(context, spot),
+          ),
       ],
     );
   }
+
+  static const _typeAr = {'Marine': 'بحرية', 'Wilderness': 'برية'};
 
   // ── MPA bottom sheet ────────────────────────────────────────────────────────
   void _showMpaSheet(BuildContext context, Map<String, dynamic> mpa) {
@@ -65,12 +73,19 @@ class BahaarOverlayLayer extends StatelessWidget {
                 const Icon(Icons.nature_people, color: Colors.red, size: 28),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    mpa['nameAr'] as String,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        mpa['nameAr'] as String,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                      if ((mpa['nameEn'] as String?) != null)
+                        Text(
+                          mpa['nameEn'] as String,
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                    ],
                   ),
                 ),
               ]),
@@ -82,28 +97,33 @@ class BahaarOverlayLayer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.red.shade200),
                 ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.red),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'منطقة محمية - الصيد مقيد',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
+                child: const Row(children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.red),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'منطقة محمية - الصيد مقيد',
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 15),
                     ),
-                  ],
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 12),
+              if ((mpa['year'] as String?) != null)
+                _MpaInfoRow(Icons.calendar_today_outlined, 'سنة الإعلان: ${mpa['year']}'),
+              if ((mpa['area_km2'] as num?) != null)
+                _MpaInfoRow(Icons.straighten, 'المساحة: ${mpa['area_km2']} كم²'),
+              if ((mpa['type'] as String?) != null)
+                _MpaInfoRow(Icons.category_outlined, _typeAr[mpa['type']] ?? mpa['type'] as String),
+              if ((mpa['authority'] as String?) != null)
+                _MpaInfoRow(Icons.account_balance_outlined, mpa['authority'] as String),
+              if ((mpa['description'] as String?)?.isNotEmpty == true) ...[
+                const SizedBox(height: 8),
+                Text(
+                  mpa['description'] as String,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'نطاق المحمية: ${(mpa['radiusKm'] as double).toStringAsFixed(1)} كم',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
+              ],
             ],
           ),
         ),
@@ -278,62 +298,107 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
+class _MpaInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MpaInfoRow(this.icon, this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(children: [
+        Icon(icon, size: 15, color: Colors.grey.shade600),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(text, style: TextStyle(fontSize: 13, color: Colors.grey.shade800)),
+        ),
+      ]),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
-// MPA circle layer
+// MPA polygon layer
 // ---------------------------------------------------------------------------
 
-class _MpaCircleLayer extends StatelessWidget {
+Future<List<Map<String, dynamic>>> _loadMpas() async {
+  final raw = await rootBundle.loadString('assets/data/protected-areas.json');
+  final list = jsonDecode(raw) as List;
+  return list.cast<Map<String, dynamic>>();
+}
+
+class _MpaCircleLayer extends StatefulWidget {
   final void Function(Map<String, dynamic> mpa) onMpaTapped;
   const _MpaCircleLayer({required this.onMpaTapped});
 
   @override
+  State<_MpaCircleLayer> createState() => _MpaCircleLayerState();
+}
+
+class _MpaCircleLayerState extends State<_MpaCircleLayer> {
+  late final Future<List<Map<String, dynamic>>> _mpasFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _mpasFuture = _loadMpas();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final circles = kMPAs.map((mpa) {
-      final center = mpa['center'] as List;
-      return CircleMarker(
-        point: LatLng(
-          (center[0] as num).toDouble(),
-          (center[1] as num).toDouble(),
-        ),
-        radius: (mpa['radiusKm'] as double) * 1000,
-        useRadiusInMeter: true,
-        color: Colors.red.withValues(alpha: 0.25),
-        borderColor: Colors.red,
-        borderStrokeWidth: 2.0,
-      );
-    }).toList();
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _mpasFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final mpas = snapshot.data!;
 
-    final markers = kMPAs.map((mpa) {
-      final center = mpa['center'] as List;
-      return Marker(
-        point: LatLng(
-          (center[0] as num).toDouble(),
-          (center[1] as num).toDouble(),
-        ),
-        width: 36,
-        height: 36,
-        child: GestureDetector(
-          onTap: () => onMpaTapped(mpa),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.85),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: const Icon(
-              Icons.nature_people,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-        ),
-      );
-    }).toList();
+        final polygons = mpas.map((mpa) {
+          final pts = (mpa['polygon'] as List).map((p) {
+            final pair = p as List;
+            return LatLng((pair[0] as num).toDouble(), (pair[1] as num).toDouble());
+          }).toList();
+          return Polygon(
+            points: pts,
+            color: Colors.red.withValues(alpha: 0.20),
+            borderColor: Colors.red,
+            borderStrokeWidth: 2.0,
+          );
+        }).toList();
 
-    return Stack(children: [
-      CircleLayer(circles: circles),
-      MarkerLayer(markers: markers),
-    ]);
+        final markers = mpas.map((mpa) {
+          final center = mpa['center'] as List;
+          return Marker(
+            point: LatLng(
+              (center[0] as num).toDouble(),
+              (center[1] as num).toDouble(),
+            ),
+            width: 36,
+            height: 36,
+            child: GestureDetector(
+              onTap: () => widget.onMpaTapped(mpa),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.85),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.nature_people,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          );
+        }).toList();
+
+        return Stack(children: [
+          PolygonLayer(polygons: polygons),
+          MarkerLayer(markers: markers),
+        ]);
+      },
+    );
   }
 }
 

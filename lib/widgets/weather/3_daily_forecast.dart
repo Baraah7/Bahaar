@@ -68,16 +68,17 @@ class _DayRow extends StatelessWidget {
         isToday ? l10n.weatherToday : l10n.dayName(date.weekday);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: isToday
           ? BoxDecoration(color: WeatherStyles.white(0.08))
           : null,
       child: Row(
         children: [
           SizedBox(
-            width: 60,
+            width: 52,
             child: Text(
               dayName,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isToday ? Colors.white : WeatherStyles.white(0.8),
                 fontSize: 15,
@@ -87,21 +88,24 @@ class _DayRow extends StatelessWidget {
             ),
           ),
           WeatherStyles.weatherIcon(day.day.conditionIcon),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           SizedBox(
-            width: 42,
+            width: 36,
             child: day.day.dailyChanceOfRain > 0
                 ? Row(
                     children: [
                       const Icon(Icons.water_drop,
                           color: WeatherStyles.accent, size: 12),
                       const SizedBox(width: 2),
-                      Text(
-                        '${l10n.n(day.day.dailyChanceOfRain)}%',
-                        style: const TextStyle(
-                            color: WeatherStyles.accent,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600),
+                      Flexible(
+                        child: Text(
+                          '${l10n.n(day.day.dailyChanceOfRain)}%',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: WeatherStyles.accent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ],
                   )
@@ -112,12 +116,12 @@ class _DayRow extends StatelessWidget {
             '${l10n.n(day.day.mintempC.round())}°',
             style: TextStyle(
                 color: WeatherStyles.white(0.5),
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w500),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           SizedBox(
-            width: 80,
+            width: 72,
             child: _TemperatureBar(
               min: day.day.mintempC,
               max: day.day.maxtempC,
@@ -126,12 +130,12 @@ class _DayRow extends StatelessWidget {
               currentTemp: isToday ? currentTemp : null,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
             '${l10n.n(day.day.maxtempC.round())}°',
             style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w500),
           ),
         ],

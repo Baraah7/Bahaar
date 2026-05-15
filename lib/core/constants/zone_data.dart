@@ -29,40 +29,6 @@ const Map<String, String> kZoneNamesAr = {
   'western': 'المنطقة الغربية',
 };
 
-/// MPA circles – center [lat, lng] + radius in km.
-const List<Map<String, dynamic>> kMPAs = [
-  {
-    'id': 'hawar',
-    'nameAr': 'محمية جزر حوار',
-    'center': [25.6667, 50.7667],
-    'radiusKm': 15.0,
-  },
-  {
-    'id': 'tubli',
-    'nameAr': 'محمية خليج توبلي',
-    'center': [26.1667, 50.5667],
-    'radiusKm': 3.5,
-  },
-  {
-    'id': 'mashtan',
-    'nameAr': 'محمية جزيرة مشتان',
-    'center': [25.8833, 50.6500],
-    'radiusKm': 2.0,
-  },
-  {
-    'id': 'duwhat_arad',
-    'nameAr': 'محمية ضوحة عراد',
-    'center': [26.2500, 50.6500],
-    'radiusKm': 1.5,
-  },
-  {
-    'id': 'fasht_bulthama',
-    'nameAr': 'محمية فشت بولتامة',
-    'center': [26.4833, 50.4500],
-    'radiusKm': 4.0,
-  },
-];
-
 /// Confirmed fishing spots.
 const List<Map<String, dynamic>> kConfirmedSpots = [
   {

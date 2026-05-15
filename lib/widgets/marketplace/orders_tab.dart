@@ -746,6 +746,7 @@ class _OrdersList extends StatelessWidget {
         final order = visible[index];
         final listing = marketplaceService.getListingById(order.listingId);
         return OrderCard(
+          key: ValueKey(order.id),
           order: order,
           listing: listing,
           isSeller: isSeller,

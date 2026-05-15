@@ -35,10 +35,6 @@ void main() {
       expect(mgr.showFishingSpots, isFalse);
     });
 
-    test('showExclusionZones is false by default', () {
-      expect(mgr.showExclusionZones, isFalse);
-    });
-
     test('showLayerControls is false by default', () {
       expect(mgr.showLayerControls, isFalse);
     });
@@ -244,7 +240,6 @@ void main() {
     test('resetToDefaults restores all fields to initial values', () {
       mgr.showDepthLayer = true;
       mgr.showFishProbabilityHeatmap = true;
-      mgr.showExclusionZones = true;
       mgr.depthLayerOpacity = 0.3;
       mgr.depthVisualizationType = DepthVisualizationType.combined;
       mgr.toggleSpecies(FishSpecies.shrimp); // remove one species
@@ -256,7 +251,6 @@ void main() {
       expect(mgr.showBaseMap, isTrue);
       expect(mgr.showDepthLayer, isFalse);
       expect(mgr.showFishProbabilityHeatmap, isFalse);
-      expect(mgr.showExclusionZones, isFalse);
       expect(mgr.depthLayerOpacity, closeTo(0.7, 0.0001));
       expect(mgr.depthVisualizationType, DepthVisualizationType.bathymetric);
       expect(mgr.selectedSpecies.length, 4);

@@ -16,7 +16,6 @@ import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_scree
 import 'package:bahaar/screens/fish%20recognition/prediction_screen.dart';
 import 'package:bahaar/services/fishRecognition/fish_probability_service.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
-import 'package:bahaar/services/map/exclusion_zone_service.dart';
 import 'package:bahaar/services/map/feature_edit_service.dart';
 import 'package:bahaar/services/map/hybrid_route_coordinator.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
@@ -36,7 +35,6 @@ import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
 import 'package:bahaar/widgets/map/trip_track_layer.dart';
 import 'package:bahaar/widgets/map/depth_soundings_layer.dart';
 import 'package:bahaar/widgets/map/enhanced_depth_layer.dart';
-import 'package:bahaar/widgets/map/exclusion_zone_layer.dart';
 import 'package:bahaar/widgets/map/feature_drawing_layer.dart';
 import 'package:bahaar/widgets/map/feature_edit_toolbar.dart';
 import 'package:bahaar/widgets/map/fish_probability_layer.dart';
@@ -109,13 +107,6 @@ class _IntegratedMapState extends State<IntegratedMap>
   List<WeatherSafetyAssessment> _activeWeatherWarnings = [];
   bool _weatherAlertDismissed = false;
 
-  // Exclusion zone state
-  final ExclusionZoneService _exclusionZoneService = ExclusionZoneService();
-  ExclusionZoneViolation? _activeExclusionViolation;
-  ExclusionZone? _approachingExclusionZone;
-  double _approachingExclusionZoneDistance = 0;
-  bool _exclusionAlertDismissed = false;
-
   // Outline edit state
   final OutlineEditService _outlineEditService = OutlineEditService();
   bool _isOutlineEditMode = false;
@@ -143,6 +134,9 @@ class _IntegratedMapState extends State<IntegratedMap>
 
   // GeoJSON data
   GeoJsonLayerBuilder? _geoJsonBuilder;
+
+  // MPA polygons loaded from protected-areas.json
+  List<Map<String, dynamic>> _mpaPolygons = [];
 
   // Marina data
   Marina? _selectedMarina;
@@ -189,6 +183,7 @@ class _IntegratedMapState extends State<IntegratedMap>
     _initLocation();
     _initNavigationMask();
     _loadGeoJson();
+    _loadMpaPolygons();
     _loadSeaports();
     _initMarinas();
     _initRoutingServices();
@@ -234,10 +229,6 @@ class _IntegratedMapState extends State<IntegratedMap>
         geoJsonBuilder: _geoJsonBuilder!,
         weatherService: _weatherService,
       );
-      // Exclusion zones are always hard-blocked during routing
-      _routeCoordinator.extraRestrictedAreas =
-          _exclusionZoneService.buildExclusionPolygons();
-
       // Initialize navigation session manager
       _navigationManager = NavigationSessionManager(
         location: _location,
@@ -273,7 +264,7 @@ class _IntegratedMapState extends State<IntegratedMap>
     setState(() {
       if (navLocation != null) {
         // Mirror live position into _locationData so the marker and other
-        // consumers (AIS CPA, exclusion zones) stay in sync.
+        // consumers (AIS CPA) stay in sync.
         _locationData = LocationData.fromMap({
           'latitude': navLocation.latitude,
           'longitude': navLocation.longitude,
@@ -427,14 +418,6 @@ class _IntegratedMapState extends State<IntegratedMap>
       if (mounted) {
         setState(() => _maskInitialized = true);
         log('Navigation mask initialized successfully');
-        // Drop any exclusion zones that ended up on land.
-        // Use a 5-cell neighbourhood search so a zone whose exact centre
-        // rounds to a land cell (grid rounding) is still kept if water
-        // exists nearby.
-        await _exclusionZoneService.initialize();
-        _exclusionZoneService.filterByWater(
-          (p) => _navigationMask.findNearestWaterPoint(p, maxSearchRadius: 5) != null,
-        );
       }
     } catch (e) {
       log('Error initializing navigation mask: $e');
@@ -485,21 +468,12 @@ class _IntegratedMapState extends State<IntegratedMap>
       if (mounted) {
         setState(() {});
         _moveToLocationIfReady();
-        if (_locationData?.latitude != null && _locationData?.longitude != null) {
-          _checkExclusionZones(LatLng(
-            _locationData!.latitude!,
-            _locationData!.longitude!,
-          ));
-        }
       }
 
       // Continuously update position so the user marker stays live
       _locationSubscription = _location.onLocationChanged.listen((data) {
         if (!mounted) return;
         setState(() => _locationData = data);
-        if (data.latitude != null && data.longitude != null) {
-          _checkExclusionZones(LatLng(data.latitude!, data.longitude!));
-        }
       });
     } catch (e) {
       log('Error getting location: $e');
@@ -542,6 +516,16 @@ class _IntegratedMapState extends State<IntegratedMap>
         .split(' ')
         .map((word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}')
         .join(' ');
+  }
+
+  Future<void> _loadMpaPolygons() async {
+    try {
+      final raw = await rootBundle.loadString('assets/data/protected-areas.json');
+      final list = jsonDecode(raw) as List;
+      if (mounted) setState(() => _mpaPolygons = list.cast<Map<String, dynamic>>());
+    } catch (e) {
+      log('Failed to load MPA polygons: $e');
+    }
   }
 
   Future<void> _loadGeoJson() async {
@@ -635,8 +619,6 @@ class _IntegratedMapState extends State<IntegratedMap>
       }
       if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
 
-      final violation = _exclusionZoneService.checkViolation(point);
-      if (violation != null) { _showExclusionDialog(violation); return; }
       final areaName = _getProtectedAreaAt(point);
       if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
 
@@ -691,8 +673,6 @@ class _IntegratedMapState extends State<IntegratedMap>
       }
       if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
 
-      final violation = _exclusionZoneService.checkViolation(point);
-      if (violation != null) { _showExclusionDialog(violation); return; }
       final areaName = _getProtectedAreaAt(point);
       if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
 
@@ -743,9 +723,6 @@ class _IntegratedMapState extends State<IntegratedMap>
       if (_outsideMaskWarning != null) setState(() => _outsideMaskWarning = null);
     }
 
-    final violation = _exclusionZoneService.checkViolation(point);
-    if (violation != null) { _showExclusionDialog(violation); return; }
-
     if (_showPortSelection) {
       final areaName = _getProtectedAreaAt(point);
       if (areaName != null) { _showProtectedAreaDialog(areaName); return; }
@@ -761,27 +738,6 @@ class _IntegratedMapState extends State<IntegratedMap>
       }
       return;
     }
-  }
-
-  void _showExclusionDialog(ExclusionZoneViolation violation) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.oil_barrel, color: Colors.red, size: 40),
-        title: const Text('Exclusion Zone'),
-        content: Text(
-          'This location is inside the ${violation.zone.name} safety exclusion zone '
-          '(${violation.distanceMeters.round()} m from platform).\n\n'
-          'Destinations inside the 500 m UNCLOS safety buffer are not permitted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Choose Another Location'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showProtectedAreaDialog(String areaName) {
@@ -1201,7 +1157,7 @@ class _IntegratedMapState extends State<IntegratedMap>
       }
 
       // Calculate marine route from port to sea destination,
-      // blocking all protected zones, restricted areas, and exclusion zones.
+      // blocking all protected zones and restricted areas.
       final marineSegment = await _marineService.findMarineRoute(
         origin: _selectedPort!.location,
         destination: _seaDestination!,
@@ -1210,7 +1166,6 @@ class _IntegratedMapState extends State<IntegratedMap>
             ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
             ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
           ],
-          ..._exclusionZoneService.buildExclusionPolygons(),
         ],
       );
 
@@ -1609,7 +1564,6 @@ class _IntegratedMapState extends State<IntegratedMap>
             ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
             ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
           ],
-          ..._exclusionZoneService.buildExclusionPolygons(),
         ],
       );
 
@@ -1687,7 +1641,6 @@ class _IntegratedMapState extends State<IntegratedMap>
             ..._geoJsonBuilder!.buildRestrictedAreas(isVisible: true),
             ..._geoJsonBuilder!.buildProtectedZones(isVisible: true),
           ],
-          ..._exclusionZoneService.buildExclusionPolygons(),
         ],
       );
 
@@ -1795,33 +1748,6 @@ class _IntegratedMapState extends State<IntegratedMap>
     }
   }
 
-  void _checkExclusionZones(LatLng position) {
-    if (!_exclusionZoneService.isInitialized) return;
-
-    final violation = _exclusionZoneService.checkViolation(position);
-    ExclusionZone? approaching;
-    double approachDist = 0;
-
-    if (violation == null) {
-      approaching = _exclusionZoneService.checkApproach(
-        position,
-        warningMeters: 2000,
-      );
-      if (approaching != null) {
-        approachDist = _exclusionZoneService.distanceTo(position, approaching);
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _activeExclusionViolation = violation;
-        _approachingExclusionZone = approaching;
-        _approachingExclusionZoneDistance = approachDist;
-        if (violation != null) _exclusionAlertDismissed = false;
-      });
-    }
-  }
-
   void _showMessage(String message, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1836,24 +1762,39 @@ class _IntegratedMapState extends State<IntegratedMap>
   /// Returns the name of the protected or restricted area that contains [point],
   /// or null if the point is not inside any such area.
   String? _getProtectedAreaAt(LatLng point) {
-    if (_geoJsonBuilder == null) return null;
-
-    for (final type in ['protected_zone', 'restricted_area']) {
-      for (final feature in _geoJsonBuilder!.getFeaturesByType(type)) {
-        try {
-          final coords = feature['geometry']['coordinates'][0] as List;
-          final polygon = coords
-              .map((c) => LatLng(
-                    (c[1] as num).toDouble(),
-                    (c[0] as num).toDouble(),
-                  ))
-              .toList();
-          if (GeometryUtils.isPointInPolygon(point, polygon)) {
-            return feature['properties']['name'] as String? ?? 'Protected Area';
-          }
-        } catch (_) {}
+    // Check GeoJSON protected zones / restricted areas
+    if (_geoJsonBuilder != null) {
+      for (final type in ['protected_zone', 'restricted_area']) {
+        for (final feature in _geoJsonBuilder!.getFeaturesByType(type)) {
+          try {
+            final coords = feature['geometry']['coordinates'][0] as List;
+            final polygon = coords
+                .map((c) => LatLng(
+                      (c[1] as num).toDouble(),
+                      (c[0] as num).toDouble(),
+                    ))
+                .toList();
+            if (GeometryUtils.isPointInPolygon(point, polygon)) {
+              return feature['properties']['name'] as String? ?? 'Protected Area';
+            }
+          } catch (_) {}
+        }
       }
     }
+
+    // Check MPA polygons from protected-areas.json
+    for (final mpa in _mpaPolygons) {
+      try {
+        final pts = (mpa['polygon'] as List).map((p) {
+          final pair = p as List;
+          return LatLng((pair[0] as num).toDouble(), (pair[1] as num).toDouble());
+        }).toList();
+        if (GeometryUtils.isPointInPolygon(point, pts)) {
+          return mpa['nameAr'] as String? ?? mpa['nameEn'] as String? ?? 'Protected Area';
+        }
+      } catch (_) {}
+    }
+
     return null;
   }
 
@@ -2069,15 +2010,6 @@ class _IntegratedMapState extends State<IntegratedMap>
               );
             },
           ),
-
-        // Offshore oil/gas platform exclusion zones (500m UNCLOS buffer)
-        ListenableBuilder(
-          listenable: _layerManager,
-          builder: (context, _) => ExclusionZoneLayer(
-            service: _exclusionZoneService,
-            isVisible: _layerManager.showExclusionZones,
-          ),
-        ),
 
         // Territorial water boundary — live-editable outline layer.
         // When outline-edit mode is active the edited version is shown
@@ -2365,15 +2297,19 @@ class _IntegratedMapState extends State<IntegratedMap>
             ],
           ),
 
-        // Bahaar fishing zones, MPA circles, and confirmed spot markers
+        // Bahaar fishing zones, MPA polygons, and confirmed spot markers
         ListenableBuilder(
           listenable: _layerManager,
-          builder: (context, _) => _layerManager.showFishingSpots
-              ? BahaarOverlayLayer(
-                  onGetPrediction: _navigateToPrediction,
-                  showMpaCircles: _layerManager.showProtectedZones,
-                )
-              : const SizedBox.shrink(),
+          builder: (context, _) {
+            final showMpa = _layerManager.showProtectedZones;
+            final showSpots = _layerManager.showFishingSpots;
+            if (!showMpa && !showSpots) return const SizedBox.shrink();
+            return BahaarOverlayLayer(
+              onGetPrediction: _navigateToPrediction,
+              showMpaCircles: showMpa,
+              showSpots: showSpots,
+            );
+          },
         ),
 
         // Catch markers — visible during an active trip
@@ -2849,26 +2785,6 @@ class _IntegratedMapState extends State<IntegratedMap>
                 message: _outsideMaskWarning!,
                 onDismiss: () => setState(() => _outsideMaskWarningDismissed = true),
               ),
-            ),
-
-          // Exclusion zone violation alert (inside 500m buffer)
-          if (_activeExclusionViolation != null && !_exclusionAlertDismissed)
-            ExclusionZoneAlert(
-              zone: _activeExclusionViolation!.zone,
-              distanceMeters: _activeExclusionViolation!.distanceMeters,
-              isViolation: true,
-              onDismiss: () => setState(() => _exclusionAlertDismissed = true),
-            ),
-
-          // Exclusion zone approach warning (within 2km, not yet inside)
-          if (_activeExclusionViolation == null &&
-              _approachingExclusionZone != null &&
-              !_exclusionAlertDismissed)
-            ExclusionZoneAlert(
-              zone: _approachingExclusionZone!,
-              distanceMeters: _approachingExclusionZoneDistance,
-              isViolation: false,
-              onDismiss: () => setState(() => _exclusionAlertDismissed = true),
             ),
 
           // Weather alert overlay

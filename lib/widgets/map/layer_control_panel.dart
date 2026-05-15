@@ -93,16 +93,13 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
                   ),
                   _buildSection(
                     key: 'protected',
-                    title: _l10n.protectedExclusionZones,
+                    title: _l10n.protectedZones,
                     icon: Icons.shield_outlined,
                     color: AppColors.red,
-                    isActive: lm.showProtectedZones || lm.showExclusionZones,
-                    toggleValue: lm.showProtectedZones || lm.showExclusionZones,
-                    onToggle: (val) {
-                      lm.showProtectedZones = val;
-                      lm.showExclusionZones = val;
-                    },
-                    content: _buildProtectedAndExclusionContent(),
+                    isActive: lm.showProtectedZones,
+                    toggleValue: lm.showProtectedZones,
+                    onToggle: (val) => lm.showProtectedZones = val,
+                    content: _buildProtectedContent(),
                   ),
                   _buildSection(
                     key: 'spots',
@@ -343,12 +340,11 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
     );
   }
 
-  Widget _buildProtectedAndExclusionContent() {
-    final active = lm.showProtectedZones || lm.showExclusionZones;
+  Widget _buildProtectedContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (active) ...[
+        if (lm.showProtectedZones) ...[
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.all(10),
@@ -361,8 +357,6 @@ class _LayerControlPanelState extends State<LayerControlPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _legendRow(AppColors.red.withValues(alpha: 0.5), _l10n.mpaRestrictedArea),
-                _legendRow(Colors.orange.withValues(alpha: 0.7), _l10n.oilExclusion),
-                _legendRow(AppColors.brown.withValues(alpha: 0.8), _l10n.gasExclusion),
               ],
             ),
           ),
