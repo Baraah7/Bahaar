@@ -184,8 +184,8 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
         currentUserName: fullName?.isNotEmpty == true ? fullName : user?.userName,
         currentUserPhone: user?.phone,
         currentUserLocation: user?.location,
-        onBuy: (method, name, phone, location, proof) =>
-            _processPurchase(listing, method, name, phone, location, proof),
+        onBuy: (method, name, phone, location, proof, requestedKg) =>
+            _processPurchase(listing, method, name, phone, location, proof, requestedKg),
       ),
     );
   }
@@ -197,6 +197,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     String buyerPhone,
     String? buyerLocation,
     String? paymentProofImage,
+    double requestedKg,
   ) async {
     final user = ref.read(authProviderProvider).currentAppUser;
     final l10n = MarketplaceLocalizations.of(context);
@@ -211,17 +212,31 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
       return;
     }
 
-    Navigator.pop(context);
+    try {
+      await _marketplaceService.createOrder(
+        listing: listing,
+        buyerId: user.id,
+        buyerName: buyerName,
+        buyerPhone: buyerPhone,
+        buyerLocation: buyerLocation,
+        paymentMethod: paymentMethod,
+        paymentProofImageUrl: paymentProofImage,
+        requestedKg: requestedKg,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.unexpectedError),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+      return;
+    }
 
-    await _marketplaceService.createOrder(
-      listing: listing,
-      buyerId: user.id,
-      buyerName: buyerName,
-      buyerPhone: buyerPhone,
-      buyerLocation: buyerLocation,
-      paymentMethod: paymentMethod,
-      paymentProofImageUrl: paymentProofImage,
-    );
+    if (!mounted) return;
+    Navigator.pop(context);
 
     if (mounted) {
       showDialog(
@@ -229,6 +244,7 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
         builder: (ctx) => OrderSuccessDialog(
           listing: listing,
           paymentMethod: paymentMethod,
+          requestedKg: requestedKg,
           l10n: MarketplaceLocalizations.of(ctx),
           onDone: () {
             Navigator.pop(ctx);

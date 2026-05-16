@@ -50,7 +50,8 @@ class _OrderCardState extends State<OrderCard> {
     final listingName = widget.listing == null
         ? ''
         : (isAr ? widget.listing!.fishType.arabicName : widget.listing!.displayName);
-    final totalPrice = widget.listing?.totalPrice ?? 0.0;
+    final effectiveKg = widget.order.requestedKg ?? widget.listing?.weight ?? 0.0;
+    final totalPrice = effectiveKg * (widget.listing?.pricePerKg ?? 0.0);
     final statusData = _getStatusData();
 
     return Container(

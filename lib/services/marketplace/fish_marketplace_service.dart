@@ -325,6 +325,7 @@ class FishMarketplaceService extends ChangeNotifier {
     String? buyerLocation,
     required PaymentMethod paymentMethod,
     String? paymentProofImageUrl,
+    double? requestedKg,
   }) async {
     final orderData = {
       'listingId': listing.id,
@@ -340,10 +341,21 @@ class FishMarketplaceService extends ChangeNotifier {
       'sellerNote': null,
       'rejectionReason': null,
       'respondAt': null,
+      'requestedKg': requestedKg,
     };
 
     final docRef = await _db.collection('orders').add(orderData);
-    await updateListingStatus(listing.id, ListingStatus.reserved);
+
+    final effectiveKg = requestedKg ?? listing.weight;
+    final isFullOrder = (listing.weight - effectiveKg).abs() < 0.001;
+    if (isFullOrder) {
+      await updateListingStatus(listing.id, ListingStatus.reserved);
+    } else {
+      // Partial purchase — subtract the requested amount, keep listing available.
+      await _db.collection('listings').doc(listing.id).update({
+        'weight': listing.weight - effectiveKg,
+      });
+    }
 
     final newOrder = Order(
       id: docRef.id,
@@ -356,6 +368,7 @@ class FishMarketplaceService extends ChangeNotifier {
       paymentMethod: paymentMethod,
       paymentProofImageUrl: paymentProofImageUrl,
       orderedAt: DateTime.now(),
+      requestedKg: requestedKg,
     );
 
     // Optimistically insert so the purchases tab shows the order immediately

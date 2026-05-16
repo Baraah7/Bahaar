@@ -186,4 +186,8 @@ class MarketplaceLocalizations {
       : 'The buyer paid via Benefit Pay. Please return their payment before relisting.';
   String get iHaveReturnedPayment => _isAr ? 'أعدتُ الدفع، أكمل' : 'I\'ve Returned It — Resell';
   String get notYet => _isAr ? 'ليس بعد' : 'Not Yet';
+  String get quantityKg => _isAr ? 'الكمية (كجم)' : 'Quantity (kg)';
+  String get quantityHelp => _isAr ? 'الكمية المتاحة' : 'Available';
+  String get invalidQuantity => _isAr ? 'الكمية غير صالحة' : 'Invalid quantity';
+  String quantityExceeds(String max) => _isAr ? 'الحد الأقصى $max كجم' : 'Max $max kg available';
 }

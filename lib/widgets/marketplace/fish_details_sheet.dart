@@ -23,7 +23,7 @@ class FishDetailsSheet extends StatefulWidget {
   final String? currentUserPhone;
   final String? currentUserLocation;
   final bool isGuest;
-  final Function(PaymentMethod, String, String, String?, String?) onBuy;
+  final Future<void> Function(PaymentMethod, String, String, String?, String?, double) onBuy;
 
   const FishDetailsSheet({
     super.key,
@@ -55,6 +55,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   late TextEditingController _buyerNameController;
   late TextEditingController _buyerPhoneController;
   late TextEditingController _buyerLocationController;
+  late TextEditingController _requestedKgController;
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
   int _currentImageIndex = 0;
@@ -67,6 +68,9 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     _buyerNameController = TextEditingController(text: widget.currentUserName ?? '');
     _buyerPhoneController = TextEditingController(text: widget.currentUserPhone ?? '');
     _buyerLocationController = TextEditingController(text: widget.currentUserLocation ?? '');
+    _requestedKgController = TextEditingController(
+      text: widget.listing.weight.toStringAsFixed(1),
+    );
   }
 
   @override
@@ -74,6 +78,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     _buyerNameController.dispose();
     _buyerPhoneController.dispose();
     _buyerLocationController.dispose();
+    _requestedKgController.dispose();
     super.dispose();
   }
 
@@ -162,6 +167,10 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                       const SizedBox(height: 20),
                       if (widget.currentUserId != widget.listing.sellerId) ...[
                         // ── Buyer view ───────────────────────────────────
+                        _buildSectionHeader(_l10n.quantityKg, Icons.scale_outlined),
+                        const SizedBox(height: 10),
+                        _buildQuantityCard(),
+                        const SizedBox(height: 20),
                         _buildSectionHeader(_l10n.yourInformation, Icons.person_outline),
                         const SizedBox(height: 10),
                         _buildBuyerForm(),
@@ -206,7 +215,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                                       const SizedBox(width: 10),
                                       Text(
                                         _selectedPayment != null
-                                            ? '${_l10n.buyNow} - ${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}'
+                                            ? '${_l10n.buyNow} - ${_n((_parsedKg * widget.listing.pricePerKg).toStringAsFixed(3))} ${_l10n.bdUnit}'
                                             : _l10n.selectPaymentMethod,
                                         style: const TextStyle(
                                           fontSize: 16,
@@ -577,6 +586,85 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
+  double get _parsedKg {
+    final v = double.tryParse(_requestedKgController.text.trim()) ?? 0;
+    return v.clamp(0, widget.listing.weight);
+  }
+
+  Widget _buildQuantityCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _requestedKgController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: _inputDecoration(
+              _l10n.weightKg,
+              Icons.scale_outlined,
+            ).copyWith(
+              helperText:
+                  '${_l10n.quantityHelp}: ${_n(widget.listing.weight.toStringAsFixed(1))} ${_l10n.kgUnit}',
+              suffixText: _l10n.kgUnit,
+            ),
+            onChanged: (_) => setState(() {}),
+            validator: (v) {
+              final n = double.tryParse(v?.trim() ?? '');
+              if (n == null || n <= 0) return _l10n.invalidQuantity;
+              if (n > widget.listing.weight) {
+                return _l10n.quantityExceeds(
+                    widget.listing.weight.toStringAsFixed(1));
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          // Live price preview
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _l10n.totalPrice,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  '${_n((_parsedKg * widget.listing.pricePerKg).toStringAsFixed(3))} ${_l10n.bdUnit}',
+                  style: const TextStyle(
+                    color: Color(0xFF0D4F54),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBuyerForm() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -895,6 +983,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       return;
     }
     if (!_formKey.currentState!.validate() || _selectedPayment == null) return;
+    final requestedKg = _parsedKg;
 
     if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -921,12 +1010,13 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         proofUrl = await ref.getDownloadURL();
       }
 
-      widget.onBuy(
+      await widget.onBuy(
         _selectedPayment!,
         _buyerNameController.text,
         _buyerPhoneController.text,
         _buyerLocationController.text.isEmpty ? null : _buyerLocationController.text,
         proofUrl,
+        requestedKg,
       );
     } catch (e) {
       if (mounted) {

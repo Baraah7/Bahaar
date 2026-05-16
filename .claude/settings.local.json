@@ -17,7 +17,8 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\" -Recurse -Filter \"*.dart\")",
       "Bash(Select-Object FullName)",
       "Bash(Sort-Object FullName)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\\\\lib\" -MaxDepth 0 -Filter \"*.dart\" -File)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Documents\\\\Code\\\\AquaNav\\\\lib\" -MaxDepth 0 -Filter \"*.dart\" -File)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\s62ht\\\\Desktop\\\\Bahaar\" | ForEach-Object { $_.Name })"
     ]
   }
 }

@@ -58,6 +58,8 @@ class Order {
   final String? sellerNote;
   final String? rejectionReason;
   final DateTime? respondedAt;
+  /// How many kg the buyer requested (null means the full listing weight).
+  final double? requestedKg;
 
   Order({
     required this.id,
@@ -74,6 +76,7 @@ class Order {
     this.sellerNote,
     this.rejectionReason,
     this.respondedAt,
+    this.requestedKg,
   });
 
   /// Creates an Order from a Firestore document
@@ -102,6 +105,7 @@ class Order {
       respondedAt: data['respondAt'] != null
           ? (data['respondAt'] as Timestamp).toDate()
           : null,
+      requestedKg: (data['requestedKg'] as num?)?.toDouble(),
     );
   }
 
@@ -121,6 +125,7 @@ class Order {
       'sellerNote': sellerNote,
       'rejectionReason': rejectionReason,
       'respondAt': respondedAt != null ? Timestamp.fromDate(respondedAt!) : null,
+      'requestedKg': requestedKg,
     };
   }
 
@@ -140,6 +145,7 @@ class Order {
     String? sellerNote,
     String? rejectionReason,
     DateTime? respondedAt,
+    double? requestedKg,
   }) {
     return Order(
       id: id ?? this.id,
@@ -156,6 +162,7 @@ class Order {
       sellerNote: sellerNote ?? this.sellerNote,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       respondedAt: respondedAt ?? this.respondedAt,
+      requestedKg: requestedKg ?? this.requestedKg,
     );
   }
 }
