@@ -49,13 +49,12 @@ class _CatchFormState extends State<CatchForm> {
   static const _quickSpecies = [
     ('هامور', 'Hamour'),
     ('صافي', 'Safi'),
-    ('صبيطي', 'Sobaity'),
+    ('صبيطي', 'Subaity'),
     ('كنعد', 'Chanad'),
     ('زبيدي', 'Zubaidi'),
     ('ربيان', 'Shrimp'),
     ('قبقب', 'Crab'),
     ('سبيطي', 'Subaity'),
-    ('أخرى', 'Other')
   ];
 
   FishingLogLocalizations get _l10n => FishingLogLocalizations.of(context);
