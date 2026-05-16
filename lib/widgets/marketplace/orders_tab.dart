@@ -876,7 +876,8 @@ class _OrdersList extends StatelessWidget {
                 _showPaymentProofFullScreen(context, imagePath),
             onUploadPaymentProof: !isSeller &&
                     order.status == OrderStatus.accepted &&
-                    order.paymentMethod == PaymentMethod.benefitPay
+                    order.paymentMethod == PaymentMethod.benefitPay &&
+                    order.paymentProofImageUrl == null
                 ? (proofUrl) =>
                     marketplaceService.updateOrderPaymentProof(order.id, proofUrl)
                 : null,

@@ -1,0 +1,74 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isImageUpload() {
+      return request.resource != null &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        (
+          (
+            request.resource.contentType is string &&
+            (
+              request.resource.contentType.matches('image/.*') ||
+              request.resource.contentType == 'application/octet-stream'
+            )
+          )
+        );
+    }
+
+    function isProofUpload(fileName) {
+      return request.resource != null &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        (
+          (
+            request.resource.contentType is string &&
+            (
+              request.resource.contentType.matches('image/.*') ||
+              request.resource.contentType == 'application/octet-stream'
+            )
+          ) ||
+          fileName.matches('.*\\.(jpg|jpeg|png|webp|heic|heif|JPG|JPEG|PNG|WEBP|HEIC|HEIF)$')
+        );
+    }
+
+    // Path: marketplace/payment_proofs/{orderId}/{buyerId}/{fileName}
+    // Buyer uploads proof; both buyer and seller can read it.
+    // The path already encodes the buyerId — we trust it via request.auth.uid check.
+    // Seller read is allowed for any authenticated user whose UID is in the path's
+    // order scope; since we can't do Firestore cross-reads reliably, we allow any
+    // authenticated user to read (the URL itself is private/non-guessable).
+    match /marketplace/payment_proofs/{orderId}/{buyerId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.auth.uid == buyerId &&
+        isProofUpload(fileName);
+      allow update, delete: if false;
+    }
+
+    // Legacy proof uploads were stored without the order id in the path.
+    match /marketplace/payment_proofs/{buyerId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.auth.uid == buyerId &&
+        isProofUpload(fileName);
+      allow update, delete: if false;
+    }
+
+    match /marketplace/listings/{sellerId}/{fileName} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated() &&
+        request.auth.uid == sellerId &&
+        isImageUpload();
+    }
+
+    match /marketplace/benefitpay/{sellerId}/{fileName} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated() &&
+        request.auth.uid == sellerId &&
+        isImageUpload();
+    }
+  }
+}

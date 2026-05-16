@@ -22,6 +22,11 @@ service cloud.firestore {
         request.auth.uid == resource.data.sellerId;
     }
 
+    function isBuyer() {
+      return isAuthenticated() &&
+        request.auth.uid == resource.data.buyerId;
+    }
+
     // ── Users ──────────────────────────────────────────────────
 
     match /users/{userId} {
@@ -87,16 +92,28 @@ service cloud.firestore {
 
       allow create: if isRegistered() &&
         request.auth.uid == request.resource.data.buyerId &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.paymentProofImageUrl == null &&
         request.resource.data.keys().hasAll([
           'buyerId', 'sellerId', 'listingId', 'status'
         ]);
 
-      allow update: if isAuthenticated() &&
-        request.auth.uid == resource.data.buyerId &&
+      allow update: if isBuyer() &&
         (resource.data.status == 'pending' || resource.data.status == 'accepted') &&
         request.resource.data.status == 'cancelled' &&
         request.resource.data.diff(resource.data)
           .affectedKeys().hasOnly(['status', 'respondAt']);
+
+      // Buyer can attach one Benefit Pay proof after acceptance, but cannot replace it.
+      allow update: if isBuyer() &&
+        resource.data.status == 'accepted' &&
+        resource.data.paymentMethod == 'benefitPay' &&
+        (!('paymentProofImageUrl' in resource.data) ||
+          resource.data.paymentProofImageUrl == null) &&
+        request.resource.data.paymentProofImageUrl is string &&
+        request.resource.data.paymentProofImageUrl.size() > 0 &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['paymentProofImageUrl']);
 
       allow update: if isAuthenticated() &&
         request.auth.uid == resource.data.sellerId &&

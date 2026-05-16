@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
@@ -54,7 +55,33 @@ class _OrderCardState extends State<OrderCard> {
     return FileImage(File(path)) as ImageProvider;
   }
 
+  String _contentTypeForExtension(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      case 'heif':
+        return 'image/heif';
+      case 'jpg':
+      case 'jpeg':
+      default:
+        return 'image/jpeg';
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant OrderCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.order.paymentProofImageUrl != null && _pendingProofPath != null) {
+      _pendingProofPath = null;
+    }
+  }
+
   Future<void> _pickProof() async {
+    if (widget.order.paymentProofImageUrl != null) return;
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (image == null || !mounted) return;
@@ -63,16 +90,23 @@ class _OrderCardState extends State<OrderCard> {
 
   Future<void> _confirmAndUpload() async {
     final path = _pendingProofPath;
-    if (path == null) return;
+    if (path == null || widget.order.paymentProofImageUrl != null) return;
 
     setState(() => _uploadingProof = true);
     try {
       final uid = widget.order.buyerId;
       final ts = DateTime.now().millisecondsSinceEpoch;
       final ext = path.split('.').last.toLowerCase();
-      final ref = FirebaseStorage.instance
-          .ref('marketplace/payment_proofs/$uid/$ts.$ext');
-      await ref.putFile(File(path));
+      final storagePath = 'marketplace/payment_proofs/${widget.order.id}/$uid/$ts.$ext';
+      debugPrint(
+        '[OrderCard] uploading proof authUid=${FirebaseAuth.instance.currentUser?.uid} '
+        'orderBuyerId=${widget.order.buyerId} path=$storagePath',
+      );
+      final ref = FirebaseStorage.instance.ref(storagePath);
+      await ref.putFile(
+        File(path),
+        SettableMetadata(contentType: _contentTypeForExtension(ext)),
+      );
       final url = await ref.getDownloadURL();
       await widget.onUploadPaymentProof?.call(url);
       if (mounted) setState(() => _pendingProofPath = null);
@@ -255,6 +289,14 @@ class _OrderCardState extends State<OrderCard> {
                             widget.order.status == OrderStatus.accepted &&
                             widget.order.paymentMethod == PaymentMethod.benefitPay)
                           _buildBuyerBenefitPaySection(),
+
+                        // Buyer can still view a submitted proof after the
+                        // order is completed, cancelled, or otherwise closed.
+                        if (!widget.isSeller &&
+                            widget.order.status != OrderStatus.accepted &&
+                            widget.order.paymentMethod == PaymentMethod.benefitPay &&
+                            widget.order.paymentProofImageUrl != null)
+                          _buildPaymentProofSection(),
 
                         // Buyer: accepted + Cash
                         if (!widget.isSeller &&
@@ -515,7 +557,9 @@ class _OrderCardState extends State<OrderCard> {
             const SizedBox(height: 14),
 
             // ── Proof section ─────────────────────────────────
-            // Priority: pending local preview > uploaded proof > upload button
+            // Priority: pending local preview > uploaded proof > upload button.
+            // didUpdateWidget clears a pending preview as soon as Firestore
+            // reports that the proof was submitted.
             if (_pendingProofPath != null) ...[
               // Local preview — not yet sent
               Text(

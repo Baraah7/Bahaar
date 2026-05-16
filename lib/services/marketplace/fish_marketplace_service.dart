@@ -518,6 +518,11 @@ class FishMarketplaceService extends ChangeNotifier {
   }
 
   Future<void> updateOrderPaymentProof(String orderId, String proofUrl) async {
+    final order = _orders.where((o) => o.id == orderId).firstOrNull;
+    if (order?.paymentProofImageUrl != null) {
+      return;
+    }
+
     _pendingProofUpdates[orderId] = proofUrl;
     _mergeAndNotify();
     try {

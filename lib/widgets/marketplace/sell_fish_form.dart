@@ -172,8 +172,29 @@ class _SellFishFormState extends State<SellFishForm> {
 
   Future<String> _uploadFile(String localPath, String storagePath) async {
     final ref = FirebaseStorage.instance.ref(storagePath);
-    await ref.putFile(File(localPath));
+    final ext = localPath.split('.').last.toLowerCase();
+    await ref.putFile(
+      File(localPath),
+      SettableMetadata(contentType: _contentTypeForExtension(ext)),
+    );
     return ref.getDownloadURL();
+  }
+
+  String _contentTypeForExtension(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      case 'heif':
+        return 'image/heif';
+      case 'jpg':
+      case 'jpeg':
+      default:
+        return 'image/jpeg';
+    }
   }
 
   /// Pre-fill form fields from a catch log entry.
