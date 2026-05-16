@@ -137,12 +137,18 @@ class _SellFishFormState extends State<SellFishForm> {
 
   /// Pre-fill form fields from a catch log entry.
   void _applyFromCatch(CatchEntry catch_) {
-    // Match species name to a FishType enum value (case-insensitive).
+    // Match species name to a FishType enum value.
+    // Handles: enum name ("hamour"), full displayName ("Hamour (Grouper)"),
+    // displayName prefix ("Hamour"), and Arabic name ("هامور").
     FishType? matched;
+    final speciesLower = catch_.species.toLowerCase().trim();
     for (final t in FishType.values) {
-      if (t.displayName.toLowerCase() ==
-              catch_.species.toLowerCase() ||
-          t.arabicName == catch_.species) {
+      if (t == FishType.other) continue;
+      if (t.name == speciesLower ||
+          t.displayName.toLowerCase() == speciesLower ||
+          t.displayName.toLowerCase().startsWith(speciesLower) ||
+          speciesLower.startsWith(t.name) ||
+          t.arabicName.trim() == catch_.species.trim()) {
         matched = t;
         break;
       }
@@ -211,8 +217,7 @@ class _SellFishFormState extends State<SellFishForm> {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   itemCount: widget.recentCatches.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: 10),
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
                   itemBuilder: (_, i) {
                     final c = widget.recentCatches[i];
                     final dateStr = _fmtDate(c.timestamp);
@@ -222,19 +227,15 @@ class _SellFishFormState extends State<SellFishForm> {
                         width: 110,
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D4F54)
-                              .withValues(alpha: 0.06),
+                          color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF0E7490)
-                                .withValues(alpha: 0.25),
+                            color: const Color(0xFF0E7490).withValues(alpha: 0.25),
                           ),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               c.species,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:bahaar/models/map/editable_map_feature.dart';
+//import 'package:bahaar/models/map/editable_map_feature.dart';
 
 /// Service for parsing and managing GeoJSON data on the map
 class GeoJsonLayerBuilder {
@@ -13,15 +13,15 @@ class GeoJsonLayerBuilder {
   /// Firestore features are converted to GeoJSON format and appended to the asset features.
   factory GeoJsonLayerBuilder.withFirestoreFeatures(
     Map<String, dynamic> assetGeoJson,
-    List<EditableMapFeature> firestoreFeatures,
+   // List<EditableMapFeature> firestoreFeatures,
   ) {
     final assetFeatures =
         List<dynamic>.from(assetGeoJson['features'] as List? ?? []);
 
-    // Convert Firestore features to GeoJSON format and append
-    for (final feature in firestoreFeatures) {
-      assetFeatures.add(feature.toGeoJsonFeature());
-    }
+    // // Convert Firestore features to GeoJSON format and append
+    // for (final feature in firestoreFeatures) {
+    //   assetFeatures.add(feature.toGeoJsonFeature());
+    // }
 
     return GeoJsonLayerBuilder({
       'type': 'FeatureCollection',
@@ -39,53 +39,53 @@ class GeoJsonLayerBuilder {
   }
 
   /// Build fishing spot markers from GeoJSON
-  List<Marker> buildFishingSpotMarkers({bool isVisible = true}) {
-    if (!isVisible) return [];
+  // List<Marker> buildFishingSpotMarkers({bool isVisible = true}) {
+  //   if (!isVisible) return [];
 
-    final spots = getFeaturesByType('fishing_spot');
-    return spots.map((feature) {
-      final coords = feature['geometry']['coordinates'] as List;
-      final name = feature['properties']['name'] as String?;
+  //   final spots = getFeaturesByType('fishing_spot');
+  //   return spots.map((feature) {
+  //     final coords = feature['geometry']['coordinates'] as List;
+  //     final name = feature['properties']['name'] as String?;
 
-      return Marker(
-        point: LatLng((coords[1] as num).toDouble(), (coords[0] as num).toDouble()), // GeoJSON is [lng, lat]
-        width: 30,
-        height: 30,
-        child: Tooltip(
-          message: name ?? 'Fishing Spot',
-          child: Icon(
-            Icons.location_on,
-            color: Colors.blue.withValues(alpha: 0.8),
-            size: 25,
-          ),
-        ),
-      );
-    }).toList();
-  }
+  //     return Marker(
+  //       point: LatLng((coords[1] as num).toDouble(), (coords[0] as num).toDouble()), // GeoJSON is [lng, lat]
+  //       width: 30,
+  //       height: 30,
+  //       child: Tooltip(
+  //         message: name ?? 'Fishing Spot',
+  //         child: Icon(
+  //           Icons.location_on,
+  //           color: Colors.blue.withValues(alpha: 0.8),
+  //           size: 25,
+  //         ),
+  //       ),
+  //     );
+  //   }).toList();
+  // }
 
-  /// Build shipping lanes polylines from GeoJSON
-  List<Polyline> buildShippingLanes({bool isVisible = true}) {
-    if (!isVisible) return [];
+  // /// Build shipping lanes polylines from GeoJSON
+  // List<Polyline> buildShippingLanes({bool isVisible = true}) {
+  //   if (!isVisible) return [];
 
-    final lanes = getFeaturesByType('shipping_lane');
-    final routes = getFeaturesByType('patrol_route');
-    final allLines = [...lanes, ...routes];
+  //   final lanes = getFeaturesByType('shipping_lane');
+  //   final routes = getFeaturesByType('patrol_route');
+  //   final allLines = [...lanes, ...routes];
 
-    return allLines.map((feature) {
-      final coords = feature['geometry']['coordinates'] as List;
-      final type = feature['properties']['type'] as String;
+  //   return allLines.map((feature) {
+  //     final coords = feature['geometry']['coordinates'] as List;
+  //     final type = feature['properties']['type'] as String;
 
-      return Polyline(
-        points: coords.map((coord) {
-          return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble()); // GeoJSON is [lng, lat]
-        }).toList(),
-        strokeWidth: type == 'shipping_lane' ? 3.0 : 2.0,
-        color: type == 'shipping_lane'
-            ? Colors.red.withValues(alpha: 0.6)
-            : Colors.orange.withValues(alpha: 0.6),
-      );
-    }).toList();
-  }
+  //     return Polyline(
+  //       points: coords.map((coord) {
+  //         return LatLng((coord[1] as num).toDouble(), (coord[0] as num).toDouble()); // GeoJSON is [lng, lat]
+  //       }).toList(),
+  //       strokeWidth: type == 'shipping_lane' ? 3.0 : 2.0,
+  //       color: type == 'shipping_lane'
+  //           ? Colors.red.withValues(alpha: 0.6)
+  //           : Colors.orange.withValues(alpha: 0.6),
+  //     );
+  //   }).toList();
+  // }
 
   /// Build protected zone polygons from GeoJSON
   List<Polygon> buildProtectedZones({bool isVisible = true}) {

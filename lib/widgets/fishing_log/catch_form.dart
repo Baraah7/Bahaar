@@ -54,6 +54,7 @@ class _CatchFormState extends State<CatchForm> {
     ('زبيدي', 'Zubaidi'),
     ('ربيان', 'Shrimp'),
     ('قبقب', 'Crab'),
+    ('سبيطي', 'Subaity'),
     ('أخرى', 'Other')
   ];
 

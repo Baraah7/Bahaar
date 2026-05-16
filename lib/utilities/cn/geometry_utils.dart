@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:latlong2/latlong.dart';
-import 'package:bahaar/models/fishing/fishing_activity_model.dart';
 
 /// Geometry utilities for track simplification and spatial aggregation
 class GeometryUtils {
@@ -141,55 +140,55 @@ class GeometryUtils {
         .map((c) => LatLng(c.latitude + dLat, c.longitude + dLng))
         .toList();
   }
-
+}
   // ============================================================
   // Heatmap aggregation
   // ============================================================
 
-  /// Aggregate fishing events into grid cells for heatmap visualization.
-  /// [resolution] is the cell size in degrees.
-  static List<FishingIntensityCell> aggregateToGrid(
-    List<FishingEvent> events,
-    double resolution,
-  ) {
-    if (events.isEmpty) return [];
+//   /// Aggregate fishing events into grid cells for heatmap visualization.
+//   /// [resolution] is the cell size in degrees.
+//   static List<FishingIntensityCell> aggregateToGrid(
+//     List<FishingEvent> events,
+//     double resolution,
+//   ) {
+//     if (events.isEmpty) return [];
 
-    // Group events by grid cell
-    final Map<(int, int), List<FishingEvent>> grid = {};
-    for (final event in events) {
-      final row = (event.latitude / resolution).floor();
-      final col = (event.longitude / resolution).floor();
-      grid.putIfAbsent((row, col), () => []).add(event);
-    }
+//     // Group events by grid cell
+//     final Map<(int, int), List<FishingEvent>> grid = {};
+//     for (final event in events) {
+//       final row = (event.latitude / resolution).floor();
+//       final col = (event.longitude / resolution).floor();
+//       grid.putIfAbsent((row, col), () => []).add(event);
+//     }
 
-    // Convert to intensity cells
-    return grid.entries.map((entry) {
-      final (row, col) = entry.key;
-      final cellEvents = entry.value;
-      final totalHours = cellEvents.fold<double>(
-        0.0,
-        (sum, e) => sum + (e.durationHours ?? 0),
-      );
-      final count = cellEvents.length;
+//     // Convert to intensity cells
+//     return grid.entries.map((entry) {
+//       final (row, col) = entry.key;
+//       final cellEvents = entry.value;
+//       final totalHours = cellEvents.fold<double>(
+//         0.0,
+//         (sum, e) => sum + (e.durationHours ?? 0),
+//       );
+//       final count = cellEvents.length;
 
-      FishingIntensityLevel level;
-      if (count >= 8 || totalHours >= 40) {
-        level = FishingIntensityLevel.veryHigh;
-      } else if (count >= 5 || totalHours >= 20) {
-        level = FishingIntensityLevel.high;
-      } else if (count >= 3 || totalHours >= 10) {
-        level = FishingIntensityLevel.moderate;
-      } else {
-        level = FishingIntensityLevel.low;
-      }
+//       FishingIntensityLevel level;
+//       if (count >= 8 || totalHours >= 40) {
+//         level = FishingIntensityLevel.veryHigh;
+//       } else if (count >= 5 || totalHours >= 20) {
+//         level = FishingIntensityLevel.high;
+//       } else if (count >= 3 || totalHours >= 10) {
+//         level = FishingIntensityLevel.moderate;
+//       } else {
+//         level = FishingIntensityLevel.low;
+//       }
 
-      return FishingIntensityCell(
-        latitude: (row + 0.5) * resolution,
-        longitude: (col + 0.5) * resolution,
-        eventCount: count,
-        totalHours: totalHours,
-        level: level,
-      );
-    }).toList();
-  }
-}
+//       return FishingIntensityCell(
+//         latitude: (row + 0.5) * resolution,
+//         longitude: (col + 0.5) * resolution,
+//         eventCount: count,
+//         totalHours: totalHours,
+//         level: level,
+//       );
+//     }).toList();
+//   }
+// }
