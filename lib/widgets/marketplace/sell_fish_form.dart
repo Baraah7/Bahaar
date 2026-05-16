@@ -13,6 +13,8 @@ class SellFishForm extends StatefulWidget {
   final String? currentUserPhone;
   final String? currentUserLocation;
   final bool isGuest;
+  /// Pre-populate the form for editing an existing listing.
+  final FishListing? initialListing;
   /// Recent catch entries from the fishing log shown as quick-fill suggestions.
   final List<CatchEntry> recentCatches;
   final Function(FishListing) onSubmit;
@@ -24,6 +26,7 @@ class SellFishForm extends StatefulWidget {
     this.currentUserPhone,
     this.currentUserLocation,
     this.isGuest = false,
+    this.initialListing,
     this.recentCatches = const [],
     required this.onSubmit,
   });
@@ -65,6 +68,23 @@ class _SellFishFormState extends State<SellFishForm> {
     _sellerNameController = TextEditingController(text: widget.currentUserName ?? '');
     _sellerPhoneController = TextEditingController(text: widget.currentUserPhone ?? '');
     _sellerLocationController = TextEditingController(text: widget.currentUserLocation ?? '');
+
+    final l = widget.initialListing;
+    if (l != null) {
+      _selectedFishType = l.fishType;
+      _selectedCondition = l.condition;
+      _acceptedPayments
+        ..clear()
+        ..addAll(l.acceptedPayments);
+      _weightController.text = l.weight.toStringAsFixed(1);
+      _priceController.text = l.pricePerKg.toStringAsFixed(3);
+      _descriptionController.text = l.description ?? '';
+      _catchLocationController.text = l.catchLocation ?? '';
+      _customFishNameController.text = l.customFishName ?? '';
+      _ibanController.text = l.benefitPayIban ?? '';
+      _fishImages.addAll(l.imageUrls);
+      if (l.benefitPayImageUrl != null) _benefitPayImage = l.benefitPayImageUrl;
+    }
   }
 
   @override
@@ -921,20 +941,28 @@ class _SellFishFormState extends State<SellFishForm> {
       final uid = widget.currentUserId!;
       final ts = DateTime.now().millisecondsSinceEpoch;
 
-      // Upload fish images to Firebase Storage
+      // Upload fish images to Firebase Storage (skip already-uploaded URLs)
       final uploadedImageUrls = <String>[];
       for (var i = 0; i < _fishImages.length; i++) {
         final path = _fishImages[i];
+        if (path.startsWith('http')) {
+          uploadedImageUrls.add(path);
+          continue;
+        }
         final ext = path.split('.').last;
         final url = await _uploadFile(path, 'marketplace/listings/$uid/${ts}_$i.$ext');
         uploadedImageUrls.add(url);
       }
 
-      // Upload BenefitPay QR image
+      // Upload BenefitPay QR image (skip already-uploaded URL)
       String? benefitPayUrl;
       if (_benefitPayImage != null) {
-        final ext = _benefitPayImage!.split('.').last;
-        benefitPayUrl = await _uploadFile(_benefitPayImage!, 'marketplace/benefitpay/$uid/$ts.$ext');
+        if (_benefitPayImage!.startsWith('http')) {
+          benefitPayUrl = _benefitPayImage;
+        } else {
+          final ext = _benefitPayImage!.split('.').last;
+          benefitPayUrl = await _uploadFile(_benefitPayImage!, 'marketplace/benefitpay/$uid/$ts.$ext');
+        }
       }
 
       final listing = FishListing(

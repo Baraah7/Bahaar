@@ -21,8 +21,7 @@ class HybridRouteCoordinator {
   final GeoJsonLayerBuilder _geoJsonBuilder;
   final MarineWeatherService? _weatherService;
 
-  /// Additional polygons that are always hard-blocked during marine routing
-  /// (e.g. oil/gas platform exclusion zones).
+  /// Additional polygons that are always hard-blocked during marine routing.
   List<Polygon> extraRestrictedAreas = [];
 
   HybridRouteCoordinator({

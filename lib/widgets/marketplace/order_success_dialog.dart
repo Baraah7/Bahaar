@@ -8,6 +8,7 @@ class OrderSuccessDialog extends StatelessWidget {
   final PaymentMethod paymentMethod;
   final MarketplaceLocalizations l10n;
   final VoidCallback onDone;
+  final double? requestedKg;
 
   const OrderSuccessDialog({
     super.key,
@@ -15,6 +16,7 @@ class OrderSuccessDialog extends StatelessWidget {
     required this.paymentMethod,
     required this.l10n,
     required this.onDone,
+    this.requestedKg,
   });
 
   @override
@@ -36,6 +38,7 @@ class OrderSuccessDialog extends StatelessWidget {
             lang: lang,
             l10n: l10n,
             onDone: onDone,
+            requestedKg: requestedKg,
           ),
         ],
       ),
@@ -102,6 +105,7 @@ class _Body extends StatelessWidget {
   final String lang;
   final MarketplaceLocalizations l10n;
   final VoidCallback onDone;
+  final double? requestedKg;
 
   const _Body({
     required this.listing,
@@ -109,6 +113,7 @@ class _Body extends StatelessWidget {
     required this.lang,
     required this.l10n,
     required this.onDone,
+    this.requestedKg,
   });
 
   @override
@@ -128,12 +133,12 @@ class _Body extends StatelessWidget {
               children: [
                 _Row(
                   label: l10n.weight,
-                  value: '${listing.weight.toStringAsFixed(1)} ${l10n.kgUnit}',
+                  value: '${(requestedKg ?? listing.weight).toStringAsFixed(1)} ${l10n.kgUnit}',
                 ),
                 Divider(height: 16, color: Colors.grey.shade200),
                 _Row(
                   label: l10n.total,
-                  value: '${listing.totalPrice.toStringAsFixed(2)} ${l10n.bdUnit}',
+                  value: '${((requestedKg ?? listing.weight) * listing.pricePerKg).toStringAsFixed(3)} ${l10n.bdUnit}',
                 ),
                 Divider(height: 16, color: Colors.grey.shade200),
                 _Row(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 class MapLeftToolbar extends StatelessWidget {
   final bool showLayerControls;
   final bool showDepthLegend;
+  final bool depthLayerEnabled;
   final bool hasRoute;
   final bool hasNavMode;
   final bool maskInitialized;
@@ -19,6 +20,7 @@ class MapLeftToolbar extends StatelessWidget {
     super.key,
     required this.showLayerControls,
     required this.showDepthLegend,
+    required this.depthLayerEnabled,
     required this.hasRoute,
     required this.hasNavMode,
     required this.maskInitialized,
@@ -48,12 +50,12 @@ class MapLeftToolbar extends StatelessWidget {
               isActive: showLayerControls,
             ),
             MapIconButton(
-              icon: showDepthLegend
+              icon: showDepthLegend && depthLayerEnabled
                   ? Icons.legend_toggle
                   : Icons.legend_toggle_outlined,
               tooltip: 'Depth legend',
               onPressed: onToggleLegend,
-              isActive: showDepthLegend,
+              isActive: showDepthLegend && depthLayerEnabled,
             ),
           ]),
           const SizedBox(height: 8),

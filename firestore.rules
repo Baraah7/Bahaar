@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isRegistered() {
+      return isAuthenticated() &&
+        request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isSeller() {
+      return isAuthenticated() &&
+        request.auth.uid == resource.data.sellerId;
+    }
+
+    // ── Users ──────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      match /trips/{tripId}   { allow read, write: if isOwner(userId); }
+      match /catches/{catchId} { allow read, write: if isOwner(userId); }
+    }
+
+    // ── Fishing spots (read-only reference data) ───────────────
+
+    match /fishing_spots/{spotId} {
+      allow read:  if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ── AI weight model config (read-only) ─────────────────────
+
+    match /ai_weight/{docId} {
+      allow read:  if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ── Marketplace listings ───────────────────────────────────
+
+    match /listings/{listingId} {
+      allow read: if true;
+
+      allow create: if isRegistered() &&
+        request.resource.data.sellerId == request.auth.uid;
+
+      // Seller can update anything except sellerId
+      allow update: if isSeller() &&
+        !request.resource.data.diff(resource.data)
+          .affectedKeys().hasAny(['sellerId']);
+
+      // Buyer: full order — flip status available → reserved only
+      allow update: if isRegistered() &&
+        !isSeller() &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['status']) &&
+        resource.data.status == 'available' &&
+        request.resource.data.status == 'reserved';
+
+      // Buyer: partial order — reduce weight only, listing stays available
+      allow update: if isRegistered() &&
+        !isSeller() &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['weight']) &&
+        resource.data.status == 'available' &&
+        request.resource.data.weight > 0 &&
+        request.resource.data.weight < resource.data.weight;
+
+      allow delete: if isSeller();
+    }
+
+    // ── Orders ─────────────────────────────────────────────────
+
+    match /orders/{orderId} {
+
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.buyerId ||
+         request.auth.uid == resource.data.sellerId);
+
+      allow create: if isRegistered() &&
+        request.auth.uid == request.resource.data.buyerId &&
+        request.resource.data.keys().hasAll([
+          'buyerId', 'sellerId', 'listingId', 'status'
+        ]);
+
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.buyerId &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status == 'cancelled' &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['status', 'respondAt']);
+
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.sellerId &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly(['status', 'sellerNote', 'rejectionReason', 'respondAt']);
+
+      allow delete: if isAuthenticated() &&
+       request.auth.uid == resource.data.sellerId &&
+       resource.data.status == 'cancelled';
+
+      // Buyer can delete their own orders (any terminal or accepted status)
+      allow delete: if isAuthenticated() &&
+       request.auth.uid == resource.data.buyerId &&
+       (resource.data.status == 'completed' ||
+        resource.data.status == 'rejected' ||
+        resource.data.status == 'cancelled' ||
+        resource.data.status == 'accepted');
+    }
+
+    // ── Messages ───────────────────────────────────────────────
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.senderId ||
+         request.auth.uid == resource.data.receiverId);
+
+      allow create: if isRegistered() &&
+        request.auth.uid == request.resource.data.senderId;
+
+      allow update: if false;
+
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.senderId;
+    }
+  }
+}

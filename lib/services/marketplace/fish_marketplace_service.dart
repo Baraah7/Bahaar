@@ -11,6 +11,9 @@ class FishMarketplaceService extends ChangeNotifier {
   List<Order> _orders = [];
   List<Order> _buyerOrdersList = [];
   List<Order> _sellerOrdersList = [];
+  // Optimistic status changes that haven't been confirmed by Firestore yet.
+  // Reapplied after every stream rebuild so stale snapshots can't undo them.
+  final Map<String, OrderStatus> _pendingStatusUpdates = {};
   String? _currentUserId;
   bool _isLoading = false;
   String? _error;
@@ -81,6 +84,21 @@ class FishMarketplaceService extends ChangeNotifier {
         .where((o) => seen.add(o.id))
         .toList()
       ..sort((a, b) => b.orderedAt.compareTo(a.orderedAt));
+
+    // Re-apply optimistic updates that Firestore hasn't confirmed yet.
+    // This prevents a stale stream snapshot from undoing the local change.
+    final confirmed = <String>[];
+    for (final entry in _pendingStatusUpdates.entries) {
+      final i = _orders.indexWhere((o) => o.id == entry.key);
+      if (i == -1) { continue; }
+      if (_orders[i].status == entry.value) {
+        confirmed.add(entry.key); // server confirmed — stop overriding
+      } else {
+        _orders[i] = _orders[i].copyWith(status: entry.value);
+      }
+    }
+    for (final id in confirmed) _pendingStatusUpdates.remove(id);
+
     notifyListeners();
   }
 
@@ -94,6 +112,7 @@ class FishMarketplaceService extends ChangeNotifier {
   }
 
   void _revertAllLists(String orderId, Order prev) {
+    _pendingStatusUpdates.remove(orderId);
     for (final list in [_buyerOrdersList, _sellerOrdersList, _orders]) {
       final i = list.indexWhere((o) => o.id == orderId);
       if (i != -1) list[i] = prev;
@@ -222,6 +241,29 @@ class FishMarketplaceService extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteOrder(String orderId) async {
+    _buyerOrdersList.removeWhere((o) => o.id == orderId);
+    _sellerOrdersList.removeWhere((o) => o.id == orderId);
+    _mergeAndNotify();
+    try {
+      await _db.collection('orders').doc(orderId).delete();
+    } catch (e) {
+      _error = 'Failed to delete order: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateListing(FishListing listing) async {
+    try {
+      await _db.collection('listings').doc(listing.id).update(listing.toFirestore());
+      await refreshListings();
+    } catch (e) {
+      _error = 'Failed to update listing: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   List<FishListing> filterByType(FishType type) {
     return availableListings.where((l) => l.fishType == type).toList();
   }
@@ -283,6 +325,7 @@ class FishMarketplaceService extends ChangeNotifier {
     String? buyerLocation,
     required PaymentMethod paymentMethod,
     String? paymentProofImageUrl,
+    double? requestedKg,
   }) async {
     final orderData = {
       'listingId': listing.id,
@@ -298,12 +341,23 @@ class FishMarketplaceService extends ChangeNotifier {
       'sellerNote': null,
       'rejectionReason': null,
       'respondAt': null,
+      'requestedKg': requestedKg,
     };
 
     final docRef = await _db.collection('orders').add(orderData);
-    await updateListingStatus(listing.id, ListingStatus.reserved);
 
-    return Order(
+    final effectiveKg = requestedKg ?? listing.weight;
+    final isFullOrder = (listing.weight - effectiveKg).abs() < 0.001;
+    if (isFullOrder) {
+      await updateListingStatus(listing.id, ListingStatus.reserved);
+    } else {
+      // Partial purchase — subtract the requested amount, keep listing available.
+      await _db.collection('listings').doc(listing.id).update({
+        'weight': listing.weight - effectiveKg,
+      });
+    }
+
+    final newOrder = Order(
       id: docRef.id,
       listingId: listing.id,
       sellerId: listing.sellerId,
@@ -314,11 +368,22 @@ class FishMarketplaceService extends ChangeNotifier {
       paymentMethod: paymentMethod,
       paymentProofImageUrl: paymentProofImageUrl,
       orderedAt: DateTime.now(),
+      requestedKg: requestedKg,
     );
+
+    // Optimistically insert so the purchases tab shows the order immediately
+    // without waiting for the Firestore stream to catch up.
+    if (!_buyerOrdersList.any((o) => o.id == newOrder.id)) {
+      _buyerOrdersList.insert(0, newOrder);
+    }
+    _mergeAndNotify();
+
+    return newOrder;
   }
 
   Future<void> acceptOrder(String orderId, {String? note}) async {
     final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _pendingStatusUpdates[orderId] = OrderStatus.accepted;
     _applyToAllLists(
         orderId, (o) => o.copyWith(status: OrderStatus.accepted, sellerNote: note));
     notifyListeners();
@@ -337,6 +402,7 @@ class FishMarketplaceService extends ChangeNotifier {
 
   Future<void> rejectOrder(String orderId, {String? reason}) async {
     final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _pendingStatusUpdates[orderId] = OrderStatus.rejected;
     _applyToAllLists(orderId,
         (o) => o.copyWith(status: OrderStatus.rejected, rejectionReason: reason));
     notifyListeners();
@@ -358,6 +424,7 @@ class FishMarketplaceService extends ChangeNotifier {
 
   Future<void> cancelOrder(String orderId) async {
     final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _pendingStatusUpdates[orderId] = OrderStatus.cancelled;
     _applyToAllLists(orderId, (o) => o.copyWith(status: OrderStatus.cancelled));
     notifyListeners();
     try {
@@ -387,6 +454,7 @@ class FishMarketplaceService extends ChangeNotifier {
 
   Future<void> completeOrder(String orderId) async {
     final prev = _orders.where((o) => o.id == orderId).firstOrNull;
+    _pendingStatusUpdates[orderId] = OrderStatus.completed;
     _applyToAllLists(orderId, (o) => o.copyWith(status: OrderStatus.completed));
     notifyListeners();
     try {

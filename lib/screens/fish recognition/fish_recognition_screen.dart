@@ -485,7 +485,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _fishInfo = {
-    'Gilt Head Bream': {
+    'Gilt-Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'Coastal waters & lagoons',
       'size': '20 – 50 cm',
@@ -547,7 +547,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   };
 
   static const _fishInfoAr = {
-    'Gilt Head Bream': {
+    'Gilt-Head Bream': {
       'scientific': 'Sparus aurata',
       'habitat': 'المياه الساحلية والبحيرات',
       'size': '٢٠ – ٥٠ سم',
@@ -987,7 +987,7 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
   }
 
   static const _speciesImages = {
-    'Gilt Head Bream': 'assets/images/Gilt-Head Bream.jpg',
+    'Gilt-Head Bream': 'assets/images/Gilt-Head Bream.jpg',
     'Horse Mackerel': 'assets/images/Horse mackerel.jpg',
     'Red Mullet': 'assets/images/Red Mullet.jpg',
     'Sea Bass': 'assets/images/Seabass.jpg',

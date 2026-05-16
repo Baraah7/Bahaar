@@ -17,6 +17,7 @@ class OrderCard extends StatefulWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onResell;
   final VoidCallback? onRemoveListing;
+  final VoidCallback? onRemoveFromPurchases;
   final void Function(String imagePath)? onViewPaymentProof;
 
   const OrderCard({
@@ -31,6 +32,7 @@ class OrderCard extends StatefulWidget {
     this.onCancel,
     this.onResell,
     this.onRemoveListing,
+    this.onRemoveFromPurchases,
     this.onViewPaymentProof,
   });
 
@@ -50,7 +52,8 @@ class _OrderCardState extends State<OrderCard> {
     final listingName = widget.listing == null
         ? ''
         : (isAr ? widget.listing!.fishType.arabicName : widget.listing!.displayName);
-    final totalPrice = widget.listing?.totalPrice ?? 0.0;
+    final effectiveKg = widget.order.requestedKg ?? widget.listing?.weight ?? 0.0;
+    final totalPrice = effectiveKg * (widget.listing?.pricePerKg ?? 0.0);
     final statusData = _getStatusData();
 
     return Container(
@@ -196,6 +199,8 @@ class _OrderCardState extends State<OrderCard> {
                           _buildCancelButton(),
                         if (widget.isSeller && widget.order.status == OrderStatus.cancelled)
                           _buildCancelledSellerSection(),
+                        if (!widget.isSeller)
+                          _buildRemoveFromPurchasesButton(),
                       ],
                     ),
                   )
@@ -606,6 +611,27 @@ class _OrderCardState extends State<OrderCard> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRemoveFromPurchasesButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: widget.onRemoveFromPurchases,
+          icon: const Icon(Icons.delete_outline_rounded, size: 17),
+          label: Text(widget.l10n.removeFromPurchases),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.grey.shade600,
+            backgroundColor: Colors.grey.withValues(alpha: 0.08),
+            side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),

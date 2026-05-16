@@ -1,5 +1,4 @@
 ﻿import 'dart:io';
-import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:firebase_storage/firebase_storage.dart';
@@ -24,8 +23,7 @@ class FishDetailsSheet extends StatefulWidget {
   final String? currentUserPhone;
   final String? currentUserLocation;
   final bool isGuest;
-  final Function(PaymentMethod, String, String, String?, String?) onBuy;
-  final VoidCallback? onDelete;
+  final Future<void> Function(PaymentMethod, String, String, String?, String?, double) onBuy;
 
   const FishDetailsSheet({
     super.key,
@@ -36,7 +34,6 @@ class FishDetailsSheet extends StatefulWidget {
     this.currentUserLocation,
     this.isGuest = false,
     required this.onBuy,
-    this.onDelete,
   });
 
   @override
@@ -58,6 +55,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   late TextEditingController _buyerNameController;
   late TextEditingController _buyerPhoneController;
   late TextEditingController _buyerLocationController;
+  late TextEditingController _requestedKgController;
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
   int _currentImageIndex = 0;
@@ -70,6 +68,9 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     _buyerNameController = TextEditingController(text: widget.currentUserName ?? '');
     _buyerPhoneController = TextEditingController(text: widget.currentUserPhone ?? '');
     _buyerLocationController = TextEditingController(text: widget.currentUserLocation ?? '');
+    _requestedKgController = TextEditingController(
+      text: widget.listing.weight.toStringAsFixed(1),
+    );
   }
 
   @override
@@ -77,6 +78,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     _buyerNameController.dispose();
     _buyerPhoneController.dispose();
     _buyerLocationController.dispose();
+    _requestedKgController.dispose();
     super.dispose();
   }
 
@@ -163,29 +165,12 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         ),
                       ],
                       const SizedBox(height: 20),
-                      if (widget.currentUserId == widget.listing.sellerId) ...[
-                        // ── Seller view: delete listing ──────────────────
-                        const SizedBox(height: 28),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _confirmDeleteListing(),
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                            label: Text(_l10n.deleteListing),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.red,
-                              backgroundColor: AppColors.red.withValues(alpha: 0.1),
-                              side: BorderSide(color: AppColors.red.withOpacity(0.3)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ] else ...[
+                      if (widget.currentUserId != widget.listing.sellerId) ...[
                         // ── Buyer view ───────────────────────────────────
+                        _buildSectionHeader(_l10n.quantityKg, Icons.scale_outlined),
+                        const SizedBox(height: 10),
+                        _buildQuantityCard(),
+                        const SizedBox(height: 20),
                         _buildSectionHeader(_l10n.yourInformation, Icons.person_outline),
                         const SizedBox(height: 10),
                         _buildBuyerForm(),
@@ -230,7 +215,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                                       const SizedBox(width: 10),
                                       Text(
                                         _selectedPayment != null
-                                            ? '${_l10n.buyNow} - ${_n(widget.listing.totalPrice.toStringAsFixed(2))} ${_l10n.bdUnit}'
+                                            ? '${_l10n.buyNow} - ${_n((_parsedKg * widget.listing.pricePerKg).toStringAsFixed(3))} ${_l10n.bdUnit}'
                                             : _l10n.selectPaymentMethod,
                                         style: const TextStyle(
                                           fontSize: 16,
@@ -601,6 +586,85 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
+  double get _parsedKg {
+    final v = double.tryParse(_requestedKgController.text.trim()) ?? 0;
+    return v.clamp(0, widget.listing.weight);
+  }
+
+  Widget _buildQuantityCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _requestedKgController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: _inputDecoration(
+              _l10n.weightKg,
+              Icons.scale_outlined,
+            ).copyWith(
+              helperText:
+                  '${_l10n.quantityHelp}: ${_n(widget.listing.weight.toStringAsFixed(1))} ${_l10n.kgUnit}',
+              suffixText: _l10n.kgUnit,
+            ),
+            onChanged: (_) => setState(() {}),
+            validator: (v) {
+              final n = double.tryParse(v?.trim() ?? '');
+              if (n == null || n <= 0) return _l10n.invalidQuantity;
+              if (n > widget.listing.weight) {
+                return _l10n.quantityExceeds(
+                    widget.listing.weight.toStringAsFixed(1));
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          // Live price preview
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D4F54).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _l10n.totalPrice,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  '${_n((_parsedKg * widget.listing.pricePerKg).toStringAsFixed(3))} ${_l10n.bdUnit}',
+                  style: const TextStyle(
+                    color: Color(0xFF0D4F54),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBuyerForm() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -912,96 +976,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
-  void _confirmDeleteListing() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: EdgeInsets.zero,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: AppColors.red.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.red.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 32),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _l10n.deleteListing,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-              child: Column(
-                children: [
-                  Text(
-                    _l10n.confirmDeleteListing,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.grey.shade700,
-                            side: BorderSide(color: Colors.grey.shade300),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text(_l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.red,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            Navigator.pop(context);
-                            widget.onDelete?.call();
-                          },
-                          child: Text(_l10n.deleteListing, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _handleBuy() async {
     if (widget.isGuest) {
@@ -1009,6 +983,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
       return;
     }
     if (!_formKey.currentState!.validate() || _selectedPayment == null) return;
+    final requestedKg = _parsedKg;
 
     if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1035,12 +1010,13 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
         proofUrl = await ref.getDownloadURL();
       }
 
-      widget.onBuy(
+      await widget.onBuy(
         _selectedPayment!,
         _buyerNameController.text,
         _buyerPhoneController.text,
         _buyerLocationController.text.isEmpty ? null : _buyerLocationController.text,
         proofUrl,
+        requestedKg,
       );
     } catch (e) {
       if (mounted) {
