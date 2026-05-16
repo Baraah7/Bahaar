@@ -1017,16 +1017,16 @@ class _IntegratedMapState extends State<IntegratedMap>
   //   });
   // }
 
-  // /// Convert screen position to LatLng for drag painting
-  // LatLng? _screenToLatLng(Offset screenPosition) {
-  //   if (!_mapReady) return null;
-  //   try {
-  //     // Use flutter_map's offset to latlng conversion
-  //     return _mapController.camera.offsetToCrs(screenPosition);
-  //   } catch (e) {
-  //     return null;
-  //   }
-  // }
+  /// Convert screen position to LatLng for drag painting
+  LatLng? _screenToLatLng(Offset screenPosition) {
+    if (!_mapReady) return null;
+    try {
+      // Use flutter_map's offset to latlng conversion
+      return _mapController.camera.offsetToCrs(screenPosition);
+    } catch (e) {
+      return null;
+    }
+  }
 
   // void _handleMarinaTapped(Marina marina) {
   //   setState(() {
@@ -2519,54 +2519,54 @@ class _IntegratedMapState extends State<IntegratedMap>
     return Scaffold(
       body: Stack(
         children: [
-          // // Main map with gesture detector for admin painting
-          // GestureDetector(
-          //   behavior: _layerManager.isAdminEditMode ||
-          //           _layerManager.isFeatureEditMode ||
-          //           _isOutlineEditMode
-          //       ? HitTestBehavior.opaque
-          //       : HitTestBehavior.translucent,
-          //   onTapDown: _layerManager.isAdminEditMode
-          //       ? (details) {
-          //           final latLng = _screenToLatLng(details.localPosition);
-          //           if (latLng != null) _handleAdminPaint(latLng);
-          //         }
-          //       : _isOutlineEditMode
-          //           ? (details) {
-          //               final latLng =
-          //                   _screenToLatLng(details.localPosition);
-          //               if (latLng != null) _handleOutlinePaint(latLng);
-          //             }
-          //           : null,
-          //   onPanStart: _layerManager.isAdminEditMode
-          //       ? (details) {
-          //           final latLng = _screenToLatLng(details.localPosition);
-          //           if (latLng != null) _handleAdminPaint(latLng);
-          //         }
-          //       : _isOutlineEditMode
-          //           ? (details) {
-          //               final latLng =
-          //                   _screenToLatLng(details.localPosition);
-          //               if (latLng != null) _handleOutlinePaint(latLng);
-          //             }
-          //           : null,
-          //   onPanUpdate: _layerManager.isAdminEditMode
-          //       ? (details) {
-          //           final latLng = _screenToLatLng(details.localPosition);
-          //           if (latLng != null) _handleAdminPaint(latLng);
-          //         }
-          //       : _isOutlineEditMode
-          //           ? (details) {
-          //               final latLng =
-          //                   _screenToLatLng(details.localPosition);
-          //               if (latLng != null) _handleOutlinePaint(latLng);
-          //             }
-          //           : null,
-          //   onPanEnd: _isOutlineEditMode
-          //       ? (_) => setState(() => _outlinePaintPreview = null)
-          //       : null,
-          //   child: _buildMap(),
-          // ),
+          // Main map with gesture detector for admin painting
+          GestureDetector(
+            behavior: _layerManager.isAdminEditMode ||
+                    _layerManager.isFeatureEditMode ||
+                    _isOutlineEditMode
+                ? HitTestBehavior.opaque
+                : HitTestBehavior.translucent,
+            onTapDown: _layerManager.isAdminEditMode
+                ? (details) {
+                    final latLng = _screenToLatLng(details.localPosition);
+                    if (latLng != null) _handleAdminPaint(latLng);
+                  }
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
+            onPanStart: _layerManager.isAdminEditMode
+                ? (details) {
+                    final latLng = _screenToLatLng(details.localPosition);
+                    if (latLng != null) _handleAdminPaint(latLng);
+                  }
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
+            onPanUpdate: _layerManager.isAdminEditMode
+                ? (details) {
+                    final latLng = _screenToLatLng(details.localPosition);
+                    if (latLng != null) _handleAdminPaint(latLng);
+                  }
+                : _isOutlineEditMode
+                    ? (details) {
+                        final latLng =
+                            _screenToLatLng(details.localPosition);
+                        if (latLng != null) _handleOutlinePaint(latLng);
+                      }
+                    : null,
+            onPanEnd: _isOutlineEditMode
+                ? (_) => setState(() => _outlinePaintPreview = null)
+                : null,
+            child: _buildMap(),
+          ),
 
           // Navigation status indicator (top right) — hidden during navigation
           if (!(_navigationManager?.isNavigating ?? false))
