@@ -1,6 +1,5 @@
 import 'package:latlong2/latlong.dart';
 
-//there is alot of redundant code in this file and it is not being used anywhere in the app, we can delete it and add it back when we need it
 
 class Trip {
   final String id;

@@ -66,10 +66,10 @@ class Marina {
       type: _parseMarinaTypeFromOsmTags(tags),
       accessType: _parseAccessType(tags['access'] as String?),
       depth: _parseDepth(tags),
-      facilities: _parseFacilities(tags),
+      // facilities: _parseFacilities(tags),
       osmId: osmData['id'].toString(),
-      isValidated: false,
-      metadata: tags,
+      isValidated: false,  // OSM data is not validated by default
+      metadata: tags, 
     );
   }
 
@@ -160,27 +160,27 @@ Map<String, dynamic> toJson() {
   }
 
   // Extracts known facilities from OSM tags
-  static List<String> _parseFacilities(Map<String, dynamic> tags) {
-    final facilities = <String>[];
+  // static List<String> _parseFacilities(Map<String, dynamic> tags) {
+  //   final facilities = <String>[];
 
-    if (tags['amenity:parking'] == 'yes' || tags['parking'] == 'yes') {
-      facilities.add('parking');
-    }
-    if (tags['amenity:fuel'] == 'yes' || tags['fuel'] == 'yes') {
-      facilities.add('fuel');
-    }
-    if (tags['amenity:toilets'] == 'yes' || tags['toilets'] == 'yes') {
-      facilities.add('restroom');
-    }
-    if (tags['amenity:restaurant'] == 'yes' || tags['restaurant'] == 'yes') {
-      facilities.add('restaurant');
-    }
-    if (tags['amenity:shower'] == 'yes' || tags['shower'] == 'yes') {
-      facilities.add('shower');
-    }
+  //   if (tags['amenity:parking'] == 'yes' || tags['parking'] == 'yes') {
+  //     facilities.add('parking');
+  //   }
+  //   if (tags['amenity:fuel'] == 'yes' || tags['fuel'] == 'yes') {
+  //     facilities.add('fuel');
+  //   }
+  //   if (tags['amenity:toilets'] == 'yes' || tags['toilets'] == 'yes') {
+  //     facilities.add('restroom');
+  //   }
+  //   if (tags['amenity:restaurant'] == 'yes' || tags['restaurant'] == 'yes') {
+  //     facilities.add('restaurant');
+  //   }
+  //   if (tags['amenity:shower'] == 'yes' || tags['shower'] == 'yes') {
+  //     facilities.add('shower');
+  //   }
 
-    return facilities;
-  }
+  //   return facilities;
+  // }
 
   @override
   String toString() {
