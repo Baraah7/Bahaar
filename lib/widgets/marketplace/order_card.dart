@@ -112,13 +112,25 @@ class _OrderCardState extends State<OrderCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 3),
-                        Text(
-                          '${_n(totalPrice.toStringAsFixed(2), lang)} ${widget.l10n.bdUnit}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: const Color(0xFF1E293B).withValues(alpha: 0.8),
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '${_n(totalPrice.toStringAsFixed(2), lang)} ${widget.l10n.bdUnit}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: const Color(0xFF1E293B).withValues(alpha: 0.8),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              ' ${_n(effectiveKg.toStringAsFixed(1), lang)} ${widget.l10n.kgUnit}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
