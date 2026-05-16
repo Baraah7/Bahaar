@@ -2886,4 +2886,3 @@ class _IntegratedMapState extends State<IntegratedMap>
     );
   }
 }
-

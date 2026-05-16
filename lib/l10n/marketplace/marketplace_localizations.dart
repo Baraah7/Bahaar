@@ -187,6 +187,10 @@ class MarketplaceLocalizations {
   String get iHaveReturnedPayment => _isAr ? 'أعدتُ الدفع، أكمل' : 'I\'ve Returned It — Resell';
   String get notYet => _isAr ? 'ليس بعد' : 'Not Yet';
   String get removeFromPurchases => _isAr ? 'إزالة من المشتريات' : 'Remove from Purchases';
+  String get listed => _isAr ? 'مُدرج' : 'Listed';
+  String get edit => _isAr ? 'تعديل' : 'Edit';
+  String get editListing => _isAr ? 'تعديل الإدراج' : 'Edit Listing';
+  String get delete => _isAr ? 'حذف' : 'Delete';
   String get quantityKg => _isAr ? 'الكمية (كجم)' : 'Quantity (kg)';
   String get quantityHelp => _isAr ? 'الكمية المتاحة' : 'Available';
   String get invalidQuantity => _isAr ? 'الكمية غير صالحة' : 'Invalid quantity';

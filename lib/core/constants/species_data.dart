@@ -119,6 +119,22 @@ const Map<String, String> kBottomTypeNamesAr = {
   'seagrass_sandy': 'أعشاب رملية',
 };
 
+const Map<String, String> kBottomTypeNamesEn = {
+  'rocky': 'Rocky',
+  'reef': 'Reef',
+  'coral': 'Coral',
+  'coral_reef': 'Coral Reef',
+  'sandy': 'Sandy',
+  'muddy': 'Muddy',
+  'seagrass': 'Seagrass',
+  'open_water': 'Open Water',
+  'reef_edge': 'Reef Edge',
+  'sandy_rocky': 'Sandy Rocky',
+  'sandy_reef': 'Sandy Reef',
+  'rocky_reef': 'Rocky Reef',
+  'seagrass_sandy': 'Seagrass Sandy',
+};
+
 /// Arabic month names.
 const List<String> kMonthNamesAr = [
   'يناير', 'فبراير', 'مارس', 'أبريل',

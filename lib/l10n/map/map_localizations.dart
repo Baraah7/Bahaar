@@ -117,4 +117,15 @@ class MapLocalizations {
       ? 'سيتم الاتصال بخدمات الطوارئ فوراً.\n\nاستخدم هذا فقط في حالات الطوارئ الحقيقية.'
       : 'This will call emergency services immediately.\n\nOnly use in a genuine emergency.';
   String get sosSend           => _isAr ? 'إرسال نداء الاستغاثة' : 'SEND SOS';
+
+  // Fish spots prediction sheet
+  String get getPrediction          => _isAr ? 'احصل على تنبؤ'                    : 'Get Prediction';
+  String get expectedSpecies        => _isAr ? 'الأسماك المتوقعة'                 : 'Expected Species';
+  String get protectedLabel         => _isAr ? 'محمية'                             : 'Protected';
+  String get protectedAreaRestricted => _isAr ? 'منطقة محمية - الصيد مقيد'       : 'Protected Area – Fishing Restricted';
+  String depthLabel(String d)       => _isAr ? 'العمق: ${d}م'                     : 'Depth: ${d}m';
+  String declarationYearLabel(String y) => _isAr ? 'سنة الإعلان: $y'             : 'Year declared: $y';
+  String areaLabel(String a)        => _isAr ? 'المساحة: $a كم²'                  : 'Area: $a km²';
+  String get mpaTypeLabel           => _isAr ? 'النوع'                             : 'Type';
+  String get mpaAuthorityLabel      => _isAr ? 'الجهة المسؤولة'                   : 'Authority';
 }

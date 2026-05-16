@@ -182,7 +182,7 @@ class _OrdersTabState extends State<OrdersTab>
               runSpacing: 8,
               children: [
                 _chip(null, l10n.allStatuses, ctx),
-                _chip('listed', 'مُدرج', ctx),
+                _chip('listed', l10n.listed, ctx),
                 _chip(OrderStatus.pending.name, l10n.pending, ctx),
                 _chip(OrderStatus.accepted.name, l10n.accepted, ctx),
                 _chip(OrderStatus.rejected.name, l10n.rejected, ctx),
@@ -930,10 +930,10 @@ class _ListingCardState extends State<_ListingCard> {
                     const EdgeInsets.fromLTRB(20, 16, 8, 0),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'تعديل الإدراج',
-                        style: TextStyle(
+                        widget.l10n.editListing,
+                        style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 18),
                       ),
@@ -985,11 +985,11 @@ class _ListingCardState extends State<_ListingCard> {
         backgroundColor: AppColors.cream,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
-        title: const Text('حذف الإدراج',
-            style: TextStyle(color: AppColors.brown)),
-        content: const Text(
-            'هل أنت متأكد من حذف هذا الإدراج؟',
-            style: TextStyle(color: AppColors.brown)),
+        title: Text(widget.l10n.deleteListing,
+            style: const TextStyle(color: AppColors.brown)),
+        content: Text(
+            widget.l10n.confirmDeleteListing,
+            style: const TextStyle(color: AppColors.brown)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -1121,9 +1121,9 @@ class _ListingCardState extends State<_ListingCard> {
                           color:
                               statusColor.withValues(alpha: 0.3)),
                     ),
-                    child: const Text(
-                      'مُدرج',
-                      style: TextStyle(
+                    child: Text(
+                      widget.l10n.listed,
+                      style: const TextStyle(
                         color: statusColor,
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
@@ -1171,22 +1171,21 @@ class _ListingCardState extends State<_ListingCard> {
                             children: [
                               _infoRow(
                                 Icons.scale_rounded,
-                                '${widget.listing.weight} كغ',
+                                '${widget.listing.weight} ${widget.l10n.kgUnit}',
                               ),
                               Divider(
                                   height: 16,
                                   color: Colors.grey.shade200),
                               _infoRow(
                                 Icons.payments_outlined,
-                                '${widget.listing.pricePerKg.toStringAsFixed(3)} د.ب / كغ',
+                                '${widget.listing.pricePerKg.toStringAsFixed(3)} ${widget.l10n.bdPerKg}',
                               ),
                               Divider(
                                   height: 16,
                                   color: Colors.grey.shade200),
                               _infoRow(
                                 Icons.water_drop_outlined,
-                                widget.listing.condition
-                                    .arabicName,
+                                widget.listing.condition.localizedName(widget.l10n.localeName),
                               ),
                               if (widget.listing.description !=
                                   null) ...[
@@ -1222,7 +1221,7 @@ class _ListingCardState extends State<_ListingCard> {
                                 icon: const Icon(
                                     Icons.delete_outline_rounded,
                                     size: 17),
-                                label: const Text('حذف'),
+                                label: Text(widget.l10n.delete),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.red
                                       .withValues(alpha: 0.8),
@@ -1249,7 +1248,7 @@ class _ListingCardState extends State<_ListingCard> {
                                 icon: const Icon(
                                     Icons.edit_outlined,
                                     size: 17),
-                                label: const Text('تعديل'),
+                                label: Text(widget.l10n.edit),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors
                                       .primary

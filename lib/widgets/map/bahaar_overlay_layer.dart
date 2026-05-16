@@ -12,6 +12,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/core/constants/zone_data.dart';
 import 'package:bahaar/core/constants/species_data.dart';
+import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ import 'package:bahaar/models/fishing/trip_model.dart';
 // ---------------------------------------------------------------------------
 
 class BahaarOverlayLayer extends StatelessWidget {
-  /// Called when the user taps "احصل على تنبؤ" on a spot card.
+  /// Called when the user taps the "Get Prediction" button on a spot card.
   /// Receives the spot's [LatLng] and [speciesId] (first species of the spot).
   final void Function(LatLng latLng, String speciesId)? onGetPrediction;
 
@@ -53,16 +54,19 @@ class BahaarOverlayLayer extends StatelessWidget {
   }
 
   static const _typeAr = {'Marine': 'بحرية', 'Wilderness': 'برية'};
+  static const _typeEn = {'Marine': 'Marine', 'Wilderness': 'Wilderness'};
 
   // ── MPA bottom sheet ────────────────────────────────────────────────────────
   void _showMpaSheet(BuildContext context, Map<String, dynamic> mpa) {
+    final l10n = MapLocalizations.of(context);
+    final isAr = l10n.localeName == 'ar';
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(
@@ -77,12 +81,12 @@ class BahaarOverlayLayer extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        mpa['nameAr'] as String,
+                        isAr ? mpa['nameAr'] as String : (mpa['nameEn'] as String? ?? mpa['nameAr'] as String),
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ),
-                      if ((mpa['nameEn'] as String?) != null)
+                      if (!isAr && (mpa['nameAr'] as String?) != null)
                         Text(
-                          mpa['nameEn'] as String,
+                          mpa['nameAr'] as String,
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                     ],
@@ -97,24 +101,24 @@ class BahaarOverlayLayer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.red.shade200),
                 ),
-                child: const Row(children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.red),
-                  SizedBox(width: 8),
+                child: Row(children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'منطقة محمية - الصيد مقيد',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 15),
+                      l10n.protectedAreaRestricted,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                   ),
                 ]),
               ),
               const SizedBox(height: 12),
               if ((mpa['year'] as String?) != null)
-                _MpaInfoRow(Icons.calendar_today_outlined, 'سنة الإعلان: ${mpa['year']}'),
+                _MpaInfoRow(Icons.calendar_today_outlined, l10n.declarationYearLabel(mpa['year'] as String)),
               if ((mpa['area_km2'] as num?) != null)
-                _MpaInfoRow(Icons.straighten, 'المساحة: ${mpa['area_km2']} كم²'),
+                _MpaInfoRow(Icons.straighten, l10n.areaLabel('${mpa['area_km2']}')),
               if ((mpa['type'] as String?) != null)
-                _MpaInfoRow(Icons.category_outlined, _typeAr[mpa['type']] ?? mpa['type'] as String),
+                _MpaInfoRow(Icons.category_outlined, (isAr ? _typeAr : _typeEn)[mpa['type']] ?? mpa['type'] as String),
               if ((mpa['authority'] as String?) != null)
                 _MpaInfoRow(Icons.account_balance_outlined, mpa['authority'] as String),
               if ((mpa['description'] as String?)?.isNotEmpty == true) ...[
@@ -133,9 +137,12 @@ class BahaarOverlayLayer extends StatelessWidget {
 
   // ── Spot bottom sheet ───────────────────────────────────────────────────────
   void _showSpotSheet(BuildContext context, Map<String, dynamic> spot) {
+    final l10n = MapLocalizations.of(context);
+    final isAr = l10n.localeName == 'ar';
     final isMpa = spot['mpa'] as bool;
     final speciesList = (spot['species'] as List).cast<String>();
     final firstSpecies = speciesList.isNotEmpty ? speciesList.first : 'hamour';
+    final bottomTypeNames = isAr ? kBottomTypeNamesAr : kBottomTypeNamesEn;
 
     showModalBottomSheet(
       context: context,
@@ -144,7 +151,7 @@ class BahaarOverlayLayer extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(
@@ -161,7 +168,7 @@ class BahaarOverlayLayer extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    spot['nameAr'] as String,
+                    isAr ? spot['nameAr'] as String : (spot['nameEn'] as String? ?? spot['nameAr'] as String),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -178,9 +185,9 @@ class BahaarOverlayLayer extends StatelessWidget {
                       color: Colors.red.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'محمية',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.protectedLabel,
+                      style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
@@ -194,20 +201,19 @@ class BahaarOverlayLayer extends StatelessWidget {
               Row(children: [
                 _InfoChip(
                   icon: Icons.water,
-                  label: 'العمق: ${spot['depth']}م',
+                  label: l10n.depthLabel('${spot['depth']}'),
                 ),
                 const SizedBox(width: 8),
                 _InfoChip(
                   icon: Icons.terrain,
-                  label: kBottomTypeNamesAr[spot['bottomType']] ??
-                      spot['bottomType'],
+                  label: bottomTypeNames[spot['bottomType']] ?? spot['bottomType'] as String,
                 ),
               ]),
               const SizedBox(height: 12),
 
               // Species chips
               Text(
-                'الأسماك المتوقعة:',
+                l10n.expectedSpecies,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey.shade800,
@@ -220,10 +226,10 @@ class BahaarOverlayLayer extends StatelessWidget {
                 children: speciesList.map((id) {
                   final s = kAllSpecies.firstWhere(
                     (e) => e['id'] == id,
-                    orElse: () => {'nameAr': id},
+                    orElse: () => {'nameAr': id, 'nameEn': id},
                   );
                   return Chip(
-                    label: Text(s['nameAr'] as String),
+                    label: Text(isAr ? s['nameAr'] as String : s['nameEn'] as String),
                     backgroundColor: const Color(0xFF0D4F54).withValues(alpha: 0.1),
                     labelStyle: const TextStyle(
                       color: Color(0xFF0D4F54),
@@ -249,9 +255,9 @@ class BahaarOverlayLayer extends StatelessWidget {
                     onGetPrediction?.call(latLng, firstSpecies);
                   },
                   icon: const Icon(Icons.analytics_outlined),
-                  label: const Text(
-                    'احصل على تنبؤ',
-                    style: TextStyle(fontSize: 16),
+                  label: Text(
+                    l10n.getPrediction,
+                    style: const TextStyle(fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D4F54),
