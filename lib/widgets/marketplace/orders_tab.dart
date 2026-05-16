@@ -522,34 +522,6 @@ class _OrdersList extends StatelessWidget {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  void _resellOrder(BuildContext context, Order order) async {
-    await marketplaceService.resellOrder(order.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.listingRelistedSuccess),
-        backgroundColor: AppColors.green,
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
-    }
-  }
-
-  // Permanently removes both listing and order from Firestore
-  void _removeListing(BuildContext context, Order order) async {
-    await marketplaceService.removeListing(order.listingId);
-    await marketplaceService.deleteOrder(order.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.listingDeleted),
-        backgroundColor: AppColors.red,
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
-    }
-  }
-
   void _acceptOrder(BuildContext context, Order order) async {
     await marketplaceService.acceptOrder(order.id);
     if (context.mounted) {
@@ -899,14 +871,6 @@ class _OrdersList extends StatelessWidget {
             onRemoveFromPurchases:
                 !isSeller
                     ? () => _removeFromPurchases(context, order)
-                    : null,
-            onResell:
-                isSeller && order.status == OrderStatus.cancelled
-                    ? () => _resellOrder(context, order)
-                    : null,
-            onRemoveListing:
-                isSeller && order.status == OrderStatus.cancelled
-                    ? () => _removeListing(context, order)
                     : null,
             onViewPaymentProof: (imagePath) =>
                 _showPaymentProofFullScreen(context, imagePath),

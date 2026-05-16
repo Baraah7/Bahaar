@@ -1,6 +1,5 @@
 import 'package:latlong2/latlong.dart';
 
-//there is alot of redundant code in this file and it is not being used anywhere in the app, we can delete it and add it back when we need it
 
 class Trip {
   final String id;
@@ -52,6 +51,7 @@ class Trip {
     String? title,
     DateTime? startTime,
     DateTime? endTime,
+    bool clearEndTime = false,
     int? pausedSeconds,
     double? startLat,
     double? startLon,
@@ -64,7 +64,7 @@ class Trip {
       userId: userId ?? this.userId,
       title: title ?? this.title,
       startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
+      endTime: clearEndTime ? null : (endTime ?? this.endTime),
       pausedSeconds: pausedSeconds ?? this.pausedSeconds,
       startLat: startLat ?? this.startLat,
       startLon: startLon ?? this.startLon,

@@ -136,7 +136,6 @@ class FishMarketplaceService extends ChangeNotifier {
     _buyerOrdersSubscription = _db
         .collection('orders')
         .where('buyerId', isEqualTo: _currentUserId)
-        .orderBy('orderedAt', descending: true)
         .snapshots()
         .listen(
       (snapshot) {
@@ -153,7 +152,6 @@ class FishMarketplaceService extends ChangeNotifier {
     _sellerOrdersSubscription = _db
         .collection('orders')
         .where('sellerId', isEqualTo: _currentUserId)
-        .orderBy('orderedAt', descending: true)
         .snapshots()
         .listen(
       (snapshot) {
@@ -413,7 +411,15 @@ class FishMarketplaceService extends ChangeNotifier {
         'respondAt': Timestamp.now(),
       });
       if (prev != null) {
-        await updateListingStatus(prev.listingId, ListingStatus.available);
+        final listing = await fetchListingById(prev.listingId);
+        if (listing != null) {
+          final returnedKg = prev.requestedKg ?? listing.weight;
+          final wasFullOrder = listing.status == ListingStatus.reserved;
+          await _db.collection('listings').doc(prev.listingId).update({
+            if (!wasFullOrder) 'weight': listing.weight + returnedKg,
+            'status': ListingStatus.available.name,
+          });
+        }
       }
     } catch (e) {
       if (prev != null) _revertAllLists(orderId, prev);
@@ -432,6 +438,20 @@ class FishMarketplaceService extends ChangeNotifier {
         'status': OrderStatus.cancelled.name,
         'respondAt': Timestamp.now(),
       });
+      // Restore the purchased kg back to the listing so it becomes available again.
+      if (prev != null) {
+        final listing = await fetchListingById(prev.listingId);
+        if (listing != null) {
+          // If it was a full-order (listing was reserved), restore fully.
+          // If partial, add back what the buyer had taken.
+          final returnedKg = prev.requestedKg ?? listing.weight;
+          final wasFullOrder = listing.status == ListingStatus.reserved;
+          await _db.collection('listings').doc(prev.listingId).update({
+            if (!wasFullOrder) 'weight': listing.weight + returnedKg,
+            'status': ListingStatus.available.name,
+          });
+        }
+      }
     } catch (e) {
       if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to cancel order: $e';
@@ -463,7 +483,13 @@ class FishMarketplaceService extends ChangeNotifier {
         'respondAt': Timestamp.now(),
       });
       if (prev != null) {
-        await updateListingStatus(prev.listingId, ListingStatus.sold);
+        // requestedKg is set only for partial orders (buyer chose less than full weight).
+        // Full orders have requestedKg == null and the listing was marked reserved.
+        // Partial orders keep the listing available with remaining weight — don't mark sold.
+        final isPartialOrder = prev.requestedKg != null;
+        if (!isPartialOrder) {
+          await updateListingStatus(prev.listingId, ListingStatus.sold);
+        }
         if (_currentUserId == prev.sellerId) {
           await _db.collection('users').doc(prev.sellerId).update({
             'total_sales': FieldValue.increment(1),

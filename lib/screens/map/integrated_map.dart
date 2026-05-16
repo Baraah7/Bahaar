@@ -4,8 +4,6 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
-import 'package:bahaar/models/map/editable_map_feature.dart';
-import 'package:bahaar/models/map/feature_edit_state.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
@@ -95,12 +93,12 @@ class _IntegratedMapState extends State<IntegratedMap>
   late final HybridRouteCoordinator _routeCoordinator;
   late final MarineWeatherService _weatherService;
   late final FishProbabilityService _fishProbabilityService;
-  final FeatureEditService _featureEditService = FeatureEditService();
-  final FeatureEditState _featureEditState = FeatureEditState();
+ // final FeatureEditService _featureEditService = FeatureEditService();
+ // final FeatureEditState _featureEditState = FeatureEditState();
   NavigationSessionManager? _navigationManager;
 
   // Feature edit state
-  List<EditableMapFeature> _firestoreMapFeatures = [];
+ // List<EditableMapFeature> _firestoreMapFeatures = [];
   Map<String, dynamic>? _rawAssetGeoJson;
 
   // Weather state
@@ -187,8 +185,8 @@ class _IntegratedMapState extends State<IntegratedMap>
     _loadSeaports();
     _initMarinas();
     _initRoutingServices();
-    _loadFirestoreFeatures();
-    _featureEditState.addListener(_onFeatureEditUpdate);
+   // _loadFirestoreFeatures();
+   // _featureEditState.addListener(_onFeatureEditUpdate);
 
     final tripUid = FirebaseAuth.instance.currentUser?.uid;
     TripService.instance.initialize(uid: tripUid).then((_) {
@@ -371,38 +369,38 @@ class _IntegratedMapState extends State<IntegratedMap>
     }
   }
 
-  Future<void> _loadFirestoreFeatures() async {
-    try {
-      final features = await _featureEditService.loadMapFeatures();
-      if (mounted) {
-        setState(() {
-          _firestoreMapFeatures = features;
-        });
-        _rebuildGeoJsonWithFirestore();
-      }
-    } catch (e) {
-      log('Error loading Firestore features: $e');
-    }
-  }
+  // Future<void> _loadFirestoreFeatures() async {
+  //   try {
+  //     final features = await _featureEditService.loadMapFeatures();
+  //     if (mounted) {
+  //       setState(() {
+  //         _firestoreMapFeatures = features;
+  //       });
+  //       _rebuildGeoJsonWithFirestore();
+  //     }
+  //   } catch (e) {
+  //     log('Error loading Firestore features: $e');
+  //   }
+  // }
 
-  void _rebuildGeoJsonWithFirestore() {
-    if (_rawAssetGeoJson != null) {
-      setState(() {
-        _geoJsonBuilder = GeoJsonLayerBuilder.withFirestoreFeatures(
-          _rawAssetGeoJson!,
-          _firestoreMapFeatures,
-        );
-      });
-    }
-  }
+  // void _rebuildGeoJsonWithFirestore() {
+  //   if (_rawAssetGeoJson != null) {
+  //     setState(() {
+  //       _geoJsonBuilder = GeoJsonLayerBuilder.withFirestoreFeatures(
+  //         _rawAssetGeoJson!,
+  //         _firestoreMapFeatures,
+  //       );
+  //     });
+  //   }
+  // }
 
   @override
   void dispose() {
     _locationSubscription?.cancel();
     _navigationManager?.removeListener(_onNavigationUpdate);
     _navigationManager?.dispose();
-    _featureEditState.removeListener(_onFeatureEditUpdate);
-    _featureEditState.dispose();
+   // _featureEditState.removeListener(_onFeatureEditUpdate);
+   // _featureEditState.dispose();
     _fishProbabilityService.dispose();
     _layerManager.dispose();
     super.dispose();
@@ -535,16 +533,18 @@ class _IntegratedMapState extends State<IntegratedMap>
       );
       final data = json.decode(jsonString) as Map<String, dynamic>;
       _rawAssetGeoJson = data;
-      setState(() {
-        if (_firestoreMapFeatures.isNotEmpty) {
-          _geoJsonBuilder = GeoJsonLayerBuilder.withFirestoreFeatures(
-            data,
-            _firestoreMapFeatures,
-          );
-        } else {
-          _geoJsonBuilder = GeoJsonLayerBuilder(data);
-        }
-      });
+      // setState(() {
+
+      //   if (_firestoreMapFeatures.isNotEmpty) {
+      //     _geoJsonBuilder = GeoJsonLayerBuilder.withFirestoreFeatures(
+      //       data,
+      //       _firestoreMapFeatures,
+      //     );
+          
+      //   } else {
+      //     _geoJsonBuilder = GeoJsonLayerBuilder(data);
+      //   }
+      // });
       log('GeoJSON loaded successfully');
     } catch (e) {
       log('Error loading GeoJSON: $e');
@@ -581,16 +581,16 @@ class _IntegratedMapState extends State<IntegratedMap>
     final l10n = MapLocalizations.of(context);
 
     // Handle feature edit mode
-    if (_layerManager.isFeatureEditMode) {
-      _handleFeatureEditTap(point);
-      return;
-    }
+    // if (_layerManager.isFeatureEditMode) {
+    //   _handleFeatureEditTap(point);
+    //   return;
+    // }
 
-    // Handle admin edit mode
-    if (_layerManager.isAdminEditMode) {
-      _handleAdminPaint(point);
-      return;
-    }
+    // // Handle admin edit mode
+    // if (_layerManager.isAdminEditMode) {
+    //   _handleAdminPaint(point);
+    //   return;
+    // }
 
     // If there's already a route, tapping doesn't do anything
     if (_currentRoute != null) return;
@@ -784,259 +784,259 @@ class _IntegratedMapState extends State<IntegratedMap>
   // Feature Edit Mode Handling
   // ============================================================
 
-  void _handleFeatureEditTap(LatLng point) {
-    switch (_featureEditState.interaction) {
-      case FeatureEditInteraction.addPoint:
-        _addPointFeature(point);
-        break;
-      case FeatureEditInteraction.addPolygon:
-      case FeatureEditInteraction.addPolyline:
-        _featureEditState.addVertex(point);
-        break;
-      case FeatureEditInteraction.select:
-        _hitTestFeatures(point);
-        break;
-      case FeatureEditInteraction.moveFeature:
-        _moveSelectedFeature(point);
-        break;
-      case FeatureEditInteraction.browse:
-        break;
-    }
-  }
+  // // void _handleFeatureEditTap(LatLng point) {
+  // //   switch (_featureEditState.interaction) {
+  // //     case FeatureEditInteraction.addPoint:
+  // //       _addPointFeature(point);
+  // //       break;
+  // //     case FeatureEditInteraction.addPolygon:
+  // //     case FeatureEditInteraction.addPolyline:
+  // //       _featureEditState.addVertex(point);
+  // //       break;
+  // //     case FeatureEditInteraction.select:
+  // //       _hitTestFeatures(point);
+  // //       break;
+  // //     case FeatureEditInteraction.moveFeature:
+  // //       _moveSelectedFeature(point);
+  // //       break;
+  // //     case FeatureEditInteraction.browse:
+  // //       break;
+  // //   }
+  // // }
 
-  Future<void> _addPointFeature(LatLng point) async {
-    final type = _featureEditState.selectedFeatureType;
-    if (type == null) return;
+  // Future<void> _addPointFeature(LatLng point) async {
+  //   final type = _featureEditState.selectedFeatureType;
+  //   if (type == null) return;
 
-    final feature = EditableMapFeature(
-      featureType: type,
-      name: '${type.displayName} ${DateTime.now().millisecondsSinceEpoch}',
-      coordinates: [point],
-    );
+  //   final feature = EditableMapFeature(
+  //     featureType: type,
+  //     name: '${type.displayName} ${DateTime.now().millisecondsSinceEpoch}',
+  //     coordinates: [point],
+  //   );
 
-    await _featureEditService.addMapFeature(feature);
-    _showMessage('${type.displayName} added', Colors.green);
-    await _loadFirestoreFeatures();
-  }
+  //   // await _featureEditService.addMapFeature(feature);
+  //   // _showMessage('${type.displayName} added', Colors.green);
+  //   // await _loadFirestoreFeatures();
+  // }
 
-  Future<void> _confirmAndSaveDrawing() async {
-    final type = _featureEditState.selectedFeatureType;
-    if (type == null) return;
+  // Future<void> _confirmAndSaveDrawing() async {
+  //   final type = _featureEditState.selectedFeatureType;
+  //   if (type == null) return;
 
-    final vertices = _featureEditState.confirmDrawing();
-    if (vertices.isEmpty) return;
+  //   final vertices = _featureEditState.confirmDrawing();
+  //   if (vertices.isEmpty) return;
 
-    // Close polygon if needed
-    final coords = List<LatLng>.from(vertices);
-    if (type.geometryType == GeometryType.polygon &&
-        coords.length >= 3 &&
-        coords.first != coords.last) {
-      coords.add(coords.first);
-    }
+  //   // Close polygon if needed
+  //   final coords = List<LatLng>.from(vertices);
+  //   if (type.geometryType == GeometryType.polygon &&
+  //       coords.length >= 3 &&
+  //       coords.first != coords.last) {
+  //     coords.add(coords.first);
+  //   }
 
-    final feature = EditableMapFeature(
-      featureType: type,
-      name: '${type.displayName} ${DateTime.now().millisecondsSinceEpoch}',
-      coordinates: coords,
-    );
+  //   final feature = EditableMapFeature(
+  //     featureType: type,
+  //     name: '${type.displayName} ${DateTime.now().millisecondsSinceEpoch}',
+  //     coordinates: coords,
+  //   );
 
-    await _featureEditService.addMapFeature(feature);
-    _showMessage('${type.displayName} added', Colors.green);
-    await _loadFirestoreFeatures();
-  }
+  //   // await _featureEditService.addMapFeature(feature);
+  //   // _showMessage('${type.displayName} added', Colors.green);
+  //   // await _loadFirestoreFeatures();
+  // }
 
-  void _hitTestFeatures(LatLng point) {
-    // Threshold in degrees (~500m at Bahrain latitude)
-    const pointThreshold = 0.005;
-    const lineThreshold = 0.003;
+  // void _hitTestFeatures(LatLng point) {
+  //   // Threshold in degrees (~500m at Bahrain latitude)
+  //   const pointThreshold = 0.005;
+  //   const lineThreshold = 0.003;
 
-    EditableMapFeature? closest;
-    double closestDist = double.infinity;
+  //   EditableMapFeature? closest;
+  //   double closestDist = double.infinity;
 
-    for (final feature in _firestoreMapFeatures) {
-      switch (feature.geometryType) {
-        case GeometryType.point:
-          final dist =
-              GeometryUtils.distanceBetween(point, feature.coordinates.first);
-          if (dist < pointThreshold && dist < closestDist) {
-            closestDist = dist;
-            closest = feature;
-          }
-          break;
-        case GeometryType.lineString:
-          final dist = GeometryUtils.distanceToLineString(
-              point, feature.coordinates);
-          if (dist < lineThreshold && dist < closestDist) {
-            closestDist = dist;
-            closest = feature;
-          }
-          break;
-        case GeometryType.polygon:
-          if (GeometryUtils.isPointInPolygon(point, feature.coordinates)) {
-            // For polygons, use distance to centroid as tiebreaker
-            final centroid =
-                GeometryUtils.computeCentroid(feature.coordinates);
-            final dist = GeometryUtils.distanceBetween(point, centroid);
-            if (dist < closestDist) {
-              closestDist = dist;
-              closest = feature;
-            }
-          }
-          break;
-      }
-    }
+  //   for (final feature in _firestoreMapFeatures) {
+  //     switch (feature.geometryType) {
+  //       case GeometryType.point:
+  //         final dist =
+  //             GeometryUtils.distanceBetween(point, feature.coordinates.first);
+  //         if (dist < pointThreshold && dist < closestDist) {
+  //           closestDist = dist;
+  //           closest = feature;
+  //         }
+  //         break;
+  //       case GeometryType.lineString:
+  //         final dist = GeometryUtils.distanceToLineString(
+  //             point, feature.coordinates);
+  //         if (dist < lineThreshold && dist < closestDist) {
+  //           closestDist = dist;
+  //           closest = feature;
+  //         }
+  //         break;
+  //       case GeometryType.polygon:
+  //         if (GeometryUtils.isPointInPolygon(point, feature.coordinates)) {
+  //           // For polygons, use distance to centroid as tiebreaker
+  //           final centroid =
+  //               GeometryUtils.computeCentroid(feature.coordinates);
+  //           final dist = GeometryUtils.distanceBetween(point, centroid);
+  //           if (dist < closestDist) {
+  //             closestDist = dist;
+  //             closest = feature;
+  //           }
+  //         }
+  //         break;
+  //     }
+  //   }
 
-    // Also hit-test asset features from GeoJsonBuilder
-    if (closest == null && _geoJsonBuilder != null) {
-      final allFeatures =
-          _geoJsonBuilder!.geoJsonData['features'] as List? ?? [];
-      for (final f in allFeatures) {
-        try {
-          final editableFeature = EditableMapFeature.fromGeoJsonFeature(
-              f as Map<String, dynamic>);
-          switch (editableFeature.geometryType) {
-            case GeometryType.point:
-              final dist = GeometryUtils.distanceBetween(
-                  point, editableFeature.coordinates.first);
-              if (dist < pointThreshold && dist < closestDist) {
-                closestDist = dist;
-                closest = editableFeature;
-              }
-              break;
-            case GeometryType.lineString:
-              final dist = GeometryUtils.distanceToLineString(
-                  point, editableFeature.coordinates);
-              if (dist < lineThreshold && dist < closestDist) {
-                closestDist = dist;
-                closest = editableFeature;
-              }
-              break;
-            case GeometryType.polygon:
-              if (GeometryUtils.isPointInPolygon(
-                  point, editableFeature.coordinates)) {
-                final centroid =
-                    GeometryUtils.computeCentroid(editableFeature.coordinates);
-                final dist = GeometryUtils.distanceBetween(point, centroid);
-                if (dist < closestDist) {
-                  closestDist = dist;
-                  closest = editableFeature;
-                }
-              }
-              break;
-          }
-        } catch (_) {}
-      }
-    }
+  //   // Also hit-test asset features from GeoJsonBuilder
+  //   if (closest == null && _geoJsonBuilder != null) {
+  //     final allFeatures =
+  //         _geoJsonBuilder!.geoJsonData['features'] as List? ?? [];
+  //     for (final f in allFeatures) {
+  //       try {
+  //         final editableFeature = EditableMapFeature.fromGeoJsonFeature(
+  //             f as Map<String, dynamic>);
+  //         switch (editableFeature.geometryType) {
+  //           case GeometryType.point:
+  //             final dist = GeometryUtils.distanceBetween(
+  //                 point, editableFeature.coordinates.first);
+  //             if (dist < pointThreshold && dist < closestDist) {
+  //               closestDist = dist;
+  //               closest = editableFeature;
+  //             }
+  //             break;
+  //           case GeometryType.lineString:
+  //             final dist = GeometryUtils.distanceToLineString(
+  //                 point, editableFeature.coordinates);
+  //             if (dist < lineThreshold && dist < closestDist) {
+  //               closestDist = dist;
+  //               closest = editableFeature;
+  //             }
+  //             break;
+  //           case GeometryType.polygon:
+  //             if (GeometryUtils.isPointInPolygon(
+  //                 point, editableFeature.coordinates)) {
+  //               final centroid =
+  //                   GeometryUtils.computeCentroid(editableFeature.coordinates);
+  //               final dist = GeometryUtils.distanceBetween(point, centroid);
+  //               if (dist < closestDist) {
+  //                 closestDist = dist;
+  //                 closest = editableFeature;
+  //               }
+  //             }
+  //             break;
+  //         }
+  //       } catch (_) {}
+  //     }
+  //   }
 
-    if (closest != null) {
-      _featureEditState.selectFeature(closest);
-      _showMessage('Selected: ${closest.name.isNotEmpty ? closest.name : closest.featureType.displayName}', Colors.blue);
-    } else {
-      _featureEditState.deselectFeature();
-    }
-  }
+  //   if (closest != null) {
+  //     _featureEditState.selectFeature(closest);
+  //     _showMessage('Selected: ${closest.name.isNotEmpty ? closest.name : closest.featureType.displayName}', Colors.blue);
+  //   } else {
+  //     _featureEditState.deselectFeature();
+  //   }
+  // }
 
-  Future<void> _moveSelectedFeature(LatLng newPosition) async {
-    final feature = _featureEditState.selectedFeature;
-    if (feature == null) return;
+  // Future<void> _moveSelectedFeature(LatLng newPosition) async {
+  //   final feature = _featureEditState.selectedFeature;
+  //   if (feature == null) return;
 
-    List<LatLng> newCoords;
-    if (feature.geometryType == GeometryType.point) {
-      newCoords = [newPosition];
-    } else {
-      final centroid = GeometryUtils.computeCentroid(feature.coordinates);
-      newCoords = GeometryUtils.translateGeometry(
-          feature.coordinates, centroid, newPosition);
-    }
+  //   List<LatLng> newCoords;
+  //   if (feature.geometryType == GeometryType.point) {
+  //     newCoords = [newPosition];
+  //   } else {
+  //     final centroid = GeometryUtils.computeCentroid(feature.coordinates);
+  //     newCoords = GeometryUtils.translateGeometry(
+  //         feature.coordinates, centroid, newPosition);
+  //   }
 
-    if (feature.id != null) {
-      // Firestore feature — update in place
-      final updated = feature.copyWith(
-        coordinates: newCoords,
-        updatedAt: DateTime.now(),
-      );
-      await _featureEditService.updateMapFeature(updated);
-    } else {
-      // Asset feature — create a new Firestore copy at the new position
-      final newFeature = feature.copyWith(
-        id: null,
-        coordinates: newCoords,
-      );
-      await _featureEditService.addMapFeature(newFeature);
-    }
+  //   if (feature.id != null) {
+  //     // Firestore feature — update in place
+  //     final updated = feature.copyWith(
+  //       coordinates: newCoords,
+  //       updatedAt: DateTime.now(),
+  //     );
+  //   //  await _featureEditService.updateMapFeature(updated);
+  //   } else {
+  //     // Asset feature — create a new Firestore copy at the new position
+  //     final newFeature = feature.copyWith(
+  //       id: null,
+  //       coordinates: newCoords,
+  //     );
+  //     // await _featureEditService.addMapFeature(newFeature);
+  //   }
 
-    _featureEditState.startSelectMode();
-    _showMessage('Feature moved', Colors.green);
-    await _loadFirestoreFeatures();
-  }
+  //   _featureEditState.startSelectMode();
+  //   _showMessage('Feature moved', Colors.green);
+  //   // await _loadFirestoreFeatures();
+  // }
 
-  Future<void> _deleteSelectedFeature() async {
-    final feature = _featureEditState.selectedFeature;
-    if (feature == null) return;
+  // Future<void> _deleteSelectedFeature() async {
+  //   final feature = _featureEditState.selectedFeature;
+  //   if (feature == null) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Feature'),
-        content: Text(
-            'Delete "${feature.name.isNotEmpty ? feature.name : feature.featureType.displayName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+  //   final confirm = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Delete Feature'),
+  //       content: Text(
+  //           'Delete "${feature.name.isNotEmpty ? feature.name : feature.featureType.displayName}"?'),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, false),
+  //           child: const Text('Cancel'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, true),
+  //           child: const Text('Delete', style: TextStyle(color: Colors.red)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
 
-    if (confirm == true) {
-      if (feature.id != null) {
-        await _featureEditService.deleteMapFeature(feature.id!);
-      }
-      _featureEditState.deselectFeature();
-      _showMessage('Feature deleted', Colors.green);
-      await _loadFirestoreFeatures();
-    }
-  }
+  //   if (confirm == true) {
+  //     if (feature.id != null) {
+  //    //   await _featureEditService.deleteMapFeature(feature.id!);
+  //     }
+  //     _featureEditState.deselectFeature();
+  //     _showMessage('Feature deleted', Colors.green);
+  //    // await _loadFirestoreFeatures();
+  //   }
+  // }
 
-  void _enterFeatureEditMode() {
-    setState(() {
-      _layerManager.isFeatureEditMode = true;
-      _featureEditState.enterEditMode();
-    });
-  }
+  // void _enterFeatureEditMode() {
+  //   setState(() {
+  //     _layerManager.isFeatureEditMode = true;
+  //     _featureEditState.enterEditMode();
+  //   });
+  // }
 
-  void _exitFeatureEditMode() {
-    setState(() {
-      _layerManager.isFeatureEditMode = false;
-      _featureEditState.exitEditMode();
-    });
-  }
+  // void _exitFeatureEditMode() {
+  //   setState(() {
+  //     _layerManager.isFeatureEditMode = false;
+  //     _featureEditState.exitEditMode();
+  //   });
+  // }
 
-  /// Convert screen position to LatLng for drag painting
-  LatLng? _screenToLatLng(Offset screenPosition) {
-    if (!_mapReady) return null;
-    try {
-      // Use flutter_map's offset to latlng conversion
-      return _mapController.camera.offsetToCrs(screenPosition);
-    } catch (e) {
-      return null;
-    }
-  }
+  // /// Convert screen position to LatLng for drag painting
+  // LatLng? _screenToLatLng(Offset screenPosition) {
+  //   if (!_mapReady) return null;
+  //   try {
+  //     // Use flutter_map's offset to latlng conversion
+  //     return _mapController.camera.offsetToCrs(screenPosition);
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 
-  void _handleMarinaTapped(Marina marina) {
-    setState(() {
-      _selectedMarina = marina;
-    });
-    log('Marina tapped: ${marina.name}');
+  // void _handleMarinaTapped(Marina marina) {
+  //   setState(() {
+  //     _selectedMarina = marina;
+  //   });
+  //   log('Marina tapped: ${marina.name}');
 
-    // Center map on marina
-    _mapController.move(marina.location, 15.0);
-  }
+  //   // Center map on marina
+  //   _mapController.move(marina.location, 15.0);
+  // }
 
   // ============================================================
   // Route Calculation Methods
@@ -2041,20 +2041,20 @@ class _IntegratedMapState extends State<IntegratedMap>
             polygons: _buildPaintedCellsOverlay(),
           ),
 
-        // Feature drawing layer (feature edit mode)
-        if (_layerManager.isFeatureEditMode)
-          FeatureDrawingLayer(
-            editState: _featureEditState,
-          ),
+        // // Feature drawing layer (feature edit mode)
+        // if (_layerManager.isFeatureEditMode)
+        //   FeatureDrawingLayer(
+        //     editState: _featureEditState,
+        //   ),
 
-        // Marina markers — hidden during active navigation
-        if (_marinaService.isInitialized && _showMarinas &&
-            !(_navigationManager?.isNavigating ?? false))
-          MarinaMarkerLayer(
-            marinas: _marinaService.getAllMarinas(),
-            highlightedMarinaId: _selectedMarina?.id,
-            onMarinaTapped: _handleMarinaTapped,
-          ),
+        // // Marina markers — hidden during active navigation
+        // if (_marinaService.isInitialized && _showMarinas &&
+        //     !(_navigationManager?.isNavigating ?? false))
+        //   MarinaMarkerLayer(
+        //     marinas: _marinaService.getAllMarinas(),
+        //     highlightedMarinaId: _selectedMarina?.id,
+        //     onMarinaTapped: _handleMarinaTapped,
+        //   ),
 
         // Route visualization (show active segment if navigating)
         if (_currentRoute != null)
@@ -2519,54 +2519,54 @@ class _IntegratedMapState extends State<IntegratedMap>
     return Scaffold(
       body: Stack(
         children: [
-          // Main map with gesture detector for admin painting
-          GestureDetector(
-            behavior: _layerManager.isAdminEditMode ||
-                    _layerManager.isFeatureEditMode ||
-                    _isOutlineEditMode
-                ? HitTestBehavior.opaque
-                : HitTestBehavior.translucent,
-            onTapDown: _layerManager.isAdminEditMode
-                ? (details) {
-                    final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) _handleAdminPaint(latLng);
-                  }
-                : _isOutlineEditMode
-                    ? (details) {
-                        final latLng =
-                            _screenToLatLng(details.localPosition);
-                        if (latLng != null) _handleOutlinePaint(latLng);
-                      }
-                    : null,
-            onPanStart: _layerManager.isAdminEditMode
-                ? (details) {
-                    final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) _handleAdminPaint(latLng);
-                  }
-                : _isOutlineEditMode
-                    ? (details) {
-                        final latLng =
-                            _screenToLatLng(details.localPosition);
-                        if (latLng != null) _handleOutlinePaint(latLng);
-                      }
-                    : null,
-            onPanUpdate: _layerManager.isAdminEditMode
-                ? (details) {
-                    final latLng = _screenToLatLng(details.localPosition);
-                    if (latLng != null) _handleAdminPaint(latLng);
-                  }
-                : _isOutlineEditMode
-                    ? (details) {
-                        final latLng =
-                            _screenToLatLng(details.localPosition);
-                        if (latLng != null) _handleOutlinePaint(latLng);
-                      }
-                    : null,
-            onPanEnd: _isOutlineEditMode
-                ? (_) => setState(() => _outlinePaintPreview = null)
-                : null,
-            child: _buildMap(),
-          ),
+          // // Main map with gesture detector for admin painting
+          // GestureDetector(
+          //   behavior: _layerManager.isAdminEditMode ||
+          //           _layerManager.isFeatureEditMode ||
+          //           _isOutlineEditMode
+          //       ? HitTestBehavior.opaque
+          //       : HitTestBehavior.translucent,
+          //   onTapDown: _layerManager.isAdminEditMode
+          //       ? (details) {
+          //           final latLng = _screenToLatLng(details.localPosition);
+          //           if (latLng != null) _handleAdminPaint(latLng);
+          //         }
+          //       : _isOutlineEditMode
+          //           ? (details) {
+          //               final latLng =
+          //                   _screenToLatLng(details.localPosition);
+          //               if (latLng != null) _handleOutlinePaint(latLng);
+          //             }
+          //           : null,
+          //   onPanStart: _layerManager.isAdminEditMode
+          //       ? (details) {
+          //           final latLng = _screenToLatLng(details.localPosition);
+          //           if (latLng != null) _handleAdminPaint(latLng);
+          //         }
+          //       : _isOutlineEditMode
+          //           ? (details) {
+          //               final latLng =
+          //                   _screenToLatLng(details.localPosition);
+          //               if (latLng != null) _handleOutlinePaint(latLng);
+          //             }
+          //           : null,
+          //   onPanUpdate: _layerManager.isAdminEditMode
+          //       ? (details) {
+          //           final latLng = _screenToLatLng(details.localPosition);
+          //           if (latLng != null) _handleAdminPaint(latLng);
+          //         }
+          //       : _isOutlineEditMode
+          //           ? (details) {
+          //               final latLng =
+          //                   _screenToLatLng(details.localPosition);
+          //               if (latLng != null) _handleOutlinePaint(latLng);
+          //             }
+          //           : null,
+          //   onPanEnd: _isOutlineEditMode
+          //       ? (_) => setState(() => _outlinePaintPreview = null)
+          //       : null,
+          //   child: _buildMap(),
+          // ),
 
           // Navigation status indicator (top right) — hidden during navigation
           if (!(_navigationManager?.isNavigating ?? false))
@@ -2600,7 +2600,7 @@ class _IntegratedMapState extends State<IntegratedMap>
                         maskInitialized: _maskInitialized,
                         onClose: () => _layerManager.showLayerControls = false,
                         onEnterAdminEdit: _enterAdminEditMode,
-                        onEnterFeatureEdit: _enterFeatureEditMode,
+                      //  onEnterFeatureEdit: _enterFeatureEditMode,
                         onEnterOutlineEdit: _enterOutlineEditMode,
                         onOpenPrediction: () => Navigator.push(
                           context,
@@ -2635,39 +2635,39 @@ class _IntegratedMapState extends State<IntegratedMap>
             ),
 
           // Feature edit toolbar (when in feature edit mode)
-          ListenableBuilder(
-            listenable: _featureEditState,
-            builder: (context, _) {
-              if (_layerManager.isFeatureEditMode) {
-                return Positioned(
-                  top: 50,
-                  left: 10,
-                  child: FeatureEditToolbar(
-                    editState: _featureEditState,
-                    onClose: _exitFeatureEditMode,
-                    onStartAdd: (type) {
-                      _featureEditState.startAddFeature(type);
-                    },
-                    onStartSelect: () {
-                      _featureEditState.startSelectMode();
-                    },
-                    onConfirmDrawing: _confirmAndSaveDrawing,
-                    onCancelDrawing: () {
-                      _featureEditState.cancelDrawing();
-                    },
-                    onUndoVertex: () {
-                      _featureEditState.undoLastVertex();
-                    },
-                    onMoveFeature: () {
-                      _featureEditState.startMoveFeature();
-                    },
-                    onDeleteFeature: _deleteSelectedFeature,
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+          // ListenableBuilder(
+          //   listenable: _featureEditState,
+          //   builder: (context, _) {
+          //     if (_layerManager.isFeatureEditMode) {
+          //       return Positioned(
+          //         top: 50,
+          //         left: 10,
+          //         child: FeatureEditToolbar(
+          //           editState: _featureEditState,
+          //           onClose: _exitFeatureEditMode,
+          //           onStartAdd: (type) {
+          //             _featureEditState.startAddFeature(type);
+          //           },
+          //           onStartSelect: () {
+          //             _featureEditState.startSelectMode();
+          //           },
+          //           onConfirmDrawing: _confirmAndSaveDrawing,
+          //           onCancelDrawing: () {
+          //             _featureEditState.cancelDrawing();
+          //           },
+          //           onUndoVertex: () {
+          //             _featureEditState.undoLastVertex();
+          //           },
+          //           onMoveFeature: () {
+          //             _featureEditState.startMoveFeature();
+          //           },
+          //           onDeleteFeature: _deleteSelectedFeature,
+          //         ),
+          //       );
+          //     }
+          //     return const SizedBox.shrink();
+          //   },
+          // ),
 
           // Left toolbar (layers, legend, navigate) — hidden during edit modes
           ListenableBuilder(

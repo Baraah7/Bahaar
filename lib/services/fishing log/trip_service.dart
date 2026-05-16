@@ -104,7 +104,7 @@ class TripService {
     final newPaused = fresh.pausedSeconds + breakSeconds;
     await _db.clearTripEndTime(trip.id);
     await _db.updateTrip(trip.id, {'paused_seconds': newPaused});
-    final resumed = fresh.copyWith(endTime: null, pausedSeconds: newPaused);
+    final resumed = fresh.copyWith(clearEndTime: true, pausedSeconds: newPaused);
     _activeTrip = resumed;
     log('TripService: resumed trip ${trip.id}, paused so far: ${newPaused}s');
     return resumed;
