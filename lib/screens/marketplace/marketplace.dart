@@ -151,6 +151,9 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
                     child: OrdersTab(
                       marketplaceService: _marketplaceService,
                       currentUserId: user?.id,
+                      currentUserName: displayName,
+                      currentUserPhone: user?.phone,
+                      currentUserLocation: user?.location,
                     ),
                   ),
                 ],
@@ -183,7 +186,6 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
         currentUserLocation: user?.location,
         onBuy: (method, name, phone, location, proof) =>
             _processPurchase(listing, method, name, phone, location, proof),
-        onDelete: () => _deleteListing(listing),
       ),
     );
   }
@@ -237,20 +239,6 @@ class _MarinerHarvestPageState extends ConsumerState<MarinerHarvestPage>
     }
   }
 
-  Future<void> _deleteListing(FishListing listing) async {
-    await _marketplaceService.removeListing(listing.id);
-    if (mounted) {
-      final l10n = MarketplaceLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.listingDeleted),
-        backgroundColor: AppColors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ));
-      setState(() {});
-    }
-  }
 
   Future<void> _onListingSubmitted(
       FishListing listing, MarketplaceLocalizations l10n) async {

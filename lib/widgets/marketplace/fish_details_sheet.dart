@@ -1,5 +1,4 @@
 ﻿import 'dart:io';
-import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:firebase_storage/firebase_storage.dart';
@@ -25,7 +24,6 @@ class FishDetailsSheet extends StatefulWidget {
   final String? currentUserLocation;
   final bool isGuest;
   final Function(PaymentMethod, String, String, String?, String?) onBuy;
-  final VoidCallback? onDelete;
 
   const FishDetailsSheet({
     super.key,
@@ -36,7 +34,6 @@ class FishDetailsSheet extends StatefulWidget {
     this.currentUserLocation,
     this.isGuest = false,
     required this.onBuy,
-    this.onDelete,
   });
 
   @override
@@ -163,28 +160,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         ),
                       ],
                       const SizedBox(height: 20),
-                      if (widget.currentUserId == widget.listing.sellerId) ...[
-                        // ── Seller view: delete listing ──────────────────
-                        const SizedBox(height: 28),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _confirmDeleteListing(),
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                            label: Text(_l10n.deleteListing),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.red,
-                              backgroundColor: AppColors.red.withValues(alpha: 0.1),
-                              side: BorderSide(color: AppColors.red.withOpacity(0.3)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ] else ...[
+                      if (widget.currentUserId != widget.listing.sellerId) ...[
                         // ── Buyer view ───────────────────────────────────
                         _buildSectionHeader(_l10n.yourInformation, Icons.person_outline),
                         const SizedBox(height: 10),
@@ -912,96 +888,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
-  void _confirmDeleteListing() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: EdgeInsets.zero,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: AppColors.red.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.red.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 32),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _l10n.deleteListing,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-              child: Column(
-                children: [
-                  Text(
-                    _l10n.confirmDeleteListing,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.grey.shade700,
-                            side: BorderSide(color: Colors.grey.shade300),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text(_l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.red,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            Navigator.pop(context);
-                            widget.onDelete?.call();
-                          },
-                          child: Text(_l10n.deleteListing, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _handleBuy() async {
     if (widget.isGuest) {

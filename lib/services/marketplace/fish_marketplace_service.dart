@@ -241,6 +241,29 @@ class FishMarketplaceService extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteOrder(String orderId) async {
+    _buyerOrdersList.removeWhere((o) => o.id == orderId);
+    _sellerOrdersList.removeWhere((o) => o.id == orderId);
+    _mergeAndNotify();
+    try {
+      await _db.collection('orders').doc(orderId).delete();
+    } catch (e) {
+      _error = 'Failed to delete order: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateListing(FishListing listing) async {
+    try {
+      await _db.collection('listings').doc(listing.id).update(listing.toFirestore());
+      await refreshListings();
+    } catch (e) {
+      _error = 'Failed to update listing: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   List<FishListing> filterByType(FishType type) {
     return availableListings.where((l) => l.fishType == type).toList();
   }

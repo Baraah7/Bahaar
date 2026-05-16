@@ -62,7 +62,6 @@ flutter:
     - secrets.env
     - assets/logo/app_icon.png
     - assets/logo/appIcon.png
-    - assets/logo/logo.png
     - assets/data/gulf_test_features.geojson
     - assets/data/marinas.geojson
     - assets/data/fishing_activity_sample.geojson
@@ -106,11 +105,5 @@ flutter:
         - asset: assets/fonts/Zain/Zain-Italic.ttf
         - asset: assets/fonts/Zain/Zain-Bold.ttf
         - asset: assets/fonts/Zain/Zain-Light.ttf
-          weight: 300
-    - family: Space_Grotesk
-      fonts:
-        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Regular.ttf
-        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Bold.ttf
-        - asset: assets/fonts/Space_Grotesk/static/SpaceGrotesk-Light.ttf
           weight: 300
   
