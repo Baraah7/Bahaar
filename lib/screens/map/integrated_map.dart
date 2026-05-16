@@ -93,6 +93,7 @@ class _IntegratedMapState extends State<IntegratedMap>
   late final HybridRouteCoordinator _routeCoordinator;
   late final MarineWeatherService _weatherService;
   late final FishProbabilityService _fishProbabilityService;
+  bool _routingInitialized = false;
  // final FeatureEditService _featureEditService = FeatureEditService();
  // final FeatureEditState _featureEditState = FeatureEditState();
   NavigationSessionManager? _navigationManager;
@@ -237,6 +238,7 @@ class _IntegratedMapState extends State<IntegratedMap>
       // Listen to navigation state changes
       _navigationManager!.addListener(_onNavigationUpdate);
 
+      _routingInitialized = true;
       log('Routing services initialized successfully');
     } catch (e) {
       log('Error initializing routing services: $e');
@@ -533,18 +535,11 @@ class _IntegratedMapState extends State<IntegratedMap>
       );
       final data = json.decode(jsonString) as Map<String, dynamic>;
       _rawAssetGeoJson = data;
-      // setState(() {
-
-      //   if (_firestoreMapFeatures.isNotEmpty) {
-      //     _geoJsonBuilder = GeoJsonLayerBuilder.withFirestoreFeatures(
-      //       data,
-      //       _firestoreMapFeatures,
-      //     );
-          
-      //   } else {
-      //     _geoJsonBuilder = GeoJsonLayerBuilder(data);
-      //   }
-      // });
+      if (mounted) {
+        setState(() {
+          _geoJsonBuilder = GeoJsonLayerBuilder(data);
+        });
+      }
       log('GeoJSON loaded successfully');
     } catch (e) {
       log('Error loading GeoJSON: $e');
@@ -1043,6 +1038,10 @@ class _IntegratedMapState extends State<IntegratedMap>
   // ============================================================
 
   Future<void> _calculateRoute(LatLng destination) async {
+    if (!_routingInitialized) {
+      _showMessage('Navigation services are still loading, please try again', Colors.orange);
+      return;
+    }
     if (_locationData == null) {
       _showMessage('Location not available', Colors.orange);
       return;
@@ -1099,6 +1098,10 @@ class _IntegratedMapState extends State<IntegratedMap>
   }
 
   Future<void> _calculatePortToSeaRoute() async {
+    if (!_routingInitialized) {
+      _showMessage('Navigation services are still loading, please try again', Colors.orange);
+      return;
+    }
     if (_selectedPort == null || _seaDestination == null) {
       final l10n = MapLocalizations.of(context);
       _showMessage(l10n.stepTapPort, Colors.orange);
@@ -1548,6 +1551,10 @@ class _IntegratedMapState extends State<IntegratedMap>
   // ============================================================
 
   Future<void> _calculateSeaToSeaRoute() async {
+    if (!_routingInitialized) {
+      _showMessage('Navigation services are still loading, please try again', Colors.orange);
+      return;
+    }
     if (_seaOrigin == null || _seaDestination == null) return;
 
     setState(() {
@@ -1621,6 +1628,10 @@ class _IntegratedMapState extends State<IntegratedMap>
   // ============================================================
 
   Future<void> _calculateSeaToLandRoute() async {
+    if (!_routingInitialized) {
+      _showMessage('Navigation services are still loading, please try again', Colors.orange);
+      return;
+    }
     if (_seaToLandOrigin == null || _selectedPort == null || _customLandDestination == null) {
       _showMessage('Please select sea origin, port, and land destination', Colors.orange);
       return;
@@ -1739,6 +1750,7 @@ class _IntegratedMapState extends State<IntegratedMap>
   }
 
   void _updateWeatherWarnings() {
+    if (!_routingInitialized) return;
     final warnings = _weatherService.getActiveWarnings();
     if (mounted) {
       setState(() {
