@@ -191,6 +191,14 @@ class MarketplaceLocalizations {
   String get edit => _isAr ? 'تعديل' : 'Edit';
   String get editListing => _isAr ? 'تعديل الإدراج' : 'Edit Listing';
   String get delete => _isAr ? 'حذف' : 'Delete';
+    // Deferred Benefit Pay flow (proof uploaded after seller accepts)
+  String get benefitPayAcceptedTitle => _isAr ? 'تم قبول طلبك!' : 'Order Accepted!';
+  String get sendPaymentViaBenefit => _isAr
+      ? 'أرسل المبلغ عبر Benefit Pay ثم ارفع إثبات الدفع'
+      : 'Send payment via Benefit Pay then upload your proof';
+  String get uploadProofNow => _isAr ? 'رفع إثبات الدفع' : 'Upload Payment Proof';
+  String get proofSubmitted => _isAr ? 'تم إرسال إثبات الدفع للبائع' : 'Proof sent to seller';
+  String get uploadNewProof => _isAr ? 'تحديث الإثبات' : 'Update Proof';
   String get quantityKg => _isAr ? 'الكمية (كجم)' : 'Quantity (kg)';
   String get quantityHelp => _isAr ? 'الكمية المتاحة' : 'Available';
   String get invalidQuantity => _isAr ? 'الكمية غير صالحة' : 'Invalid quantity';

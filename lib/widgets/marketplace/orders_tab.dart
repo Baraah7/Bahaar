@@ -874,6 +874,12 @@ class _OrdersList extends StatelessWidget {
                     : null,
             onViewPaymentProof: (imagePath) =>
                 _showPaymentProofFullScreen(context, imagePath),
+            onUploadPaymentProof: !isSeller &&
+                    order.status == OrderStatus.accepted &&
+                    order.paymentMethod == PaymentMethod.benefitPay
+                ? (proofUrl) =>
+                    marketplaceService.updateOrderPaymentProof(order.id, proofUrl)
+                : null,
           );
         },
       ),
