@@ -7,6 +7,7 @@ enum FishType {
   kingfish,
   shrimp,
   crab,
+  subaity,
   other;
 
   String get displayName {
@@ -23,6 +24,8 @@ enum FishType {
         return 'Shrimp';
       case FishType.crab:
         return 'Crab';
+      case FishType.subaity:
+        return 'Subaity';
       case FishType.other:
         return 'Other';
     }
@@ -42,6 +45,8 @@ enum FishType {
         return 'ربيان';
       case FishType.crab:
         return 'قبقب';
+      case FishType.subaity:
+        return 'سبيطي';
       case FishType.other:
         return 'أخرى';
     }
@@ -104,7 +109,7 @@ enum PaymentMethod {
   String get arabicName {
     switch (this) {
       case PaymentMethod.cash:
-        return 'نقداً';
+        return 'نقدًا';
       case PaymentMethod.benefitPay:
         return 'بنفت باي';
     }
