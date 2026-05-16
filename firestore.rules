@@ -107,6 +107,14 @@ service cloud.firestore {
       allow delete: if isAuthenticated() &&
        request.auth.uid == resource.data.sellerId &&
        resource.data.status == 'cancelled';
+
+      // Buyer can delete their own orders (any terminal or accepted status)
+      allow delete: if isAuthenticated() &&
+       request.auth.uid == resource.data.buyerId &&
+       (resource.data.status == 'completed' ||
+        resource.data.status == 'rejected' ||
+        resource.data.status == 'cancelled' ||
+        resource.data.status == 'accepted');
     }
 
     // ── Messages ───────────────────────────────────────────────
