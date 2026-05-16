@@ -575,18 +575,6 @@ class _OrderCardState extends State<OrderCard> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  Positioned(
-                    top: 6, right: 6,
-                    child: GestureDetector(
-                      onTap: () => setState(() => _pendingProofPath = null),
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                            color: Colors.red, shape: BoxShape.circle),
-                        child: const Icon(Icons.close, size: 14, color: Colors.white),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 10),

@@ -939,49 +939,6 @@ class _FishRecognitionScreenState extends ConsumerState<FishRecognitionScreen>
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: classificationState.isLoading
-                  ? null
-                  : () {
-                      if (_selectedImage != null) {
-                        _classifyImage(_selectedImage!);
-                      }
-                    },
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.search_rounded,
-                      color: classificationState.isLoading
-                          ? Colors.grey
-                          : AppColors.accent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.reanalyze,
-                      style: TextStyle(
-                        color: classificationState.isLoading
-                            ? Colors.grey
-                            : AppColors.accent,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
