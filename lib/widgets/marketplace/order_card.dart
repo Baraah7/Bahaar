@@ -44,6 +44,8 @@ class OrderCard extends StatefulWidget {
 class _OrderCardState extends State<OrderCard> {
   bool _expanded = false;
   bool _uploadingProof = false;
+  // Local image picked but not yet uploaded — shown as preview before confirming
+  String? _pendingProofPath;
 
   String _n(String value, String lang) => arabicN(value, lang);
 
@@ -52,29 +54,28 @@ class _OrderCardState extends State<OrderCard> {
     return FileImage(File(path)) as ImageProvider;
   }
 
-  Future<void> _pickAndUploadProof() async {
+  Future<void> _pickProof() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (image == null || !mounted) return;
+    setState(() => _pendingProofPath = image.path);
+  }
+
+  Future<void> _confirmAndUpload() async {
+    final path = _pendingProofPath;
+    if (path == null) return;
 
     setState(() => _uploadingProof = true);
     try {
       final uid = widget.order.buyerId;
       final ts = DateTime.now().millisecondsSinceEpoch;
-      final ext = image.path.split('.').last.toLowerCase();
+      final ext = path.split('.').last.toLowerCase();
       final ref = FirebaseStorage.instance
           .ref('marketplace/payment_proofs/$uid/$ts.$ext');
-      await ref.putFile(File(image.path));
+      await ref.putFile(File(path));
       final url = await ref.getDownloadURL();
       await widget.onUploadPaymentProof?.call(url);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(widget.l10n.proofSubmitted),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
-      }
+      if (mounted) setState(() => _pendingProofPath = null);
     } catch (e) {
       debugPrint('[OrderCard] proof upload error: $e');
       if (mounted) {
@@ -513,18 +514,92 @@ class _OrderCardState extends State<OrderCard> {
             Divider(color: Colors.grey.shade200, height: 1),
             const SizedBox(height: 14),
 
-            // Proof already submitted
-            if (hasProof) ...[
+            // ── Proof section ─────────────────────────────────
+            // Priority: pending local preview > uploaded proof > upload button
+            if (_pendingProofPath != null) ...[
+              // Local preview — not yet sent
+              Text(
+                widget.l10n.paymentProof,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13,
+                    color: Color(0xFF1E293B)),
+              ),
+              const SizedBox(height: 8),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image(
+                      image: _resolveImage(_pendingProofPath!),
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  Positioned(
+                    top: 6, right: 6,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _pendingProofPath = null),
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                            color: Colors.red, shape: BoxShape.circle),
+                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _uploadingProof ? null : _pickProof,
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: Text(widget.l10n.uploadNewProof),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF0E7490),
+                        side: BorderSide(
+                            color: const Color(0xFF0E7490).withValues(alpha: 0.4)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _uploadingProof ? null : _confirmAndUpload,
+                      icon: _uploadingProof
+                          ? const SizedBox(
+                              width: 15, height: 15,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.send_rounded, size: 16),
+                      label: Text(widget.l10n.confirm),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0D4F54),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (hasProof) ...[
+              // Already uploaded — read-only, no re-upload allowed
               Row(
                 children: [
                   Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
                   const SizedBox(width: 6),
                   Text(
                     widget.l10n.proofSubmitted,
-                    style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13),
+                    style: TextStyle(color: Colors.green.shade700,
+                        fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                 ],
               ),
@@ -536,7 +611,7 @@ class _OrderCardState extends State<OrderCard> {
                   borderRadius: BorderRadius.circular(10),
                   child: Image(
                     image: _resolveImage(widget.order.paymentProofImageUrl!),
-                    height: 120,
+                    height: 140,
                     width: double.infinity,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Center(
@@ -545,42 +620,16 @@ class _OrderCardState extends State<OrderCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              // Allow updating proof
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _uploadingProof ? null : _pickAndUploadProof,
-                  icon: _uploadingProof
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh_rounded, size: 17),
-                  label: Text(widget.l10n.uploadNewProof),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0E7490),
-                    side: BorderSide(color: const Color(0xFF0E7490).withValues(alpha: 0.4)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 4),
+              Text(widget.l10n.tapToViewFullImage,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
             ] else ...[
-              // Upload proof button
+              // No proof yet — pick button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _uploadingProof ? null : _pickAndUploadProof,
-                  icon: _uploadingProof
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.upload_rounded, size: 18),
+                  onPressed: _uploadingProof ? null : _pickProof,
+                  icon: const Icon(Icons.upload_rounded, size: 18),
                   label: Text(widget.l10n.uploadProofNow),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D4F54),

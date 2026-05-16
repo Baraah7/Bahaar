@@ -84,6 +84,8 @@ class WeatherLocalizations {
   String get dayFri => _isAr ? 'الجمعة' : 'Fri';
   String get daySat => _isAr ? 'السبت' : 'Sat';
   String get daySun => _isAr ? 'الأحد' : 'Sun';
+  String get tidesAndCelestialAvailableOffline =>
+      _isAr ? 'المد والجزر والبيانات الفلكية متاحة بدون إنترنت' : 'Tides & celestial data available offline';
 
     static const Map<String, String> cityArabic = {
     // ── Core names ──────────────────────────────────────────────────────────
