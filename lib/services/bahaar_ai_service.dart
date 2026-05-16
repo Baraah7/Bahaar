@@ -62,11 +62,13 @@ class BahaarAIService {
     double? temp,
     double? wind,
     int? month,
+    bool fetchWeather = false,
   }) async {
     final body = <String, dynamic>{
       'lat': lat,
       'lng': lng,
       'species_id': speciesId,
+      'fetch_weather': fetchWeather,
       if (temp != null) 'temp': temp,
       if (wind != null) 'wind': wind,
       if (month != null) 'month': month,
