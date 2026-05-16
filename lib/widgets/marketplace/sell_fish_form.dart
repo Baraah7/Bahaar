@@ -39,6 +39,47 @@ class _SellFishFormState extends State<SellFishForm> {
   MarketplaceLocalizations get _l10n => MarketplaceLocalizations.of(context);
   String get _lang => Localizations.localeOf(context).languageCode;
 
+  // Maps every species name variant (English, Arabic, transliteration, id)
+  // that the fishing log or fish-recognition can produce → FishType enum.
+  static const _speciesLookup = <String, FishType>{
+    // ── Hamour / Grouper ──────────────────────────────
+    'hamour': FishType.hamour,
+    'hamour (grouper)': FishType.hamour,
+    'grouper': FishType.hamour,
+    'هامور': FishType.hamour,
+    // ── Shaari / Emperor ─────────────────────────────
+    'shaari': FishType.shaari,
+    'shaari (emperor)': FishType.shaari,
+    'emperor': FishType.shaari,
+    'emperor fish': FishType.shaari,
+    'شعري': FishType.shaari,
+    // ── Subaity / Sobaity ────────────────────────────
+    'subaity': FishType.subaity,
+    'sobaity': FishType.subaity,
+    'سبيطي': FishType.subaity,
+    'صبيطي': FishType.subaity,
+    'subaity (spangled emperor)': FishType.subaity,
+    // ── Safi / Rabbitfish ─────────────────────────────
+    'safi': FishType.safi,
+    'safi (rabbitfish)': FishType.safi,
+    'rabbitfish': FishType.safi,
+    'صافي': FishType.safi,
+    // ── Kingfish / Kanad / Spanish Mackerel ──────────
+    'kingfish': FishType.kingfish,
+    'kanad': FishType.kingfish,
+    'chanad': FishType.kingfish,
+    'spanish mackerel': FishType.kingfish,
+    'كنعد': FishType.kingfish,
+    // ── Shrimp / Robiyan ─────────────────────────────
+    'shrimp': FishType.shrimp,
+    'robiyan': FishType.shrimp,
+    'ربيان': FishType.shrimp,
+    // ── Crab ─────────────────────────────────────────
+    'crab': FishType.crab,
+    'blue crab': FishType.crab,
+    'قبقب': FishType.crab,
+  };
+
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
 
@@ -137,20 +178,16 @@ class _SellFishFormState extends State<SellFishForm> {
 
   /// Pre-fill form fields from a catch log entry.
   void _applyFromCatch(CatchEntry catch_) {
-    // Match species name to a FishType enum value.
-    // Handles: enum name ("hamour"), full displayName ("Hamour (Grouper)"),
-    // displayName prefix ("Hamour"), and Arabic name ("هامور").
-    FishType? matched;
     final speciesLower = catch_.species.toLowerCase().trim();
-    for (final t in FishType.values) {
-      if (t == FishType.other) continue;
-      if (t.name == speciesLower ||
-          t.displayName.toLowerCase() == speciesLower ||
-          t.displayName.toLowerCase().startsWith(speciesLower) ||
-          speciesLower.startsWith(t.name) ||
-          t.arabicName.trim() == catch_.species.trim()) {
-        matched = t;
-        break;
+    FishType? matched =
+        _speciesLookup[speciesLower] ?? _speciesLookup[catch_.species.trim()];
+    // Handle compound names like "صافي safi" or "Hamour Grouper" by trying each token.
+    if (matched == null) {
+      for (final word in speciesLower.split(RegExp(r'[\s/,()]+'))) {
+        final w = word.trim();
+        if (w.isEmpty) continue;
+        matched = _speciesLookup[w];
+        if (matched != null) break;
       }
     }
 

@@ -182,7 +182,7 @@ class _OrdersTabState extends State<OrdersTab>
               runSpacing: 8,
               children: [
                 _chip(null, l10n.allStatuses, ctx),
-                _chip('listed', 'Listed', ctx),
+                _chip('listed', 'مُدرج', ctx),
                 _chip(OrderStatus.pending.name, l10n.pending, ctx),
                 _chip(OrderStatus.accepted.name, l10n.accepted, ctx),
                 _chip(OrderStatus.rejected.name, l10n.rejected, ctx),
@@ -1122,7 +1122,7 @@ class _ListingCardState extends State<_ListingCard> {
                               statusColor.withValues(alpha: 0.3)),
                     ),
                     child: const Text(
-                      'Listed',
+                      'مُدرج',
                       style: TextStyle(
                         color: statusColor,
                         fontWeight: FontWeight.w700,
