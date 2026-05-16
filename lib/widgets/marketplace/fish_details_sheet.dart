@@ -1,8 +1,5 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../app_start.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
@@ -57,9 +54,7 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
   late TextEditingController _buyerLocationController;
   late TextEditingController _requestedKgController;
   final _formKey = GlobalKey<FormState>();
-  final _imagePicker = ImagePicker();
   int _currentImageIndex = 0;
-  String? _paymentProofImage;
   bool _isSubmitting = false;
 
   @override
@@ -82,11 +77,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     super.dispose();
   }
 
-  Future<void> _pickPaymentProofImage() async {
-    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (image == null) return;
-    setState(() => _paymentProofImage = image.path);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,10 +170,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
                         ...widget.listing.acceptedPayments.map((method) {
                           return _buildPaymentOption(method);
                         }),
-                        if (_selectedPayment == PaymentMethod.benefitPay) ...[
-                          const SizedBox(height: 12),
-                          _buildPaymentProofUpload(),
-                        ],
                         const SizedBox(height: 28),
                         SizedBox(
                           width: double.infinity,
@@ -729,211 +715,6 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     );
   }
 
-  Widget _buildPaymentProofUpload() {
-    final hasQr = widget.listing.benefitPayImageUrl != null;
-    final hasIban = widget.listing.benefitPayIban != null &&
-        widget.listing.benefitPayIban!.isNotEmpty;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0E7490).withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Seller's BenefitPay info
-          if (hasQr || hasIban) ...[
-            Text(
-              _l10n.benefitPayQRCode,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1E293B)),
-            ),
-            const SizedBox(height: 10),
-            if (hasQr)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image(
-                  image: _resolveImage(widget.listing.benefitPayImageUrl!),
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            if (hasIban) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E7490).withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.account_balance_outlined, size: 16, color: Color(0xFF0E7490)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.listing.benefitPayIban!,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF0D4F54)),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy_rounded, size: 18, color: Color(0xFF0E7490)),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: 'Copy IBAN',
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: widget.listing.benefitPayIban!));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('IBAN copied'),
-                            backgroundColor: const Color(0xFF0D4F54),
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Divider(color: Colors.grey.shade200),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E7490).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.receipt_long, size: 16, color: Color(0xFF0E7490)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _l10n.uploadPaymentProof,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _l10n.required,
-                  style: TextStyle(color: Colors.red.shade600, fontSize: 11, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _l10n.pleaseUploadPaymentScreenshot,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          if (_paymentProofImage != null) ...[
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image(
-                    image: _resolveImage(_paymentProofImage!),
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _paymentProofImage = null),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade500,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.close, size: 14, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  _l10n.paymentProofUploaded,
-                  style: TextStyle(color: Colors.green.shade600, fontSize: 12, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ] else
-            GestureDetector(
-              onTap: _pickPaymentProofImage,
-              child: Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E7490).withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF0E7490).withValues(alpha: 0.2),
-                    style: BorderStyle.solid,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_photo_alternate_rounded, size: 32, color: const Color(0xFF0E7490).withValues(alpha: 0.6)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _l10n.tapToUploadScreenshot,
-                      style: TextStyle(
-                        color: Color(0xFF0E7490),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   void _showLoginRequired() {
     showDialog(
       context: context,
@@ -985,37 +766,14 @@ class _FishDetailsSheetState extends State<FishDetailsSheet> {
     if (!_formKey.currentState!.validate() || _selectedPayment == null) return;
     final requestedKg = _parsedKg;
 
-    if (_selectedPayment == PaymentMethod.benefitPay && _paymentProofImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_l10n.pleaseUploadPaymentProofScreenshot),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-
     setState(() => _isSubmitting = true);
     try {
-      String? proofUrl;
-      if (_paymentProofImage != null) {
-        final uid = widget.currentUserId ?? 'unknown';
-        final ts = DateTime.now().millisecondsSinceEpoch;
-        final ext = _paymentProofImage!.split('.').last;
-        final ref = FirebaseStorage.instance
-            .ref('marketplace/payment_proofs/$uid/$ts.$ext');
-        await ref.putFile(File(_paymentProofImage!));
-        proofUrl = await ref.getDownloadURL();
-      }
-
       await widget.onBuy(
         _selectedPayment!,
         _buyerNameController.text,
         _buyerPhoneController.text,
         _buyerLocationController.text.isEmpty ? null : _buyerLocationController.text,
-        proofUrl,
+        null, // proof uploaded later after seller accepts
         requestedKg,
       );
     } catch (e) {

@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:bahaar/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
@@ -17,6 +20,7 @@ class OrderCard extends StatefulWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onRemoveFromPurchases;
   final void Function(String imagePath)? onViewPaymentProof;
+  final Future<void> Function(String proofUrl)? onUploadPaymentProof;
 
   const OrderCard({
     super.key,
@@ -30,6 +34,7 @@ class OrderCard extends StatefulWidget {
     this.onCancel,
     this.onRemoveFromPurchases,
     this.onViewPaymentProof,
+    this.onUploadPaymentProof,
   });
 
   @override
@@ -38,8 +43,52 @@ class OrderCard extends StatefulWidget {
 
 class _OrderCardState extends State<OrderCard> {
   bool _expanded = false;
+  bool _uploadingProof = false;
 
   String _n(String value, String lang) => arabicN(value, lang);
+
+  ImageProvider _resolveImage(String path) {
+    if (path.startsWith('http')) return NetworkImage(path);
+    return FileImage(File(path)) as ImageProvider;
+  }
+
+  Future<void> _pickAndUploadProof() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (image == null || !mounted) return;
+
+    setState(() => _uploadingProof = true);
+    try {
+      final uid = widget.order.buyerId;
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final ext = image.path.split('.').last.toLowerCase();
+      final ref = FirebaseStorage.instance
+          .ref('marketplace/payment_proofs/$uid/$ts.$ext');
+      await ref.putFile(File(image.path));
+      final url = await ref.getDownloadURL();
+      await widget.onUploadPaymentProof?.call(url);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(widget.l10n.proofSubmitted),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    } catch (e) {
+      debugPrint('[OrderCard] proof upload error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${widget.l10n.failedToUploadImage}\n$e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingProof = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -179,30 +228,50 @@ class _OrderCardState extends State<OrderCard> {
                         _buildContactInfo(),
                         const SizedBox(height: 10),
                         _buildPaymentRow(lang),
+
+                        // Seller sees buyer's proof (if any)
                         if (widget.isSeller &&
                             widget.order.paymentMethod == PaymentMethod.benefitPay &&
                             widget.order.paymentProofImageUrl != null)
                           _buildPaymentProofSection(),
+
+                        // Buyer sees rejection reason
                         if (!widget.isSeller &&
                             widget.order.status == OrderStatus.rejected &&
                             widget.order.rejectionReason != null)
                           _buildRejectionReason(),
+
+                        // Buyer: waiting for seller
                         if (!widget.isSeller && widget.order.status == OrderStatus.pending)
                           _buildStatusBanner(
                             icon: Icons.hourglass_top_rounded,
                             color: AppColors.brown,
                             message: widget.l10n.waitingForSeller,
                           ),
-                        if (!widget.isSeller && widget.order.status == OrderStatus.accepted)
+
+                        // Buyer: accepted + Benefit Pay → show QR/IBAN + proof upload
+                        if (!widget.isSeller &&
+                            widget.order.status == OrderStatus.accepted &&
+                            widget.order.paymentMethod == PaymentMethod.benefitPay)
+                          _buildBuyerBenefitPaySection(),
+
+                        // Buyer: accepted + Cash
+                        if (!widget.isSeller &&
+                            widget.order.status == OrderStatus.accepted &&
+                            widget.order.paymentMethod != PaymentMethod.benefitPay)
                           _buildStatusBanner(
                             icon: Icons.check_circle_outline_rounded,
                             color: AppColors.green,
                             message: widget.l10n.orderAcceptedContactSeller,
                           ),
+
+                        // Seller actions
                         if (widget.isSeller && widget.order.status == OrderStatus.pending)
                           _buildSellerActions(),
                         if (widget.isSeller && widget.order.status == OrderStatus.accepted)
                           _buildCompleteButton(),
+
+                        // Buyer cancel / remove
                         if (!widget.isSeller && widget.order.status == OrderStatus.pending)
                           _buildCancelButton(),
                         if (!widget.isSeller)
@@ -287,8 +356,7 @@ class _OrderCardState extends State<OrderCard> {
 
   Widget _buildPaymentProofSection() {
     final url = widget.order.paymentProofImageUrl!;
-    final ImageProvider imageProvider =
-        url.startsWith('http') ? NetworkImage(url) : FileImage(File(url)) as ImageProvider;
+    final ImageProvider imageProvider = _resolveImage(url);
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -325,8 +393,7 @@ class _OrderCardState extends State<OrderCard> {
                     image: imageProvider,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          size: 36, color: Colors.grey),
+                      child: Icon(Icons.broken_image_outlined, size: 36, color: Colors.grey),
                     ),
                   ),
                 ),
@@ -335,6 +402,196 @@ class _OrderCardState extends State<OrderCard> {
             const SizedBox(height: 4),
             Text(widget.l10n.tapToViewFullImage,
                 style: TextStyle(color: AppColors.brown, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBuyerBenefitPaySection() {
+    final listing = widget.listing;
+    final hasQr = listing?.benefitPayImageUrl != null;
+    final hasIban = listing?.benefitPayIban != null &&
+        listing!.benefitPayIban!.isNotEmpty;
+    final hasProof = widget.order.paymentProofImageUrl != null;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.green.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Accepted banner
+            Row(
+              children: [
+                Icon(Icons.check_circle_outline_rounded,
+                    size: 16, color: AppColors.green.withValues(alpha: 0.8)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    widget.l10n.benefitPayAcceptedTitle,
+                    style: TextStyle(
+                        color: AppColors.green.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.l10n.sendPaymentViaBenefit,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+
+            // Seller QR / IBAN
+            if (hasQr || hasIban) ...[
+              const SizedBox(height: 12),
+              if (hasQr)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image(
+                    image: _resolveImage(listing!.benefitPayImageUrl!),
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              if (hasIban) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0E7490).withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.account_balance_outlined,
+                          size: 16, color: Color(0xFF0E7490)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          listing!.benefitPayIban!,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Color(0xFF0D4F54)),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded,
+                            size: 18, color: Color(0xFF0E7490)),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Clipboard.setData(
+                              ClipboardData(text: listing.benefitPayIban ?? ''));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text('IBAN copied'),
+                            backgroundColor: const Color(0xFF0D4F54),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+
+            const SizedBox(height: 14),
+            Divider(color: Colors.grey.shade200, height: 1),
+            const SizedBox(height: 14),
+
+            // Proof already submitted
+            if (hasProof) ...[
+              Row(
+                children: [
+                  Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
+                  const SizedBox(width: 6),
+                  Text(
+                    widget.l10n.proofSubmitted,
+                    style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () =>
+                    widget.onViewPaymentProof?.call(widget.order.paymentProofImageUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image(
+                    image: _resolveImage(widget.order.paymentProofImageUrl!),
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.broken_image_outlined,
+                            size: 36, color: Colors.grey)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Allow updating proof
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _uploadingProof ? null : _pickAndUploadProof,
+                  icon: _uploadingProof
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 17),
+                  label: Text(widget.l10n.uploadNewProof),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0E7490),
+                    side: BorderSide(color: const Color(0xFF0E7490).withValues(alpha: 0.4)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ] else ...[
+              // Upload proof button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _uploadingProof ? null : _pickAndUploadProof,
+                  icon: _uploadingProof
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.upload_rounded, size: 18),
+                  label: Text(widget.l10n.uploadProofNow),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D4F54),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -14,6 +14,8 @@ class FishMarketplaceService extends ChangeNotifier {
   // Optimistic status changes that haven't been confirmed by Firestore yet.
   // Reapplied after every stream rebuild so stale snapshots can't undo them.
   final Map<String, OrderStatus> _pendingStatusUpdates = {};
+  // Optimistic proof URL updates pending Firestore confirmation.
+  final Map<String, String> _pendingProofUpdates = {};
   String? _currentUserId;
   bool _isLoading = false;
   String? _error;
@@ -92,12 +94,24 @@ class FishMarketplaceService extends ChangeNotifier {
       final i = _orders.indexWhere((o) => o.id == entry.key);
       if (i == -1) { continue; }
       if (_orders[i].status == entry.value) {
-        confirmed.add(entry.key); // server confirmed — stop overriding
+        confirmed.add(entry.key);
       } else {
         _orders[i] = _orders[i].copyWith(status: entry.value);
       }
     }
     for (final id in confirmed) _pendingStatusUpdates.remove(id);
+
+    final confirmedProofs = <String>[];
+    for (final entry in _pendingProofUpdates.entries) {
+      final i = _orders.indexWhere((o) => o.id == entry.key);
+      if (i == -1) { continue; }
+      if (_orders[i].paymentProofImageUrl == entry.value) {
+        confirmedProofs.add(entry.key); // Firestore confirmed — stop overriding
+      } else {
+        _orders[i] = _orders[i].copyWith(paymentProofImageUrl: entry.value);
+      }
+    }
+    for (final id in confirmedProofs) { _pendingProofUpdates.remove(id); }
 
     notifyListeners();
   }
@@ -500,6 +514,20 @@ class FishMarketplaceService extends ChangeNotifier {
       if (prev != null) _revertAllLists(orderId, prev);
       _error = 'Failed to complete order: $e';
       notifyListeners();
+    }
+  }
+
+  Future<void> updateOrderPaymentProof(String orderId, String proofUrl) async {
+    _pendingProofUpdates[orderId] = proofUrl;
+    _mergeAndNotify();
+    try {
+      await _db.collection('orders').doc(orderId).update({
+        'paymentProofImageUrl': proofUrl,
+      });
+    } catch (e) {
+      _pendingProofUpdates.remove(orderId);
+      _error = 'Failed to update payment proof: $e';
+      _mergeAndNotify();
     }
   }
 
