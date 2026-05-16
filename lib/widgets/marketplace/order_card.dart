@@ -15,8 +15,6 @@ class OrderCard extends StatefulWidget {
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
   final VoidCallback? onCancel;
-  final VoidCallback? onResell;
-  final VoidCallback? onRemoveListing;
   final VoidCallback? onRemoveFromPurchases;
   final void Function(String imagePath)? onViewPaymentProof;
 
@@ -30,8 +28,6 @@ class OrderCard extends StatefulWidget {
     this.onReject,
     this.onComplete,
     this.onCancel,
-    this.onResell,
-    this.onRemoveListing,
     this.onRemoveFromPurchases,
     this.onViewPaymentProof,
   });
@@ -197,8 +193,6 @@ class _OrderCardState extends State<OrderCard> {
                           _buildCompleteButton(),
                         if (!widget.isSeller && widget.order.status == OrderStatus.pending)
                           _buildCancelButton(),
-                        if (widget.isSeller && widget.order.status == OrderStatus.cancelled)
-                          _buildCancelledSellerSection(),
                         if (!widget.isSeller)
                           _buildRemoveFromPurchasesButton(),
                       ],
@@ -331,167 +325,6 @@ class _OrderCardState extends State<OrderCard> {
                 style: TextStyle(color: AppColors.brown, fontSize: 11)),
           ],
         ),
-      ),
-    );
-  }
-
-  void _handleResell() {
-    final wasBenefitPay =
-        widget.order.paymentMethod == PaymentMethod.benefitPay &&
-            widget.order.paymentProofImageUrl != null;
-    if (!wasBenefitPay) {
-      widget.onResell?.call();
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.account_balance_wallet_outlined,
-                color: AppColors.brown, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(widget.l10n.benefitPay,
-                  style: const TextStyle(
-                      color: AppColors.brown, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        content: Text(widget.l10n.benefitPayRefundReminder,
-            style: const TextStyle(height: 1.5)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(widget.l10n.notYet,
-                style: const TextStyle(color: AppColors.brown)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              widget.onResell?.call();
-            },
-            child: Text(widget.l10n.iHaveReturnedPayment),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleRemoveListing() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(widget.l10n.removePermanently,
-                  style: TextStyle(
-                      color: AppColors.red, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        content: Text(widget.l10n.confirmRemovePermanently,
-            style: const TextStyle(height: 1.5)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(widget.l10n.cancel,
-                style: TextStyle(color: Colors.grey.shade600)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              widget.onRemoveListing?.call();
-            },
-            child: Text(widget.l10n.removePermanently),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCancelledSellerSection() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        children: [
-          // Info banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.l10n.buyerCancelledOrder,
-                    style:
-                        TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Resell (with BenefitPay refund check)
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _handleResell,
-              icon: const Icon(Icons.refresh_rounded, size: 17),
-              label: Text(widget.l10n.resellListing),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Remove permanently
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _handleRemoveListing,
-              icon: const Icon(Icons.delete_outline_rounded, size: 17),
-              label: Text(widget.l10n.removePermanently),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.red.withValues(alpha: 0.85),
-                backgroundColor: AppColors.red.withValues(alpha: 0.07),
-                side: BorderSide(color: AppColors.red.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

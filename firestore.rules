@@ -93,7 +93,7 @@ service cloud.firestore {
 
       allow update: if isAuthenticated() &&
         request.auth.uid == resource.data.buyerId &&
-        resource.data.status == 'pending' &&
+        (resource.data.status == 'pending' || resource.data.status == 'accepted') &&
         request.resource.data.status == 'cancelled' &&
         request.resource.data.diff(resource.data)
           .affectedKeys().hasOnly(['status', 'respondAt']);
