@@ -19,7 +19,6 @@ class OrderCard extends StatefulWidget {
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
   final VoidCallback? onCancel;
-  final VoidCallback? onRemoveFromPurchases;
   final void Function(String imagePath)? onViewPaymentProof;
   final Future<void> Function(String proofUrl)? onUploadPaymentProof;
 
@@ -33,7 +32,6 @@ class OrderCard extends StatefulWidget {
     this.onReject,
     this.onComplete,
     this.onCancel,
-    this.onRemoveFromPurchases,
     this.onViewPaymentProof,
     this.onUploadPaymentProof,
   });
@@ -317,8 +315,6 @@ class _OrderCardState extends State<OrderCard> {
                         // Buyer cancel / remove
                         if (!widget.isSeller && widget.order.status == OrderStatus.pending)
                           _buildCancelButton(),
-                        if (!widget.isSeller)
-                          _buildRemoveFromPurchasesButton(),
                       ],
                     ),
                   )
@@ -812,26 +808,6 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 
-  Widget _buildRemoveFromPurchasesButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: widget.onRemoveFromPurchases,
-          icon: const Icon(Icons.delete_outline_rounded, size: 17),
-          label: Text(widget.l10n.removeFromPurchases),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.grey.shade600,
-            backgroundColor: Colors.grey.withValues(alpha: 0.08),
-            side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildCancelButton() {
     return Padding(

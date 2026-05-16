@@ -622,21 +622,6 @@ class _OrdersList extends StatelessWidget {
     );
   }
 
-  void _removeFromPurchases(BuildContext context, Order order) async {
-    // Cancel first if still pending (Firestore only allows buyer to delete terminal orders)
-    if (order.status == OrderStatus.pending) {
-      await marketplaceService.cancelOrder(order.id);
-    }
-    await marketplaceService.deleteOrder(order.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.removeFromPurchases),
-        backgroundColor: Colors.grey.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
-    }
-  }
 
   void _showCancelDialog(BuildContext context, Order order) {
     showDialog(
@@ -868,10 +853,7 @@ class _OrdersList extends StatelessWidget {
                 !isSeller && order.status == OrderStatus.pending
                     ? () => _showCancelDialog(context, order)
                     : null,
-            onRemoveFromPurchases:
-                !isSeller
-                    ? () => _removeFromPurchases(context, order)
-                    : null,
+
             onViewPaymentProof: (imagePath) =>
                 _showPaymentProofFullScreen(context, imagePath),
             onUploadPaymentProof: !isSeller &&
