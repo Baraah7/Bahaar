@@ -360,9 +360,7 @@ class _OrdersTabState extends State<OrdersTab>
             l.status == ListingStatus.available)
         .toList();
     final buyerOrders = widget.marketplaceService.orders
-        .where((o) =>
-            o.buyerId == widget.currentUserId &&
-            o.status != OrderStatus.cancelled)
+        .where((o) => o.buyerId == widget.currentUserId)
         .toList();
 
     final tabIdx = _tabController.index;
@@ -502,7 +500,6 @@ class _OrdersList extends StatelessWidget {
     // Include orders if filter is not 'listed'
     if (filterKey != 'listed') {
       for (final o in orders) {
-        if (!isSeller && o.status == OrderStatus.cancelled) continue;
         if (filterKey != null && o.status.name != filterKey) continue;
         if (search.isNotEmpty) {
           final listing = marketplaceService.getListingById(o.listingId);
@@ -651,6 +648,22 @@ class _OrdersList extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _removeFromPurchases(BuildContext context, Order order) async {
+    // Cancel first if still pending (Firestore only allows buyer to delete terminal orders)
+    if (order.status == OrderStatus.pending) {
+      await marketplaceService.cancelOrder(order.id);
+    }
+    await marketplaceService.deleteOrder(order.id);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.removeFromPurchases),
+        backgroundColor: Colors.grey.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    }
   }
 
   void _showCancelDialog(BuildContext context, Order order) {
@@ -882,6 +895,10 @@ class _OrdersList extends StatelessWidget {
             onCancel:
                 !isSeller && order.status == OrderStatus.pending
                     ? () => _showCancelDialog(context, order)
+                    : null,
+            onRemoveFromPurchases:
+                !isSeller
+                    ? () => _removeFromPurchases(context, order)
                     : null,
             onResell:
                 isSeller && order.status == OrderStatus.cancelled
