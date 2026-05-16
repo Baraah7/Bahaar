@@ -2681,6 +2681,7 @@ class _IntegratedMapState extends State<IntegratedMap>
               return MapLeftToolbar(
                 showLayerControls: _layerManager.showLayerControls,
                 showDepthLegend: _showDepthLegend,
+                depthLayerEnabled: _layerManager.showDepthLayer,
                 hasRoute: _currentRoute != null,
                 hasNavMode: _navMode != null,
                 maskInitialized: _maskInitialized,
@@ -2688,8 +2689,26 @@ class _IntegratedMapState extends State<IntegratedMap>
                 isNavigating: _navigationManager?.isNavigating ?? false,
                 onToggleLayers: () => _layerManager.showLayerControls =
                     !_layerManager.showLayerControls,
-                onToggleLegend: () =>
-                    setState(() => _showDepthLegend = !_showDepthLegend),
+                onToggleLegend: () {
+                  if (!_layerManager.showDepthLayer) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Turn on Depth Visualization in the Layers panel to use the depth legend.',
+                        ),
+                        duration: Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                        margin: EdgeInsets.only(
+                          bottom: 80,
+                          left: 12,
+                          right: 12,
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() => _showDepthLegend = !_showDepthLegend);
+                },
                 onOpenCelestial: () => Navigator.push(
                   context,
                   MaterialPageRoute(
