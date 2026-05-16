@@ -76,7 +76,10 @@ class _CelestialNavigationScreenState
       if (perm != PermissionStatus.granted) return;
       final data = await _location.getLocation();
       if (mounted && data.latitude != null && data.longitude != null) {
-        setState(() => _gpsPosition = LatLng(data.latitude!, data.longitude!));
+        final pos = LatLng(data.latitude!, data.longitude!);
+        setState(() {
+          _gpsPosition = pos;
+        });
       }
     } catch (_) {
     } finally {
@@ -84,7 +87,10 @@ class _CelestialNavigationScreenState
     }
   }
 
-
+  bool get _isDaytime {
+    final hour = DateTime.now().hour;
+    return hour >= 6 && hour < 18;
+  }
 
   // ── Sky Scanner ───────────────────────────────────────────────────────────
 
@@ -99,10 +105,12 @@ class _CelestialNavigationScreenState
     }
   }
 
+
   /// Initialises the camera (if needed) then pushes [SkyScannerView].
   /// When the user closes the scanner the results are applied to state and
   /// the confidence-engine inputs are auto-filled.
   Future<void> _openScanner() async {
+    if (_isDaytime) return;
     if (!_scannerReady) {
       await _initScanner();
       if (!_scannerReady) return;
@@ -401,6 +409,49 @@ class _CelestialNavigationScreenState
   }
 
   Widget _buildScannerCard(CelestialNavigationLocalizations l10n) {
+    final daytime = _isDaytime;
+
+    if (daytime) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            const Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 22),
+            const SizedBox(width: 10),
+            Text(
+              l10n.skyScanner,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              ),
+              child: const Text(
+                'Available at Night',
+                style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -413,13 +464,6 @@ class _CelestialNavigationScreenState
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: AppColors.white.withValues(alpha: 0.1),
-        //     blurRadius: 20,
-        //     offset: const Offset(0, 8),
-        //   ),
-        // ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -427,8 +471,7 @@ class _CelestialNavigationScreenState
         children: [
           Row(
             children: [
-              const Icon(Icons.camera_alt_outlined,
-                  color: Colors.white, size: 22),
+              const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 22),
               const SizedBox(width: 10),
               Text(
                 l10n.skyScanner,
@@ -441,8 +484,7 @@ class _CelestialNavigationScreenState
               const Spacer(),
               if (_detectedStars > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -466,8 +508,7 @@ class _CelestialNavigationScreenState
           if (_scannerError != null) ...[
             const SizedBox(height: 8),
             Text(_scannerError!,
-                style:
-                    const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
+                style: const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
           ],
           const SizedBox(height: 16),
           SizedBox(
@@ -484,8 +525,7 @@ class _CelestialNavigationScreenState
               icon: const Icon(Icons.videocam_rounded, size: 20),
               label: Text(
                 _detectedStars > 0 ? l10n.scanAgain : l10n.startSkyScan,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               onPressed: _openScanner,
             ),
