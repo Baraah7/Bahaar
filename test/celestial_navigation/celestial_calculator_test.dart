@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bahaar/utilities/cn/celestial_calculator.dart';
+import 'package:bahaar/utilities/celestial_navigation/celestial_calculator.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

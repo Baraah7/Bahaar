@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/services/weather/marine_weather_service.dart';
 import 'package:bahaar/services/notifications/notification_service.dart';
 import 'package:bahaar/services/weather/world_tides_service.dart';
 import 'package:location/location.dart';

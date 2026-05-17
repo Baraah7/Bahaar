@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
-import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
 
 ImageProvider _resolveImage(String path) {
   if (path.startsWith('http')) return NetworkImage(path);

@@ -7,7 +7,7 @@ import 'package:bahaar/services/map/marina_data_service.dart';
 import 'package:bahaar/services/map/marine_pathfinding_service.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:bahaar/services/map/osrm_routing_service.dart';
-import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/services/weather/marine_weather_service.dart';
 import 'package:bahaar/widgets/map/geojson_layers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';

@@ -4,7 +4,7 @@ import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
-import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';

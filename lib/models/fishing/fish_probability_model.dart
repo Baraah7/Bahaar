@@ -38,8 +38,6 @@ extension FishSpeciesExtension on FishSpecies {
         return 'حومر';
       case FishSpecies.shrimp:
         return 'روبيان';
-      case FishSpecies.redMullet:
-        return 'حومر';
     }
   }
 

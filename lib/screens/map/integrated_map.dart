@@ -14,7 +14,6 @@ import 'package:bahaar/screens/celestial%20navigation/celestial_navigation_scree
 import 'package:bahaar/screens/fish%20recognition/prediction_screen.dart';
 import 'package:bahaar/services/fishRecognition/fish_probability_service.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
-import 'package:bahaar/services/map/feature_edit_service.dart';
 import 'package:bahaar/services/map/hybrid_route_coordinator.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
 import 'package:bahaar/services/map/marina_data_service.dart';
@@ -23,9 +22,9 @@ import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:bahaar/services/map/navigation_session_manager.dart';
 import 'package:bahaar/services/map/osrm_routing_service.dart';
 import 'package:bahaar/services/map/outline_edit_service.dart';
-import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/services/weather/marine_weather_service.dart';
 import 'package:bahaar/services/offline/connectivity_service.dart';
-import 'package:bahaar/utilities/cn/geometry_utils.dart';
+import 'package:bahaar/utilities/celestial_navigation/geometry_utils.dart';
 import 'package:bahaar/utilities/map/map_constants.dart';
 import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
 import 'package:bahaar/widgets/map/bahaar_overlay_layer.dart';
@@ -33,8 +32,6 @@ import 'package:bahaar/widgets/map/celestial_fix_overlay.dart';
 import 'package:bahaar/widgets/map/trip_track_layer.dart';
 import 'package:bahaar/widgets/map/depth_soundings_layer.dart';
 import 'package:bahaar/widgets/map/enhanced_depth_layer.dart';
-import 'package:bahaar/widgets/map/feature_drawing_layer.dart';
-import 'package:bahaar/widgets/map/feature_edit_toolbar.dart';
 import 'package:bahaar/widgets/map/fish_probability_layer.dart';
 import 'package:bahaar/widgets/map/geojson_layers.dart';
 import 'package:bahaar/widgets/map/layer_control_panel.dart';
@@ -60,6 +57,9 @@ import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map/flutter_map.dart';
+// import 'package:bahaar/widgets/map/feature_drawing_layer.dart';
+// import 'package:bahaar/widgets/map/feature_edit_toolbar.dart';
+// import 'package:bahaar/services/map/feature_edit_service.dart';
 
 /// Integrated map with clean architecture and enhanced depth visualization
 ///
@@ -139,7 +139,7 @@ class _IntegratedMapState extends State<IntegratedMap>
 
   // Marina data
   Marina? _selectedMarina;
-  final bool _showMarinas = true;
+  // final bool _showMarinas = true;
 
   // Navigation state
   NavigationRoute? _currentRoute;
@@ -365,11 +365,11 @@ class _IntegratedMapState extends State<IntegratedMap>
     );
   }
 
-  void _onFeatureEditUpdate() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
+  // void _onFeatureEditUpdate() {
+  //   if (mounted) {
+  //     setState(() {});
+  //   }
+  // }
 
   // Future<void> _loadFirestoreFeatures() async {
   //   try {

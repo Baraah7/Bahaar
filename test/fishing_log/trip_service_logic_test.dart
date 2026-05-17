@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bahaar/models/fishing/trip_model.dart';
-import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

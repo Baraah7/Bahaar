@@ -7,7 +7,7 @@ import 'package:bahaar/models/fishing/trip_model.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/screens/fishing%20log/trip_detail_screen.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
-import 'package:bahaar/utilities/cn/localization_helper.dart';
+import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
 import 'package:bahaar/widgets/common/app_empty_state.dart';
 import 'package:bahaar/widgets/common/app_snackbar.dart';
 import 'package:bahaar/widgets/fishing_log/trip_card.dart';

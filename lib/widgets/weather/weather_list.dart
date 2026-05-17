@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/weather/weather_response_model.dart';
 import '../../models/weather/tide_model.dart';
 import '../../l10n/weather/weather_localizations.dart';
-import '../../utilities/cn/celestial_calculator.dart';
+import '../../utilities/celestial_navigation/celestial_calculator.dart';
 import 'styles.dart';
 import '5_compact_card.dart';
 import '1_header.dart';

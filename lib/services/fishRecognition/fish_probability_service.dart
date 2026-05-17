@@ -254,7 +254,6 @@ class FishProbabilityService {
       FishSpecies.redMullet => (16.0, 18.0, 25.0, 29.0),
       FishSpecies.seaBass => (14.0, 16.0, 22.0, 26.0),
       FishSpecies.shrimp => (20.0, 22.0, 28.0, 32.0),
-      FishSpecies.redMullet => (14.0, 16.0, 22.0, 26.0),
     };
     return _trapezoid(sst, minOk, minOpt, maxOpt, maxOk);
   }

@@ -5,7 +5,7 @@ import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/route_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/services/map/hybrid_route_coordinator.dart';
-import 'package:bahaar/services/marine_weather_service.dart';
+import 'package:bahaar/services/weather/marine_weather_service.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';

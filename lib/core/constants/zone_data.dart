@@ -1,4 +1,3 @@
-// lib/core/constants/zone_data.dart
 // Hardcoded geographic data for Bahrain fishing zones, MPAs, and confirmed spots.
 
 /// Zone polygons – list of [lat, lng] points.

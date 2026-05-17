@@ -1,4 +1,3 @@
-// lib/core/constants/species_data.dart
 // Hardcoded catalogue of the 8 target species for Bahraini waters.
 
 const List<Map<String, dynamic>> kAllSpecies = [
