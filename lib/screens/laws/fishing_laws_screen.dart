@@ -1,6 +1,7 @@
+import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/l10n/app/fishing_laws_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
@@ -9,7 +10,8 @@ class FishingLawsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = FishingLawsLocalizations.of(context);
+    final isAr = l10n.isAr;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -50,7 +52,7 @@ class FishingLawsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            isAr ? 'قوانين الصيد' : 'Fishing Laws',
+                            l10n.screenTitle,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -59,9 +61,7 @@ class FishingLawsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            isAr
-                                ? 'دليل شامل ومحدّث · 2025–2026'
-                                : 'Complete Guide · 2025–2026',
+                            l10n.screenSubtitle,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.78),
                               fontSize: 12,
@@ -77,11 +77,11 @@ class FishingLawsScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: isAr
-                  ? const Directionality(
+                  ? Directionality(
                       textDirection: TextDirection.rtl,
-                      child: _ArabicLaws(),
+                      child: _LawsContent(l10n: l10n),
                     )
-                  : const _EnglishLaws(),
+                  : _LawsContent(l10n: l10n),
             ),
           ],
         ),
@@ -90,215 +90,11 @@ class FishingLawsScreen extends StatelessWidget {
   }
 }
 
-// ─── Arabic Content ───────────────────────────────────────────────────────────
+// ─── Unified Content ──────────────────────────────────────────────────────────
 
-class _ArabicLaws extends StatelessWidget {
-  const _ArabicLaws();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _InfoBanner(
-            message:
-                'القوانين قابلة للتحديث. يُنصح بالتحقق عبر بوابة bahrain.bh للحصول على أحدث الإصدارات.',
-            isRtl: true,
-          ),
-          SizedBox(height: 16),
-          _QuickStatsRow(items: [
-            _Stat('5', 'قوانين'),
-            _Stat('7', 'مخالفات'),
-            _Stat('18', 'نوع محمي'),
-            _Stat('3', 'أشهر حظر'),
-          ]),
-          SizedBox(height: 20),
-
-          // ── Section 1 ──
-          _SectionCard(
-            icon: Icons.balance_rounded,
-            title: '1. الإطار القانوني الأساسي',
-            children: [
-              _BodyText(
-                'يستند تنظيم الصيد في البحرين إلى المرسوم بقانون رقم (20) لسنة 2002 بشأن تنظيم صيد واستغلال وحماية الثروة البحرية، والذي خضع لعدة تعديلات كان آخرها في عام 2025.',
-              ),
-              SizedBox(height: 12),
-              _SubHeader('أهم القوانين والتعديلات الحديثة:'),
-              _BulletItem(
-                bold: 'المرسوم بقانون رقم (20) لسنة 2002:',
-                text:
-                    ' القانون الأم الذي يحدد الأحكام الرئيسية للتراخيص، وطرق الصيد، والمناطق المحظورة، والعقوبات.',
-              ),
-              _BulletItem(
-                bold: 'القانون رقم (14) لسنة 2025:',
-                text:
-                    ' أحدث تعديل على المادة (33) من القانون الأم، والذي شدد العقوبات بشكل كبير على مخالفات الصيد.',
-              ),
-              _BulletItem(
-                bold: 'القرار رقم (4) لسنة 2025:',
-                text:
-                    ' الخاص بتنظيم تراخيص الصيادين البحريين لمزاولة الصيد التجاري.',
-              ),
-              _BulletItem(
-                bold: 'القرار رقم (6) لسنة 2025:',
-                text:
-                    ' الخاص بتنظيم الصيد باستخدام المصائد (القراقير) والشباك وخيوط الصيد.',
-              ),
-              _BulletItem(
-                bold: 'المرسوم رقم (3) لسنة 2025:',
-                text:
-                    ' الصادر عن المجلس الأعلى للبيئة، يمنع صيد وتداول 18 نوعاً من صغار الأسماك والقشريات.',
-              ),
-            ],
-          ),
-
-          // ── Section 2 ──
-          _SectionCard(
-            icon: Icons.badge_outlined,
-            title: '2. أنواع تراخيص الصيد والشروط',
-            children: [
-              _BodyText(
-                'لا يُسمح لأي شخص بمزاولة الصيد في المياه الإقليمية البحرينية دون الحصول على ترخيص من الجهة المختصة (الإدارة العامة للموارد البحرية).',
-              ),
-              SizedBox(height: 12),
-              _LicenseTable(),
-              SizedBox(height: 12),
-              _SubHeader('المستندات المطلوبة للتقديم:'),
-              _BulletItem(
-                  text: 'نموذج طلب مكتمل (متاح عبر بوابة bahrain.bh).'),
-              _BulletItem(
-                  text:
-                      'صورة عن جواز السفر ساري المفعول (مع الإقامة للمقيمين).'),
-              _BulletItem(text: 'صورة عن البطاقة الشخصية للمواطنين.'),
-              _BulletItem(
-                  text: 'إثبات عنوان (مثل فاتورة كهرباء حديثة).'),
-              _BulletItem(text: 'صورتان شخصيتان حديثتان.'),
-              _BulletItem(
-                  text:
-                      'شهادة طبية تثبت اللياقة البدنية (تُطلب أحياناً للصيد التجاري).'),
-              _BulletItem(text: 'تسجيل القارب (للصيد التجاري).'),
-              SizedBox(height: 8),
-              _WarningBox(
-                'ملاحظة: يُمنع على غير مواطني الدولة ممارسة الصيد التجاري، بينما يُسمح لهم بالصيد بهواية بشرط الحصول على الترخيص اللازم.',
-              ),
-            ],
-          ),
-
-          // ── Section 3 ──
-          _SectionCard(
-            icon: Icons.report_problem_outlined,
-            title: '3. العقوبات والمخالفات (القانون رقم 14 لسنة 2025)',
-            children: [
-              _PenaltiesTable(),
-              SizedBox(height: 8),
-              _WarningBox(
-                'تتضاعف الغرامة في حال تكرار المخالفة خلال سنة من تاريخ الانتهاء من تنفيذ العقوبة السابقة.',
-              ),
-            ],
-          ),
-
-          // ── Section 4 ──
-          _SectionCard(
-            icon: Icons.map_outlined,
-            title: '4. المناطق المسموح والممنوع فيها الصيد',
-            children: [
-              _SubHeader('المناطق المتاحة لهواة الصيد:'),
-              _BulletItem(
-                  text: 'شواطئ الحدائق العامة المخصصة (مثل شاطئ الجزائر).'),
-              _BulletItem(
-                  text:
-                      'الأرصفة الحضرية (مثل كورنيش شمال المنامة ورصيف المحرق).'),
-              _BulletItem(
-                  text:
-                      'شواطئ المناطق السكنية بشرط الالتزام بالعلامات الإرشادية.'),
-              SizedBox(height: 8),
-              _SubHeader('المناطق المنظمة والخاصة:'),
-              _BulletItem(
-                bold: 'الساحل الشمالي الغربي (بودعيا):',
-                text: ' متاح للجميع مع وجود حصص محددة للأنواع المهددة.',
-              ),
-              _BulletItem(
-                bold: 'جزر حوار:',
-                text:
-                    ' شديدة التنظيم، الوصول للبحث العلمي أو بتصاريح خاصة نظراً لكونها محمية طبيعية.',
-              ),
-              _BulletItem(
-                bold: 'منطقة الميناء (المنامة):',
-                text: ' تخضع للرقابة وغالباً محجوزة للصيد التجاري.',
-              ),
-            ],
-          ),
-
-          // ── Section 5 ──
-          _SectionCard(
-            icon: Icons.event_busy_rounded,
-            title: '5. مواسم الحظر والأنواع المحظورة',
-            children: [
-              _SubHeader('فترات الإغلاق الموسمي:'),
-              _BulletItem(
-                bold: 'الجمبري:',
-                text:
-                    ' يُمنع صيده تماماً خلال مايو ويونيو ويوليو (1 مايو – 31 يوليو) لحماية موسم التكاثر.',
-              ),
-              _BulletItem(
-                bold: 'الهامور، الشعري، الصافي، والدنيس:',
-                text:
-                    ' تُعلن الجهات المختصة دورياً عن فترات حظر موسمية. يجب متابعة الإعلانات الرسمية.',
-              ),
-              SizedBox(height: 8),
-              _SubHeader('الأنواع المحظورة صيداً وتداولاً:'),
-              _BulletItem(
-                bold: 'صغار الأسماك:',
-                text:
-                    ' بموجب المرسوم رقم (3) لسنة 2025، يُمنع صيد أو بيع 18 نوعاً لا يبلغ طولها الحد القانوني؛ يجب إعادتها للبحر فور صيدها.',
-              ),
-              _BulletItem(
-                bold: 'الأنواع المهددة بالانقراض:',
-                text:
-                    ' أبقار البحر (الدوجونج)، السلاحف البحرية، وأسماك القرش الساحلية.',
-              ),
-              _BulletItem(
-                bold: 'طرق الصيد المحظورة:',
-                text:
-                    ' شباك الجرافة في المناطق الحساسة، والمتفجرات والسموم في كل الأحوال.',
-              ),
-            ],
-          ),
-
-          // ── Section 6 ──
-          _SectionCard(
-            icon: Icons.lightbulb_outline_rounded,
-            title: '6. نصائح عملية للمستخدمين',
-            children: [
-              _TipItem(
-                  number: 1,
-                  text: 'احمل الترخيص دائماً — قد تواجه تفتيشاً مفاجئاً.'),
-              _TipItem(
-                  number: 2,
-                  text:
-                      'استخدم الأدوات القانونية فقط — تأكد من أن شباكك وقراقيرك مرخصة.'),
-              _TipItem(
-                  number: 3,
-                  text:
-                      'احتفظ بجدول الأحجام المسموح بها للأسماك لمراجعتها قبل الاحتفاظ بأي صيد.'),
-              _TipItem(
-                  number: 4,
-                  text:
-                      'لأي استفسار راجع الإدارة العامة للموارد البحرية عبر bahrain.bh أو وزارة الأشغال وشؤون البلديات والتخطيط العمراني.'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── English Content ──────────────────────────────────────────────────────────
-
-class _EnglishLaws extends StatelessWidget {
-  const _EnglishLaws();
+class _LawsContent extends StatelessWidget {
+  final FishingLawsLocalizations l10n;
+  const _LawsContent({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -306,194 +102,114 @@ class _EnglishLaws extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _InfoBanner(
-            message:
-                'Laws are subject to updates. Always verify via bahrain.bh for the latest versions.',
-            isRtl: false,
-          ),
-          SizedBox(height: 16),
+        children: [
+          _InfoBanner(message: l10n.infoBanner, isRtl: l10n.isAr),
+          const SizedBox(height: 16),
           _QuickStatsRow(items: [
-            _Stat('5', 'Key Laws'),
-            _Stat('7', 'Violations'),
-            _Stat('18', 'Protected\nSpecies'),
-            _Stat('3mo', 'Shrimp Ban'),
+            _Stat(l10n.statLawsValue, l10n.statLawsLabel),
+            _Stat(l10n.statViolationsValue, l10n.statViolationsLabel),
+            _Stat(l10n.statSpeciesValue, l10n.statSpeciesLabel),
+            _Stat(l10n.statShrimpValue, l10n.statShrimpLabel),
           ]),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
 
           // ── Section 1 ──
           _SectionCard(
             icon: Icons.balance_rounded,
-            title: '1. Legal Framework',
+            title: l10n.section1Title,
             children: [
-              _BodyText(
-                'Fishing in Bahrain is governed by Legislative Decree No. (20) of 2002 on the Regulation, Exploitation, and Protection of Marine Resources, amended most recently in 2025.',
-              ),
-              SizedBox(height: 12),
-              _SubHeader('Key Laws & Recent Amendments:'),
-              _BulletItem(
-                bold: 'Legislative Decree No. 20 of 2002:',
-                text:
-                    ' The parent law defining licensing, fishing methods, prohibited areas, and penalties.',
-              ),
-              _BulletItem(
-                bold: 'Law No. 14 of 2025:',
-                text:
-                    ' Latest amendment to Article 33, significantly increasing penalties for fishing violations.',
-              ),
-              _BulletItem(
-                bold: 'Decision No. 4 of 2025:',
-                text:
-                    ' Regulates commercial fishing licenses for Bahraini fishermen.',
-              ),
-              _BulletItem(
-                bold: 'Decision No. 6 of 2025:',
-                text:
-                    ' Regulates fishing with traps (fish pots), nets, and lines.',
-              ),
-              _BulletItem(
-                bold: 'Decree No. 3 of 2025:',
-                text:
-                    ' Issued by the Supreme Council for Environment; bans the catching and trading of 18 species of juvenile fish and crustaceans.',
-              ),
+              _BodyText(l10n.legalFrameworkBody),
+              const SizedBox(height: 12),
+              _SubHeader(l10n.keyLawsSubHeader),
+              _BulletItem(bold: l10n.decree20Bold, text: l10n.decree20Text),
+              _BulletItem(bold: l10n.law14Bold, text: l10n.law14Text),
+              _BulletItem(bold: l10n.decision4Bold, text: l10n.decision4Text),
+              _BulletItem(bold: l10n.decision6Bold, text: l10n.decision6Text),
+              _BulletItem(bold: l10n.decree3Bold, text: l10n.decree3Text),
             ],
           ),
 
           // ── Section 2 ──
           _SectionCard(
             icon: Icons.badge_outlined,
-            title: '2. Fishing Licenses & Requirements',
+            title: l10n.section2Title,
             children: [
-              _BodyText(
-                'No person may fish in Bahrain\'s territorial waters without a valid license from the General Directorate of Marine Resources.',
+              _BodyText(l10n.licenseIntroBody),
+              const SizedBox(height: 12),
+              _TableWidget(
+                headers: l10n.licenseTableHeaders,
+                rows: l10n.licenseTableRows,
               ),
-              SizedBox(height: 12),
-              _LicenseTableEn(),
-              SizedBox(height: 12),
-              _SubHeader('Required Documents:'),
-              _BulletItem(
-                  text: 'Completed application form (via bahrain.bh portal).'),
-              _BulletItem(
-                  text:
-                      'Valid passport copy (with residency permit for expatriates).'),
-              _BulletItem(text: 'National ID copy (for citizens).'),
-              _BulletItem(text: 'Proof of address (recent utility bill).'),
-              _BulletItem(text: 'Two recent passport-size photographs.'),
-              _BulletItem(
-                  text:
-                      'Medical fitness certificate (sometimes required for commercial fishing).'),
-              _BulletItem(text: 'Vessel registration (for commercial fishing).'),
-              SizedBox(height: 8),
-              _WarningBox(
-                'Note: Non-Bahraini nationals are prohibited from commercial fishing. Recreational fishing is permitted with the appropriate license.',
-              ),
+              const SizedBox(height: 12),
+              _SubHeader(l10n.requiredDocsSubHeader),
+              _BulletItem(text: l10n.doc1),
+              _BulletItem(text: l10n.doc2),
+              _BulletItem(text: l10n.doc3),
+              _BulletItem(text: l10n.doc4),
+              _BulletItem(text: l10n.doc5),
+              _BulletItem(text: l10n.doc6),
+              _BulletItem(text: l10n.doc7),
+              const SizedBox(height: 8),
+              _WarningBox(l10n.licenseWarning),
             ],
           ),
 
           // ── Section 3 ──
           _SectionCard(
             icon: Icons.report_problem_outlined,
-            title: '3. Violations & Penalties (Law No. 14 of 2025)',
+            title: l10n.section3Title,
             children: [
-              _PenaltiesTableEn(),
-              SizedBox(height: 8),
-              _WarningBox(
-                'Fines double for repeat offences committed within one year of completing a previous sentence.',
+              _TableWidget(
+                headers: l10n.penaltiesTableHeaders,
+                rows: l10n.penaltiesTableRows,
               ),
+              const SizedBox(height: 8),
+              _WarningBox(l10n.penaltiesWarning),
             ],
           ),
 
           // ── Section 4 ──
           _SectionCard(
             icon: Icons.map_outlined,
-            title: '4. Permitted & Restricted Fishing Areas',
+            title: l10n.section4Title,
             children: [
-              _SubHeader('Areas Open to Recreational Fishing:'),
-              _BulletItem(
-                  text: 'Public park beaches (e.g. Al-Jazayir Beach).'),
-              _BulletItem(
-                  text:
-                      'Urban waterfronts (e.g. North Manama Corniche, Muharraq Pier).'),
-              _BulletItem(
-                  text:
-                      'Residential area beaches — observe all posted signage.'),
-              SizedBox(height: 8),
-              _SubHeader('Regulated & Restricted Areas:'),
-              _BulletItem(
-                bold: 'North-West Coast (Bu Daiya):',
-                text:
-                    ' Open to all with species-specific quotas for threatened stocks.',
-              ),
-              _BulletItem(
-                bold: 'Hawar Islands:',
-                text:
-                    ' Strictly regulated; access is limited to scientific research or with special permits — a protected nature reserve.',
-              ),
-              _BulletItem(
-                bold: 'Port Area (Manama):',
-                text:
-                    ' Under surveillance; generally reserved for commercial fishing.',
-              ),
+              _SubHeader(l10n.openAreasSubHeader),
+              _BulletItem(text: l10n.openArea1),
+              _BulletItem(text: l10n.openArea2),
+              _BulletItem(text: l10n.openArea3),
+              const SizedBox(height: 8),
+              _SubHeader(l10n.restrictedAreasSubHeader),
+              _BulletItem(bold: l10n.buDaiyaBold, text: l10n.buDaiyaText),
+              _BulletItem(bold: l10n.hawarBold, text: l10n.hawarText),
+              _BulletItem(bold: l10n.portAreaBold, text: l10n.portAreaText),
             ],
           ),
 
           // ── Section 5 ──
           _SectionCard(
             icon: Icons.event_busy_rounded,
-            title: '5. Closed Seasons & Prohibited Species',
+            title: l10n.section5Title,
             children: [
-              _SubHeader('Seasonal Closures:'),
-              _BulletItem(
-                bold: 'Shrimp:',
-                text:
-                    ' Fishing completely banned during May, June, and July (1 May – 31 July) to protect the breeding season.',
-              ),
-              _BulletItem(
-                bold: 'Hamour, Sha\'ari, Safi, and Deinis:',
-                text:
-                    ' Periodic seasonal bans announced by the Supreme Council for the Environment. Monitor official announcements.',
-              ),
-              SizedBox(height: 8),
-              _SubHeader('Prohibited Species (Catching & Trading):'),
-              _BulletItem(
-                bold: 'Juvenile fish:',
-                text:
-                    ' Decree No. 3 of 2025 prohibits catching, selling, or trading 18 species below the legal minimum size — they must be returned to the sea immediately.',
-              ),
-              _BulletItem(
-                bold: 'Endangered species:',
-                text:
-                    ' Dugongs, sea turtles, and coastal sharks are fully protected.',
-              ),
-              _BulletItem(
-                bold: 'Prohibited methods:',
-                text:
-                    ' Trawl nets in sensitive areas; explosives and poisons under all circumstances.',
-              ),
+              _SubHeader(l10n.seasonalClosuresSubHeader),
+              _BulletItem(bold: l10n.shrimpBold, text: l10n.shrimpText),
+              _BulletItem(bold: l10n.hamourBold, text: l10n.hamourText),
+              const SizedBox(height: 8),
+              _SubHeader(l10n.prohibitedSpeciesSubHeader),
+              _BulletItem(bold: l10n.juvenileFishBold, text: l10n.juvenileFishText),
+              _BulletItem(bold: l10n.endangeredBold, text: l10n.endangeredText),
+              _BulletItem(bold: l10n.prohibitedMethodsBold, text: l10n.prohibitedMethodsText),
             ],
           ),
 
           // ── Section 6 ──
           _SectionCard(
             icon: Icons.lightbulb_outline_rounded,
-            title: '6. Practical Tips',
+            title: l10n.section6Title,
             children: [
-              _TipItem(
-                  number: 1,
-                  text:
-                      'Always carry your fishing license — inspections can occur at any time.'),
-              _TipItem(
-                  number: 2,
-                  text:
-                      'Use only legal equipment — ensure your nets and fish pots are properly licensed.'),
-              _TipItem(
-                  number: 3,
-                  text:
-                      'Keep a copy of the minimum size chart and verify each catch before keeping it.'),
-              _TipItem(
-                  number: 4,
-                  text:
-                      'For enquiries, contact the General Directorate of Marine Resources via bahrain.bh or the Ministry of Works, Municipalities Affairs, and Urban Planning.'),
+              _TipItem(number: 1, text: l10n.tip1),
+              _TipItem(number: 2, text: l10n.tip2),
+              _TipItem(number: 3, text: l10n.tip3),
+              _TipItem(number: 4, text: l10n.tip4),
             ],
           ),
         ],
@@ -868,105 +584,6 @@ class _WarningBox extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── Arabic License Table ─────────────────────────────────────────────────────
-
-class _LicenseTable extends StatelessWidget {
-  const _LicenseTable();
-
-  @override
-  Widget build(BuildContext context) {
-    return _TableWidget(
-      headers: const ['نوع الترخيص', 'الفئة', 'الصلاحية', 'الرسوم'],
-      rows: const [
-        ['ترخيص الهواة', 'مواطنون ومقيمون', 'سنوي / مؤقت', '10–15 د.ب'],
-        ['ترخيص تجاري', 'شركات وأفراد', 'سنوي', '50–100 د.ب'],
-      ],
-    );
-  }
-}
-
-// ─── Arabic Penalties Table ───────────────────────────────────────────────────
-
-class _PenaltiesTable extends StatelessWidget {
-  const _PenaltiesTable();
-
-  @override
-  Widget build(BuildContext context) {
-    return _TableWidget(
-      headers: const ['المخالفة', 'العقوبة'],
-      rows: const [
-        [
-          'إلقاء النفايات البحرية (م. 18)',
-          'سجن ≥ سنة + غرامة 1,000–10,000 د.ب'
-        ],
-        [
-          'استخدام متفجرات/سموم (م. 23)',
-          'سجن ≥ 6 أشهر + غرامة 30,000–100,000 د.ب'
-        ],
-        [
-          'إنشاء مزارع دون ترخيص (م. 21)',
-          'سجن + غرامة 1,000–5,000 د.ب'
-        ],
-        ['الصيد دون ترخيص (م. 27)', 'سجن + غرامة 500–3,000 د.ب'],
-        ['حيازة شباك غير مرخصة (م. 20)', 'سجن + غرامة 500–3,000 د.ب'],
-        ['صيد أسماك صغيرة/سلاحف (م. 19)', 'سجن + غرامة 500–3,000 د.ب'],
-        ['رفض إبراز الرخصة (م. 28)', 'سجن + غرامة 100–2,000 د.ب'],
-      ],
-    );
-  }
-}
-
-// ─── English License Table ────────────────────────────────────────────────────
-
-class _LicenseTableEn extends StatelessWidget {
-  const _LicenseTableEn();
-
-  @override
-  Widget build(BuildContext context) {
-    return _TableWidget(
-      headers: const ['License Type', 'Target Group', 'Validity', 'Approx. Fee'],
-      rows: const [
-        ['Recreational', 'Citizens & residents', 'Annual / Temp.', 'BD 10–15'],
-        ['Commercial', 'Companies & individuals', 'Annual', 'BD 50–100'],
-      ],
-    );
-  }
-}
-
-// ─── English Penalties Table ──────────────────────────────────────────────────
-
-class _PenaltiesTableEn extends StatelessWidget {
-  const _PenaltiesTableEn();
-
-  @override
-  Widget build(BuildContext context) {
-    return _TableWidget(
-      headers: const ['Violation', 'Penalty'],
-      rows: const [
-        [
-          'Dumping waste in marine environment (Art. 18)',
-          'Prison ≥ 1 yr + BD 1,000–10,000 fine'
-        ],
-        [
-          'Use of explosives / poisons (Art. 23)',
-          'Prison ≥ 6 months + BD 30,000–100,000 fine'
-        ],
-        [
-          'Unlicensed fish farm / enclosure (Art. 21)',
-          'Prison + BD 1,000–5,000 fine'
-        ],
-        ['Fishing without a license (Art. 27)', 'Prison + BD 500–3,000 fine'],
-        ['Possessing unlicensed gear (Art. 20)', 'Prison + BD 500–3,000 fine'],
-        [
-          'Catching juvenile fish / turtles (Art. 19)',
-          'Prison + BD 500–3,000 fine'
-        ],
-        ['Refusing to show license (Art. 28)', 'Prison + BD 100–2,000 fine'],
-      ],
     );
   }
 }

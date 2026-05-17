@@ -202,7 +202,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'AI-Powered Catch Analysis',
+                  _l10n.aiPoweredAnalysis,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 13,
@@ -561,9 +561,9 @@ class _PredictionScreenState extends State<PredictionScreen> {
             children: [
               const Icon(Icons.analytics_outlined, color: _teal, size: 18),
               const SizedBox(width: 8),
-              const Text(
-                'Catch Probability',
-                style: TextStyle(
+              Text(
+                _l10n.catchProbability,
+                style: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 14, color: _teal),
               ),
             ],
