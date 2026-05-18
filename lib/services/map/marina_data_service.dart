@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:bahaar/models/navigation/marina_model.dart';
+import 'package:bahaar/models/map/navigation/marina_model.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -94,15 +94,6 @@ class MarinaDataService {
     return _marinas!.where((marina) => marina.type == type).toList();
   }
 
-  /// Get all public access marinas
-  List<Marina> getPublicMarinas() {
-    if (!_isInitialized || _marinas == null) return [];
-    return _marinas!.where((marina) =>
-      marina.accessType == MarinaAccessType.public ||
-      marina.accessType == MarinaAccessType.permissive
-    ).toList();
-  }
-
   /// Get marina by ID
   Marina? getMarinaById(String id) {
     if (!_isInitialized || _marinas == null) return null;
@@ -151,9 +142,7 @@ class MarinaDataService {
         landOrigin,
         marina.location,
       );
-      return landDistance <= maxSearchRadius &&
-          (marina.accessType == MarinaAccessType.public ||
-           marina.accessType == MarinaAccessType.permissive);
+      return landDistance <= maxSearchRadius;
     }).toList();
 
     if (candidates.isEmpty) return null;
@@ -183,12 +172,6 @@ class MarinaDataService {
     }
 
     return bestMarina;
-  }
-
-  /// Check if a marina is accessible (public or permissive)
-  bool isMarinaAccessible(Marina marina) {
-    return marina.accessType == MarinaAccessType.public ||
-        marina.accessType == MarinaAccessType.permissive;
   }
 
   /// Get marinas sorted by distance from a point

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:bahaar/navigation/corrections.dart';
-import 'package:bahaar/navigation/dead_reckoning.dart';
+import 'package:bahaar/celestial%20navigation/corrections.dart';
+import 'package:bahaar/celestial%20navigation/dead_reckoning.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CelestialCorrections tests

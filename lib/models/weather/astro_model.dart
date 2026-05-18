@@ -34,9 +34,6 @@ class AstroModel {
         isSunUp: json['is_sun_up'] is int ? json['is_sun_up'] as int : (json['is_sun_up'] as num).toInt(),
       );
     } catch (e) {
-      // print('ERROR in AstroModel.fromJson: $e');
-      // print('Stack trace: $stackTrace');
-      // print('JSON data: $json');
       rethrow;
     }
   }

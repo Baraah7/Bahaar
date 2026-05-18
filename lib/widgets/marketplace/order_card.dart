@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
-import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
+import 'package:bahaar/utilities/map/celestial_navigation/localization_helper.dart';
 
 class OrderCard extends StatefulWidget {
   final Order order;

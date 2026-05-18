@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
-import 'package:bahaar/models/navigation/navigation_session_model.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
-import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/models/map/navigation/navigation_session_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/waypoint_model.dart';
 import 'package:bahaar/services/map/hybrid_route_coordinator.dart';
 import 'package:bahaar/services/weather/marine_weather_service.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
 import 'package:bahaar/models/weather/marine_weather_model.dart';
 
 void main() {

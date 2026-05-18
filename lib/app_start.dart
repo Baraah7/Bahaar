@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bahaar/services/fishing%20log/trip_service.dart';
-import 'screens/authentication/login.dart';
+import 'package:bahaar/services/fishing_log/trip_service.dart';
+import 'screens/authentication/login_screen.dart';
 import 'main.dart';
 
 class AppStart extends StatelessWidget {

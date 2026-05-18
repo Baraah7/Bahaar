@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bahaar/services/fishRecognition/fish_classifier_service.dart';
-import 'package:bahaar/providers/fish%20recognition/fish_classification_provider.dart';
+import 'package:bahaar/providers/fish_recognition/fish_classification_provider.dart';
 
 // // ── Helpers ──────────────────────────────────────────────────────────────────
 

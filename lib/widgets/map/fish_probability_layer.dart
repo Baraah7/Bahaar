@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:bahaar/services/fishRecognition/fish_probability_service.dart';
+import 'package:bahaar/services/fish_recognition/fish_probability_service.dart';
 import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 
 /// Renders a fish-probability heatmap as pre-computed grid polygons.

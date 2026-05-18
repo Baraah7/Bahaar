@@ -10,9 +10,6 @@ class LayerControlPanel extends StatefulWidget {
   final GeoJsonLayerBuilder? geoJsonBuilder;
   final bool maskInitialized;
   final VoidCallback onClose;
-  final VoidCallback? onEnterAdminEdit;
-  final VoidCallback? onEnterFeatureEdit;
-  final VoidCallback? onEnterOutlineEdit;
   final VoidCallback? onOpenPrediction;
 
   const LayerControlPanel({
@@ -21,9 +18,6 @@ class LayerControlPanel extends StatefulWidget {
     this.geoJsonBuilder,
     required this.maskInitialized,
     required this.onClose,
-    this.onEnterAdminEdit,
-    this.onEnterFeatureEdit,
-    this.onEnterOutlineEdit,
     this.onOpenPrediction,
   });
 

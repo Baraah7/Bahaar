@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/constants/app_colors.dart';
-import 'package:bahaar/navigation/dead_reckoning.dart';
-import 'package:bahaar/navigation/trip_database.dart';
-import 'package:bahaar/navigation/trip_recorder.dart';
+import 'package:bahaar/celestial%20navigation/dead_reckoning.dart';
+import 'package:bahaar/celestial%20navigation/trip_database.dart';
+import 'package:bahaar/celestial%20navigation/trip_recorder.dart';
 
 /// Renders the live trip track, port markers, current-position marker,
 /// and a DR uncertainty circle directly inside a [FlutterMap] widget tree.

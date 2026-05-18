@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'dart:math' as math;
-import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
 import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:bahaar/services/weather/marine_weather_service.dart';
