@@ -122,7 +122,7 @@ Map<String, dynamic> toJson() {
     if (tags['waterway'] == 'dock') return MarinaType.harbor;
     if (tags['amenity'] == 'boat_ramp') return MarinaType.boatRamp;
     if (tags['landuse'] == 'port') return MarinaType.port;
-    return MarinaType.marina;
+    return MarinaType.port;
   }
 
   // Parses access type from OSM or GeoJSON values
@@ -158,29 +158,6 @@ Map<String, dynamic> toJson() {
 
     return null;
   }
-
-  // Extracts known facilities from OSM tags
-  // static List<String> _parseFacilities(Map<String, dynamic> tags) {
-  //   final facilities = <String>[];
-
-  //   if (tags['amenity:parking'] == 'yes' || tags['parking'] == 'yes') {
-  //     facilities.add('parking');
-  //   }
-  //   if (tags['amenity:fuel'] == 'yes' || tags['fuel'] == 'yes') {
-  //     facilities.add('fuel');
-  //   }
-  //   if (tags['amenity:toilets'] == 'yes' || tags['toilets'] == 'yes') {
-  //     facilities.add('restroom');
-  //   }
-  //   if (tags['amenity:restaurant'] == 'yes' || tags['restaurant'] == 'yes') {
-  //     facilities.add('restaurant');
-  //   }
-  //   if (tags['amenity:shower'] == 'yes' || tags['shower'] == 'yes') {
-  //     facilities.add('shower');
-  //   }
-
-  //   return facilities;
-  // }
 
   @override
   String toString() {

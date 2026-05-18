@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
-import '../../models/fishing/trip_model.dart';
+import '../../models/fishing_log/trip_model.dart';
 import '../../app_start.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// The five species supported by the fish classifier, also used for
-/// the probability heatmap.
+/// The five species supported by the fish classifier
+
 enum FishSpecies {
   giltHeadBream,
   horseMackerel,

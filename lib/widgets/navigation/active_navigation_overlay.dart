@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';
 import 'package:bahaar/models/navigation/waypoint_model.dart';
 import 'package:bahaar/services/map/navigation_voice_service.dart';

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;

@@ -1,4 +1,4 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/settings/settings_localizations.dart';
 import 'package:bahaar/widgets/map/sos_button.dart';
 import 'package:flutter/material.dart';

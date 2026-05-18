@@ -1,4 +1,4 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/widgets/common/app_card.dart';

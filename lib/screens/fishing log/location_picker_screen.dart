@@ -1,4 +1,4 @@
-﻿import 'package:bahaar/core/constants/app_colors.dart';
+﻿import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';

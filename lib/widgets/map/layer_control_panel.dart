@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
 import 'package:bahaar/widgets/map/geojson_layers.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
 
 /// Control panel widget for managing all map layers

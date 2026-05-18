@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
 import 'package:bahaar/models/navigation/marina_model.dart';
 import 'package:bahaar/models/navigation/navigation_session_model.dart';

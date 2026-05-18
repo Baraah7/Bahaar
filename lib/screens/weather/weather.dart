@@ -1,4 +1,4 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/weather/weather_localizations.dart';
 import 'package:bahaar/models/weather/tide_model.dart';
 import 'package:bahaar/models/weather/weather_response_model.dart';

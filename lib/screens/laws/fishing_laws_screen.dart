@@ -1,4 +1,4 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/app/fishing_laws_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

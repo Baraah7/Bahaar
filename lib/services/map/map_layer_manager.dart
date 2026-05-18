@@ -1,4 +1,4 @@
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 import 'package:flutter/foundation.dart';
 
 /// Manages the state and configuration of all map layers

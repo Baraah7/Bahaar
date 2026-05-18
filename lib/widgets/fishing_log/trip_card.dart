@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/fishing_log/trip_model.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';

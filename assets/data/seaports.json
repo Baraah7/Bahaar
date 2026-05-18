@@ -1,1 +1,212 @@
-[{"name": "HIDD FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062d\u062f \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 101.0, "x_longitude": 50.65974701, "y_latitude": 26.24441083, "location": {"lon": 50.65974701, "lat": 26.24441083}},{"name": "GENERAL ORGANISATION OF SEA PORTS", "l_sm": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u0644\u0645\u0648\u0627\u0646\u0626 \u0627\u0644\u0628\u062d\u0631\u064a\u0629", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 216.0, "x_longitude": 50.61723184, "y_latitude": 26.24270207, "location": {"lon": 50.61723184, "lat": 26.24270207}},{"name": "QALALI FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0642\u0644\u0627\u0644\u064a \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 254.0, "x_longitude": 50.6637348, "y_latitude": 26.26790611, "location": {"lon": 50.6637348, "lat": 26.26790611}},{"name": "PORT AL JASRAH", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062c\u0633\u0631\u0629", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 1003.0, "x_longitude": 50.4482641, "y_latitude": 26.16305792, "location": {"lon": 50.4482641, "lat": 26.16305792}},{"name": "AMERICAN NAVAL BASE", "l_sm": "\u0627\u0644\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0628\u062d\u0631\u064a\u0629 \u0627\u0644\u0623\u0645\u0631\u064a\u0643\u064a\u0629", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 341.0, "x_longitude": 50.60685954, "y_latitude": 26.21028553, "location": {"lon": 50.60685954, "lat": 26.21028553}},{"name": "MINA SALMAN PORT", "l_sm": "\u0645\u064a\u0646\u0627\u0621 \u0633\u0644\u0645\u0627\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 342.0, "x_longitude": 50.60626099, "y_latitude": 26.20092845, "location": {"lon": 50.60626099, "lat": 26.20092845}},{"name": "MANAMA FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0645\u0646\u0627\u0645\u0629 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 346.0, "x_longitude": 50.57008657, "y_latitude": 26.2358234, "location": {"lon": 50.57008657, "lat": 26.2358234}},{"name": "BANDAR AL DAR FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0628\u0646\u062f\u0631 \u0627\u0644\u062f\u0627\u0631 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 615.0, "x_longitude": 50.6315552, "y_latitude": 26.13056356, "location": {"lon": 50.6315552, "lat": 26.13056356}},{"name": "KHALIFA BIN SALMAN PORT", "l_sm": "\u0645\u064a\u0646\u0627\u0621 \u062e\u0644\u064a\u0641\u0629 \u0628\u0646 \u0633\u0644\u0645\u0627\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 115.0, "x_longitude": 50.7142989, "y_latitude": 26.18740972, "location": {"lon": 50.7142989, "lat": 26.18740972}},{"name": "MUHARRAQ FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0645\u062d\u0631\u0642 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 216.0, "x_longitude": 50.61921733, "y_latitude": 26.24511176, "location": {"lon": 50.61921733, "lat": 26.24511176}},{"name": "RAS RAYYA FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0631\u0627\u0633 \u0631\u064a\u0629 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 262.0, "x_longitude": 50.64042318, "y_latitude": 26.28758864, "location": {"lon": 50.64042318, "lat": 26.28758864}},{"name": "BUDAIYA FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0628\u062f\u064a\u0639 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 552.0, "x_longitude": 50.44443917, "y_latitude": 26.21436182, "location": {"lon": 50.44443917, "lat": 26.21436182}},{"name": "ASKAR FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0639\u0633\u0643\u0631 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 950.0, "x_longitude": 50.6228955, "y_latitude": 26.05175653, "location": {"lon": 50.6228955, "lat": 26.05175653}},{"name": "AL DUR JETTY FISHERMAN PORT", "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062f\u0648\u0631 \u062c\u064a\u062a\u064a \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", "type": "SEAPORTS", "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", "subtype": "SEAPORTS", "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", "block": 965.0, "x_longitude": 50.61503191, "y_latitude": 25.97124457, "location": {"lon": 50.61503191, "lat": 25.97124457}}]
+[
+    {
+        "name": "HIDD FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062d\u062f \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 101.0, 
+        "x_longitude": 50.65974701, 
+        "y_latitude": 26.24441083, 
+        "location": {
+            "lon": 50.65974701, 
+            "lat": 26.24441083
+            }
+    },
+    {
+        "name": "GENERAL ORGANISATION OF SEA PORTS", 
+        "l_sm": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u0644\u0645\u0648\u0627\u0646\u0626 \u0627\u0644\u0628\u062d\u0631\u064a\u0629", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 216.0, 
+        "x_longitude": 50.61723184, 
+        "y_latitude": 26.24270207, 
+        "location": {
+            "lon": 50.61723184, 
+            "lat": 26.24270207
+        }
+    },
+    {
+        "name": "QALALI FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0642\u0644\u0627\u0644\u064a \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 254.0, 
+        "x_longitude": 50.6637348, 
+        "y_latitude": 26.26790611, 
+        "location": {
+            "lon": 50.6637348, 
+            "lat": 26.26790611
+        }
+    },
+    {
+        "name": "PORT AL JASRAH", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062c\u0633\u0631\u0629", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 1003.0, 
+        "x_longitude": 50.4482641, 
+        "y_latitude": 26.16305792, 
+        "location": {
+            "lon": 50.4482641, 
+            "lat": 26.16305792
+        }
+    },
+    {
+        "name": "AMERICAN NAVAL BASE", 
+        "l_sm": "\u0627\u0644\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0628\u062d\u0631\u064a\u0629 \u0627\u0644\u0623\u0645\u0631\u064a\u0643\u064a\u0629", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 341.0, 
+        "x_longitude": 50.60685954, 
+        "y_latitude": 26.21028553, 
+        "location": {
+            "lon": 50.60685954, 
+            "lat": 26.21028553
+        }
+    },
+    {
+        "name": "MINA SALMAN PORT", 
+        "l_sm": "\u0645\u064a\u0646\u0627\u0621 \u0633\u0644\u0645\u0627\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 342.0, 
+        "x_longitude": 50.60626099, 
+        "y_latitude": 26.20092845, 
+        "location": {
+            "lon": 50.60626099, 
+            "lat": 26.20092845
+        }
+    },
+    {
+        "name": "MANAMA FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0645\u0646\u0627\u0645\u0629 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 346.0, 
+        "x_longitude": 50.57008657, 
+        "y_latitude": 26.2358234, 
+        "location": {
+            "lon": 50.57008657, 
+            "lat": 26.2358234
+        }
+    },
+    {
+        "name": "BANDAR AL DAR FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0628\u0646\u062f\u0631 \u0627\u0644\u062f\u0627\u0631 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 615.0, 
+        "x_longitude": 50.6315552, 
+        "y_latitude": 26.13056356, 
+        "location": {
+            "lon": 50.6315552, 
+            "lat": 26.13056356
+        }
+    },
+    {
+        "name": "KHALIFA BIN SALMAN PORT", 
+        "l_sm": "\u0645\u064a\u0646\u0627\u0621 \u062e\u0644\u064a\u0641\u0629 \u0628\u0646 \u0633\u0644\u0645\u0627\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 115.0, 
+        "x_longitude": 50.7142989, 
+        "y_latitude": 26.18740972, 
+        "location": {
+            "lon": 50.7142989, 
+            "lat": 26.18740972
+        }
+    },
+    {
+        "name": "MUHARRAQ FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0645\u062d\u0631\u0642 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 216.0, 
+        "x_longitude": 50.61921733, 
+        "y_latitude": 26.24511176, 
+        "location": {
+            "lon": 50.61921733, 
+            "lat": 26.24511176
+        }
+    },
+    {
+        "name": "RAS RAYYA FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0631\u0627\u0633 \u0631\u064a\u0629 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 262.0, 
+        "x_longitude": 50.64042318, 
+        "y_latitude": 26.28758864, 
+        "location": {
+            "lon": 50.64042318, 
+            "lat": 26.28758864
+        }
+    },
+    {
+        "name": "BUDAIYA FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u0628\u062f\u064a\u0639 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 552.0, 
+        "x_longitude": 50.44443917, 
+        "y_latitude": 26.21436182, 
+        "location": {
+            "lon": 50.44443917, 
+            "lat": 26.21436182
+        }
+    },
+    {
+        "name": "ASKAR FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0639\u0633\u0643\u0631 \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 950.0, 
+        "x_longitude": 50.6228955, 
+        "y_latitude": 26.05175653, 
+        "location": {
+            "lon": 50.6228955, 
+            "lat": 26.05175653
+        }
+    },
+    {
+        "name": "AL DUR JETTY FISHERMAN PORT", 
+        "l_sm": "\u0645\u0631\u0641\u0623 \u0627\u0644\u062f\u0648\u0631 \u062c\u064a\u062a\u064a \u0644\u0633\u0641\u0646 \u0627\u0644\u0635\u064a\u0627\u062f\u064a\u0646", 
+        "type": "SEAPORTS", 
+        "nw_ltsnyf": "\u0645\u0648\u0627\u0646\u0626", 
+        "subtype": "SEAPORTS", 
+        "nw_ltsnyf_lfr_y": "\u0645\u0648\u0627\u0646\u0626", 
+        "block": 965.0, 
+        "x_longitude": 50.61503191, 
+        "y_latitude": 25.97124457, 
+        "location": {
+            "lon": 50.61503191, 
+            "lat": 25.97124457
+        }
+    }
+]

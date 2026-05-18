@@ -2,7 +2,7 @@
 import 'dart:math' show Random;
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 
 const kAuthTeal     = AppColors.accent;   // #4597a8
 const kAuthTealDark = AppColors.primary;  // #005b74

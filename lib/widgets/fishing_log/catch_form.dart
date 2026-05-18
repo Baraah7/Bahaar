@@ -4,7 +4,7 @@ import 'package:location/location.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:bahaar/screens/fishing log/location_picker_screen.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
 import 'package:bahaar/widgets/common/app_card.dart';
 import 'package:bahaar/widgets/common/section_label.dart';

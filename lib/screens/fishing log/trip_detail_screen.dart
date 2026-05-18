@@ -1,6 +1,6 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/fishing_log/fishing_log_localizations.dart';
-import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/fishing_log/trip_model.dart';
 import 'package:bahaar/screens/fishing%20log/location_picker_screen.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';

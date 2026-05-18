@@ -47,7 +47,7 @@ const List<Map<String, dynamic>> kAllSpecies = [
   },
   {
     'id': 'crab',
-    'nameAr': 'غبغب',
+    'nameAr': 'قبقب',
     'nameEn': 'Blue Crab',
     'scientific': 'Portunus pelagicus',
     'peakMonths': [5, 6, 7, 8, 9],

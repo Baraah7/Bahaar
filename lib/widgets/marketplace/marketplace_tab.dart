@@ -1,4 +1,4 @@
-﻿import 'package:bahaar/core/constants/app_colors.dart';
+﻿import 'package:bahaar/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../services/marketplace/fish_marketplace_service.dart';

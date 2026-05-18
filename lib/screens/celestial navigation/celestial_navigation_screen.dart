@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/navigation/celestial_fix_notifier.dart';
 import 'package:bahaar/navigation/camera_service.dart';
 import 'package:bahaar/navigation/star_identifier.dart';

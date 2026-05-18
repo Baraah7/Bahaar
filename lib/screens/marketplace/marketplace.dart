@@ -1,6 +1,6 @@
-﻿import 'package:bahaar/core/constants/app_colors.dart';
+﻿import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/marketplace/marketplace_localizations.dart';
-import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/fishing_log/trip_model.dart';
 import 'package:bahaar/models/marketplace/fish_listing.dart';
 import 'package:bahaar/providers/authentication/authentication_provider.dart';
 import 'package:bahaar/services/fishing%20log/trip_service.dart';

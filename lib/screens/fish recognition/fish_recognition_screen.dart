@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/fish_recognition/fish_recognition_localizations.dart';
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 import 'package:bahaar/providers/fish%20recognition/fish_classification_provider.dart';
 import 'package:bahaar/providers/language/language_provider.dart';
 import 'package:bahaar/widgets/common/app_empty_state.dart';

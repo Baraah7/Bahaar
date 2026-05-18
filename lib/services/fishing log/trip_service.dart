@@ -1,5 +1,5 @@
 import 'dart:developer';
-import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/fishing_log/trip_model.dart';
 import 'package:bahaar/services/offline/connectivity_service.dart';
 import 'package:bahaar/services/offline/database_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

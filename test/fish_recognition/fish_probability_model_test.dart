@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 
 // ── _trapezoid extracted for pure testing (mirrors the private static method) ──
 
