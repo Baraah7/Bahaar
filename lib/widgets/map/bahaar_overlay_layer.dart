@@ -10,10 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:bahaar/core/constants/zone_data.dart';
-import 'package:bahaar/core/constants/species_data.dart';
+import 'package:bahaar/constants/fishing_spots_zones.dart';
+import 'package:bahaar/constants/species_data.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
-import 'package:bahaar/models/fishing/trip_model.dart';
+import 'package:bahaar/models/fishing_log/trip_model.dart';
 
 // ---------------------------------------------------------------------------
 // Public widget — drop it inside FlutterMap's children list.

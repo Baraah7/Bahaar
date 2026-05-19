@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/marketplace/fish_listing.dart';
 import '../../models/marketplace/order_model.dart';
 import '../../l10n/marketplace/marketplace_localizations.dart';
-import 'package:bahaar/utilities/celestial_navigation/localization_helper.dart';
+import 'package:bahaar/utilities/map/celestial_navigation/localization_helper.dart';
 
 class OrderCard extends StatefulWidget {
   final Order order;

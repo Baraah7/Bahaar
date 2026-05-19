@@ -1,7 +1,7 @@
 import 'dart:developer';
-import 'package:bahaar/models/navigation/marina_model.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
-import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/models/map/navigation/marina_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/waypoint_model.dart';
 import 'package:bahaar/models/weather/marine_weather_model.dart';
 import 'package:bahaar/services/map/marina_data_service.dart';
 import 'package:bahaar/services/map/marine_pathfinding_service.dart';

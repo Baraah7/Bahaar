@@ -1,9 +1,9 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/weather/weather_localizations.dart';
 import 'package:bahaar/models/weather/tide_model.dart';
 import 'package:bahaar/models/weather/weather_response_model.dart';
 import 'package:bahaar/services/weather/world_tides_service.dart';
-import 'package:bahaar/utilities/celestial_navigation/celestial_calculator.dart';
+import 'package:bahaar/utilities/map/celestial_navigation/celestial_calculator.dart';
 import 'package:bahaar/utilities/weather/weather_api_service.dart';
 import 'package:bahaar/widgets/weather/6_tides_card.dart';
 import 'package:bahaar/widgets/weather/7_celestial_almanac_card.dart';

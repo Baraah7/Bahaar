@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;

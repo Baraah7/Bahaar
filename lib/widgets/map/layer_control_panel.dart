@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
 import 'package:bahaar/widgets/map/geojson_layers.dart';
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/map/map_localizations.dart';
 
 /// Control panel widget for managing all map layers
@@ -10,9 +10,6 @@ class LayerControlPanel extends StatefulWidget {
   final GeoJsonLayerBuilder? geoJsonBuilder;
   final bool maskInitialized;
   final VoidCallback onClose;
-  final VoidCallback? onEnterAdminEdit;
-  final VoidCallback? onEnterFeatureEdit;
-  final VoidCallback? onEnterOutlineEdit;
   final VoidCallback? onOpenPrediction;
 
   const LayerControlPanel({
@@ -21,9 +18,6 @@ class LayerControlPanel extends StatefulWidget {
     this.geoJsonBuilder,
     required this.maskInitialized,
     required this.onClose,
-    this.onEnterAdminEdit,
-    this.onEnterFeatureEdit,
-    this.onEnterOutlineEdit,
     this.onOpenPrediction,
   });
 

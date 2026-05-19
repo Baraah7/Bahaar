@@ -1,4 +1,4 @@
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 import 'package:flutter/foundation.dart';
 
 /// Manages the state and configuration of all map layers
@@ -43,14 +43,6 @@ class MapLayerManager extends ChangeNotifier {
   // UI control
   bool _showLayerControls = false;
 
-  // Admin edit mode (mask painting)
-  bool _isAdminEditMode = false;
-  AdminBrushType _brushType = AdminBrushType.water;
-  int _brushRadius = 1; // 1-5 cells
-
-  // Feature edit mode (add/move/delete features)
-  bool _isFeatureEditMode = false;
-
   // Getters
   bool get showBaseMap => _showBaseMap;
   bool get showDepthLayer => _showDepthLayer;
@@ -68,11 +60,6 @@ class MapLayerManager extends ChangeNotifier {
   bool get showDepthSoundings => _showDepthSoundings;
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
-  bool get isFeatureEditMode => _isFeatureEditMode;
-  bool get isAdminEditMode => _isAdminEditMode;
-  AdminBrushType get brushType => _brushType;
-  int get brushRadius => _brushRadius;
-
   // Setters with notification
   set showBaseMap(bool value) {
     if (_showBaseMap != value) {
@@ -188,41 +175,6 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
-  set isAdminEditMode(bool value) {
-    if (_isAdminEditMode != value) {
-      _isAdminEditMode = value;
-      if (value && _isFeatureEditMode) {
-        _isFeatureEditMode = false;
-      }
-      notifyListeners();
-    }
-  }
-
-  set isFeatureEditMode(bool value) {
-    if (_isFeatureEditMode != value) {
-      _isFeatureEditMode = value;
-      if (value && _isAdminEditMode) {
-        _isAdminEditMode = false;
-      }
-      notifyListeners();
-    }
-  }
-
-  set brushType(AdminBrushType value) {
-    if (_brushType != value) {
-      _brushType = value;
-      notifyListeners();
-    }
-  }
-
-  set brushRadius(int value) {
-    final clamped = value.clamp(1, 5);
-    if (_brushRadius != clamped) {
-      _brushRadius = clamped;
-      notifyListeners();
-    }
-  }
-
   /// Toggle the protected zones GeoJSON sub-layer on/off
   void toggleAllGeoJsonLayers(bool value) {
     _showProtectedZones = value;
@@ -252,7 +204,6 @@ class MapLayerManager extends ChangeNotifier {
     _showDepthSoundings = false;
     _showMaskOverlay = false;
     _showLayerControls = false;
-    _isFeatureEditMode = false;
     notifyListeners();
   }
 }
@@ -293,14 +244,3 @@ extension DepthVisualizationTypeExtension on DepthVisualizationType {
   }
 }
 
-/// Brush types for admin mask editing
-enum AdminBrushType {
-  /// Paint water cells (navigable, value = 1)
-  water,
-
-  /// Paint land cells (blocked, value = 0)
-  land,
-
-  /// Eraser - removes cells (sets to land/0)
-  eraser,
-}

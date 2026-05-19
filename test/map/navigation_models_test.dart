@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bahaar/utilities/map/navigation_constants.dart';
-import 'package:bahaar/models/navigation/navigation_session_model.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
-import 'package:bahaar/models/navigation/waypoint_model.dart';
+import 'package:bahaar/models/map/navigation/navigation_session_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/waypoint_model.dart';
 import 'package:bahaar/services/map/navigation_mask.dart';
 import 'package:latlong2/latlong.dart';
 

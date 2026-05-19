@@ -1,4 +1,4 @@
-import 'package:bahaar/core/constants/app_colors.dart';
+import 'package:bahaar/constants/app_colors.dart';
 import 'package:bahaar/l10n/app/app_localization.dart';
 import 'package:bahaar/l10n/profile/profile_localizations.dart';
 import 'package:bahaar/models/registration/user.dart' as app_user;

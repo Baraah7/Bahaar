@@ -42,21 +42,6 @@ class WeatherApiService {
       throw Exception("nooo api key in the env FILE!!!");
     }
 
-    // bulid query parameters : old vesrion
-
-    // if (airQuality == true) {
-    //   aqi = "yes";
-    // } else {
-    //   aqi = "no";
-    // }
-    // if (alert == true) {
-    //     alerts = "yes";
-    //   } else {
-    //     alerts = "no";
-    //   }
-
-    //new version
-
     final Map<String, String> queryParams = {
       'key': apiKey,
       'q': city,

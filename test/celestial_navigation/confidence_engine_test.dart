@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bahaar/navigation/confidence_engine.dart';
+import 'package:bahaar/celestial%20navigation/confidence_engine.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:bahaar/services/map/osrm_routing_service.dart';
-import 'package:bahaar/models/navigation/route_model.dart';
+import 'package:bahaar/models/map/navigation/route_model.dart';
 import 'package:latlong2/latlong.dart';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

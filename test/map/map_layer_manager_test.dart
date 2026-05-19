@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bahaar/services/map/map_layer_manager.dart';
-import 'package:bahaar/models/fishing/fish_probability_model.dart';
+import 'package:bahaar/models/fish_recognition/fish_probability_model.dart';
 
 void main() {
   // ── Default State ────────────────────────────────────────────────────────────

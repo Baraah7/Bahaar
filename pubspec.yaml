@@ -63,8 +63,6 @@ flutter:
     - secrets.env
     - assets/logo/app_icon.png
     - assets/logo/appIcon.png
-    - assets/data/gulf_test_features.geojson
-    - assets/data/marinas.geojson
     - assets/data/fishing_activity_sample.geojson
     - assets/data/fish_probability_fallback.json
     - assets/data/seaports.json
