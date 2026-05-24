@@ -3,7 +3,12 @@ part of 'integrated_map.dart';
 extension _IntegratedMapInit on _IntegratedMapState {
   Future<void> _initRoutingServices() async {
     try {
+      final deadline = DateTime.now().add(const Duration(seconds: 20));
       while (!_maskInitialized || !_marinaService.isInitialized || _geoJsonBuilder == null) {
+        if (DateTime.now().isAfter(deadline)) {
+          log('Routing init timed out — mask:$_maskInitialized marina:${_marinaService.isInitialized} geoJson:${_geoJsonBuilder != null}');
+          return;
+        }
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
@@ -167,6 +172,11 @@ extension _IntegratedMapInit on _IntegratedMapState {
       log('GeoJSON loaded successfully');
     } catch (e) {
       log('Error loading GeoJSON: $e');
+      if (mounted) {
+        setState(() {
+          _geoJsonBuilder = GeoJsonLayerBuilder({'type': 'FeatureCollection', 'features': []});
+        });
+      }
     }
   }
 

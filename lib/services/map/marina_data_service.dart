@@ -22,31 +22,25 @@ class MarinaDataService {
   Future<void> initialize(NavigationMask navigationMask) async {
     _navigationMask = navigationMask;
 
-    // 1. Load manual GeoJSON data
-    final manualMarinas = await _loadManualMarinas();
-
-    // 2. Validate water connectivity
-    final validatedMarinas = _validateMarinas(manualMarinas, navigationMask);
-
-    // 3. Filter by restricted areas (for now, just store all)
-    _marinas = validatedMarinas;
+    try {
+      final manualMarinas = await _loadManualMarinas();
+      final validatedMarinas = _validateMarinas(manualMarinas, navigationMask);
+      _marinas = validatedMarinas;
+    } catch (e) {
+      _marinas = [];
+    }
 
     _isInitialized = true;
   }
 
   /// Load marinas from the manual GeoJSON file
   Future<List<Marina>> _loadManualMarinas() async {
-    try {
-      final jsonString = await rootBundle.loadString('assets/data/marinas.geojson');
-      final data = json.decode(jsonString) as Map<String, dynamic>;
-      final features = data['features'] as List;
-
-      return features
-          .map((feature) => Marina.fromJson(feature as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      throw Exception('Failed to load marinas.geojson: $e');
-    }
+    final jsonString = await rootBundle.loadString('assets/data/marinas.geojson');
+    final data = json.decode(jsonString) as Map<String, dynamic>;
+    final features = data['features'] as List;
+    return features
+        .map((feature) => Marina.fromJson(feature as Map<String, dynamic>))
+        .toList();
   }
 
   /// Validate marinas for water connectivity
