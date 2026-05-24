@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:bahaar/utilities/weather/weather_api_service.dart';
+import 'package:bahaar/services/weather/weather_api_service.dart';
 import 'package:bahaar/models/weather/weather_response_model.dart';
 
 Map<String, dynamic> _successBody() => {

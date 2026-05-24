@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:bahaar/constants/app_colors.dart';
-import 'package:bahaar/celestial%20navigation/celestial_fix_notifier.dart';
-import 'package:bahaar/celestial%20navigation/camera_service.dart';
-import 'package:bahaar/celestial%20navigation/star_identifier.dart';
-import 'package:bahaar/screens/map/celestial%20navigation/sky_scanner_view.dart';
+import 'package:bahaar/services/celestial_navigation/celestial_fix_notifier.dart';
+import 'package:bahaar/services/celestial_navigation/camera_service.dart';
+import 'package:bahaar/services/celestial_navigation/star_identifier.dart';
+import 'package:bahaar/screens/map/celestial_navigation/sky_scanner_view.dart';
 import 'package:bahaar/l10n/celestial_navigation/celestial_navigation_localizations.dart';
 
 class CelestialNavigationScreen extends StatefulWidget {

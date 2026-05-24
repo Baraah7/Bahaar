@@ -43,6 +43,12 @@ class MapLayerManager extends ChangeNotifier {
   // UI control
   bool _showLayerControls = false;
 
+  // Admin / feature edit modes (mutually exclusive)
+  bool _isAdminEditMode = false;
+  bool _isFeatureEditMode = false;
+  int _brushRadius = 1;
+  AdminBrushType _brushType = AdminBrushType.water;
+
   // Getters
   bool get showBaseMap => _showBaseMap;
   bool get showDepthLayer => _showDepthLayer;
@@ -60,6 +66,11 @@ class MapLayerManager extends ChangeNotifier {
   bool get showDepthSoundings => _showDepthSoundings;
   bool get showMaskOverlay => _showMaskOverlay;
   bool get showLayerControls => _showLayerControls;
+  bool get isAdminEditMode => _isAdminEditMode;
+  bool get isFeatureEditMode => _isFeatureEditMode;
+  int get brushRadius => _brushRadius;
+  AdminBrushType get brushType => _brushType;
+
   // Setters with notification
   set showBaseMap(bool value) {
     if (_showBaseMap != value) {
@@ -175,6 +186,37 @@ class MapLayerManager extends ChangeNotifier {
     }
   }
 
+  set isAdminEditMode(bool value) {
+    if (_isAdminEditMode != value) {
+      _isAdminEditMode = value;
+      if (value) _isFeatureEditMode = false;
+      notifyListeners();
+    }
+  }
+
+  set isFeatureEditMode(bool value) {
+    if (_isFeatureEditMode != value) {
+      _isFeatureEditMode = value;
+      if (value) _isAdminEditMode = false;
+      notifyListeners();
+    }
+  }
+
+  set brushRadius(int value) {
+    final clamped = value.clamp(1, 5);
+    if (_brushRadius != clamped) {
+      _brushRadius = clamped;
+      notifyListeners();
+    }
+  }
+
+  set brushType(AdminBrushType value) {
+    if (_brushType != value) {
+      _brushType = value;
+      notifyListeners();
+    }
+  }
+
   /// Toggle the protected zones GeoJSON sub-layer on/off
   void toggleAllGeoJsonLayers(bool value) {
     _showProtectedZones = value;
@@ -204,9 +246,15 @@ class MapLayerManager extends ChangeNotifier {
     _showDepthSoundings = false;
     _showMaskOverlay = false;
     _showLayerControls = false;
+    _isAdminEditMode = false;
+    _isFeatureEditMode = false;
+    _brushRadius = 1;
+    _brushType = AdminBrushType.water;
     notifyListeners();
   }
 }
+
+enum AdminBrushType { water, land, eraser }
 
 /// Types of depth visualization available
 enum DepthVisualizationType {

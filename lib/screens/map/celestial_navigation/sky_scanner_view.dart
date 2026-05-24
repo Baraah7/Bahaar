@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:bahaar/constants/app_colors.dart';
-import 'package:bahaar/celestial%20navigation/camera_service.dart';
-import 'package:bahaar/celestial%20navigation/star_identifier.dart';
+import 'package:bahaar/services/celestial_navigation/camera_service.dart';
+import 'package:bahaar/services/celestial_navigation/star_identifier.dart';
 
 /// Result handed back to the caller when the scanner is closed.
 class SkyScannerResult {

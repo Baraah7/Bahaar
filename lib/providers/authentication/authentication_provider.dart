@@ -1,4 +1,4 @@
-import 'package:bahaar/services/firestore_service.dart';
+import 'package:bahaar/services/registration/firestore_service.dart';
 import 'package:bahaar/services/registration/authentication_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
