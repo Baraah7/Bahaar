@@ -152,6 +152,10 @@ class _CatchFormState extends State<CatchForm> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (_location == null) {
+      setState(() => _locationError = _l10n.locationRequiredError);
+      return;
+    }
     final weight = double.tryParse(_weightCtrl.text.trim());
     Navigator.of(context).pop(CatchFormResult(
       species: _speciesCtrl.text.trim(),

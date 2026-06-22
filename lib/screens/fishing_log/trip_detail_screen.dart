@@ -956,6 +956,11 @@ class CatchEditSheetState extends State<CatchEditSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (_pickedLocation == null) {
+      setState(() => _locationError =
+          FishingLogLocalizations.of(context).locationRequiredError);
+      return;
+    }
     Navigator.of(context).pop(CatchEditResult(
       species: _speciesCtrl.text.trim(),
       weightKg: double.tryParse(_weightCtrl.text.trim()),

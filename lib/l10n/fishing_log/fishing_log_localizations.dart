@@ -81,6 +81,7 @@ class FishingLogLocalizations {
   String get pinnedOnMap => _isAr ? 'مثبت على الخريطة' : 'Pinned on map';
   String get gpsLocationLabel => _isAr ? 'موقع GPS' : 'GPS location';
   String get locationNotSet => _isAr ? 'الموقع غير محدد' : 'Location not set';
+  String get locationRequiredError => _isAr ? 'يجب تحديد موقع صيد في البحر' : 'A sea catch location is required';
   String get mapLabel => _isAr ? 'خريطة' : 'Map';
   String get tripActiveLabel => _isAr ? 'نشطة' : 'Active';
   String get tripStartedLabel => _isAr ? 'بدأت' : 'Started';
